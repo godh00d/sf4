@@ -1,0 +1,6 @@
+# SF4 Access Widener
+
+# Example:
+# class net.minecraft.world.level.block.Blocks
+#   field public static final net.minecraft.world.level.block.Block DIAMOND_BLOCK
+#   method public void tick(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, java.util.Random)
