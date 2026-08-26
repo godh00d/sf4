@@ -53,25 +53,6 @@ public class AngelPersonality {
         "The sky judged you for that. It was not impressed."
     };
 
-    private static final String[] HINT_GREETINGS = {
-        "Ah, you seek guidance. Wise.",
-        "The angel remembers your struggles.",
-        "I have been watching. You need help.",
-        "Ask, and the sky shall answer.",
-        "Your confusion radiates like end rods.",
-        "I sense... uncertainty. Let me help.",
-        "The path ahead is clear. To me."
-    };
-
-    private static final String[] SACRIFICE_REFUNDS = {
-        "An offering? How thoughtful. Here is my advice instead.",
-        "I do not eat. But I appreciate the gesture.",
-        "Your sacrifice has been noted. And judged.",
-        "The sky accepts your offering. In return, knowledge.",
-        "I will remember this. The items I return are yours.",
-        "Generosity. A rare trait in the sky."
-    };
-
     private static final String[] DEPARTURE_LINES = {
         "I must go. The sky calls.",
         "Until next time, builder.",
@@ -120,14 +101,6 @@ public class AngelPersonality {
         return ATTACK_RESPONSES[RANDOM.nextInt(ATTACK_RESPONSES.length)];
     }
 
-    public static String getRandomHintGreeting() {
-        return HINT_GREETINGS[RANDOM.nextInt(HINT_GREETINGS.length)];
-    }
-
-    public static String getRandomSacrificeRefund() {
-        return SACRIFICE_REFUNDS[RANDOM.nextInt(SACRIFICE_REFUNDS.length)];
-    }
-
     public static String getRandomDepartureLine() {
         return DEPARTURE_LINES[RANDOM.nextInt(DEPARTURE_LINES.length)];
     }
@@ -157,11 +130,4 @@ public class AngelPersonality {
         return greetings[RANDOM.nextInt(greetings.length)];
     }
 
-    public static String getContributionLine(int count) {
-        if (count == 1) return "A single item? The sky is generous with its patience.";
-        if (count < 5) return count + " items. The angel is mildly impressed.";
-        if (count < 10) return count + " items. Now you have my attention.";
-        if (count < 20) return count + " items. The angel nods approvingly.";
-        return count + " items. You are generous, mortal. Here is wisdom.";
-    }
 }

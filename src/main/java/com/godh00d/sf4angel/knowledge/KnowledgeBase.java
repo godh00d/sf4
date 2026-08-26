@@ -50,7 +50,7 @@ public class KnowledgeBase {
     }
 
     private static void loadDefaultTopics() {
-        addTopic("help", "Prayer Commands", "pray guide <topic> - learn about a topic | pray how <topic> - step by step | pray explain <topic> - deep dive | pray tip - random tip | pray topics - list all topics | pray goal - your current goal | pray stage - your current stage", "general", "any");
+        addTopic("help", "Angel Commands", "The angel appears automatically. Complete achievements to progress. Angel shows the next goal after each advancement. No commands needed.", "general", "any");
         addTopic("topics", "All Topics", "sieve, cobblegen, bonsai, tinker, ae2, mekanism, nuclear, rftools, deepmob, storage, barrels, twilight, nether, end, lostcities, compactmachines, singularities, prestige, parabox, hogs, crops, animals, market, power, generators, enchanting, glitch, collectibles", "general", "any");
         addTopic("sieve", "The Sieve", "The sieve is your primary resource generator. Place it on top of a chest or drawer. Use a hammer on blocks (cobble, gravel, sand, dust) to get materials, then sift them through the sieve. Mesh tiers: flint < iron < diamond. Higher tiers give better loot. Automate with hoppers or Simple Storage cables.", "ex_nihilo", "age1");
         addTopic("cobblegen", "Cobblestone Generator", "Basic cobble gen: flowing lava next to flowing water. Place water on one side, lava on the other, with a gap between. Cobblestone forms in the gap. Upgrade to compressed generators for more output. Essential early game for infinite materials.", "ex_nihilo", "age1");
@@ -80,8 +80,6 @@ public class KnowledgeBase {
         addTopic("enchanting", "Enchanting", "Enchanting Table + bookshelves (15 for max). Enchant with lapis. Levels: 1-30. Best enchantments: Fortune, Efficiency, Unbreaking, Sharpness, Protection. Use Anvil to combine. Tinker tools: use modifier slots instead.", "minecraft", "age_enhancement");
         addTopic("glitch", "Glitch Armor", "Craft from Glitch fragments (from Deep Mob Learning). Full set gives: flight, damage reduction, speed. Powered by Mob Data in Deep Learner. Best armor in the game when fully powered.", "deep_mob_learning", "age_enhancement");
         addTopic("collectibles", "Collectible Hunter", "Collect special items scattered across the world. Display in Collectible Case. Each collectible gives a small bonus. Find them in structures, dungeons, and hidden locations.", "sf4", "age_allthethingsomglol");
-        addTopic("sacrifice", "Sacrifice System", "Drop items near the Angel. Angel analyzes your inventory and gives advice based on what you have and what you need. More items = better advice. Angel returns items it does not need.", "sf4angel", "any");
-        addTopic("prayer", "Prayer Commands", "Type pray <command> in chat. Angel appears and responds. Commands: guide, how, explain, tip, topics, goal, stage, help. The angel knows everything about your current progression.", "sf4angel", "any");
         addTopic("skyorchards", "Sky Orchards", "Custom resource tree for SF4. Trees drop specific resources based on type. Oak: wood, apples. Birch: saplings. Resource trees: iron, gold, diamond, coal. Automate with bonsai pots.", "sky_orchards", "age1");
         addTopic("void", "The Void", "Do not fall. Forgiving Void mod: you respawn on top instead of dying. But you lose your items. Build platforms. Use Jetpack or Glitch Armor for safety. The void is always watching.", "forgiving_void", "age1");
         addTopic("watering", "Watering Can", "Speeds up crop and bonsai growth. Craft with iron + water bucket. Right-click to use. Essential for farming automation. Keep it filled.", "agricraft", "age_farming");
@@ -293,7 +291,7 @@ public class KnowledgeBase {
         addTopic("dimension_farming", "Dimension Farming", "RFTools dimension: create resource-rich world. Mekanism Digital Miner: auto-mine. Essential for endgame resources. Build dimension builder.", "rftools", "age_power");
         addTopic("void_safety", "Void Safety", "Forgiving Void: respawn on platform. But items drop. Keep backup gear. Build safety nets. Never carry everything. Angel watches you fall.", "forgiving_void", "any");
         addTopic("angel_knowledge", "Angel Knowledge System", "The angel knows everything about your progression. It tracks your stage, inventory, and advancement history. Its advice is based on deep mod knowledge. Trust it.", "sf4angel", "any");
-        addTopic("angel_behavior", "Angel Behavior", "Appears on: first login, achievements, death, idle chatter. Talks via action bar typewriter. Follows player. Freezes when looked at. Absorbs dropped items for advice. Cannot be killed.", "sf4angel", "any");
+        addTopic("angel_behavior", "Angel Behavior", "Appears on: first login, achievements, death, idle chatter. Talks via action bar typewriter. Follows player. Freezes when looked at. Cannot be killed.", "sf4angel", "any");
     }
 
     private static void addTopic(String keyword, String title, String content, String mod, String age) {
