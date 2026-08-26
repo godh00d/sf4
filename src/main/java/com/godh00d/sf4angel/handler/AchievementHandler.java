@@ -478,14 +478,37 @@ public class AchievementHandler {
     private static String getNextAdvancement(String completedAdvancement) {
         for (Map.Entry<String, String> entry : PROGRESSION_PATH.entrySet()) {
             if (entry.getKey().equals(completedAdvancement)) {
-                String nextId = entry.getValue();
-                String creativeName = CREATIVE_NAMES.get(nextId);
-                if (creativeName != null) return creativeName;
-                String shortName = nextId.substring(nextId.lastIndexOf('/') + 1).replace('_', ' ');
-                return capitalizeWords(shortName);
+                return getCreativeName(entry.getValue());
             }
         }
         return null;
+    }
+
+    private static String getCreativeName(String advancementId) {
+        String creativeName = CREATIVE_NAMES.get(advancementId);
+        if (creativeName != null) return creativeName;
+
+        String path = advancementId;
+        String category = "unknown";
+        int colon = advancementId.indexOf(':');
+        int slash = advancementId.indexOf('/');
+        if (colon >= 0 && slash > colon) {
+            category = advancementId.substring(colon + 1, slash);
+            path = advancementId.substring(slash + 1);
+        } else if (slash >= 0) {
+            path = advancementId.substring(slash + 1);
+        }
+
+        String subject = capitalizeWords(path.replace('_', ' '));
+        if (category.equals("basic")) return "Rite of " + subject;
+        if (category.equals("farming")) return "Bloom of " + subject;
+        if (category.equals("enhancement")) return "Ascension of " + subject;
+        if (category.equals("power")) return "Engine of " + subject;
+        if (category.equals("storage")) return "Vault of " + subject;
+        if (category.equals("exploration")) return "Pilgrimage to " + subject;
+        if (category.equals("endgame")) return "Crown of " + subject;
+        if (category.equals("angel")) return "Angel's Omen: " + subject;
+        return "Omen of " + subject;
     }
 
     private static String capitalizeWords(String input) {
@@ -541,11 +564,7 @@ public class AchievementHandler {
 
         LOGGER.info("Advancement completed for {}: {}", player.getName(), advancementId);
 
-        String advTitle = CREATIVE_NAMES.get(advancementId);
-        if (advTitle == null) {
-            advTitle = advancementId.substring(advancementId.lastIndexOf('/') + 1).replace('_', ' ');
-            advTitle = capitalizeWords(advTitle);
-        }
+        String advTitle = getCreativeName(advancementId);
 
         String greeting = AngelPersonality.getAdvancementGreeting(advTitle);
         TypewriterHandler.queueMessage(player, greeting, 0, 0);
