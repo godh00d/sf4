@@ -10,9 +10,8 @@ import java.util.*;
 public class TypewriterHandler {
 
     private static final int CHARS_PER_TICK = 1;
-    private static final int APPEAR_TICKS = 6;
     private static final int SHOW_TICKS = 80;
-    private static final int DISAPPEAR_TICKS = 6;
+    private static final int DESPAWN_DELAY_TICKS = 200;
 
     private static final Map<UUID, PlayerTypewriterState> states = new HashMap<>();
 
@@ -51,9 +50,6 @@ public class TypewriterHandler {
             case IDLE:
                 if (state.despawnDelay > 0) {
                     state.despawnDelay--;
-                    if (state.despawnDelay == 0) {
-                        state.despawnWhenReady = false;
-                    }
                     return;
                 }
                 advanceQueue(state);
@@ -68,14 +64,10 @@ public class TypewriterHandler {
                 break;
 
             case APPEAR:
-                if (state.tickCount == 0) {
-                    state.charIndex = 0;
-                }
-                if (state.tickCount >= APPEAR_TICKS) {
-                    state.phase = Phase.TYPING;
-                    state.tickCount = 0;
-                    state.charIndex = 0;
-                }
+                state.phase = Phase.TYPING;
+                state.tickCount = 0;
+                state.charIndex = Math.min(CHARS_PER_TICK, state.currentMessage.text.length());
+                sendPartialMessage(player, state);
                 break;
 
             case TYPING:
@@ -97,18 +89,14 @@ public class TypewriterHandler {
                 break;
 
             case DISAPPEAR:
-                if (state.tickCount >= DISAPPEAR_TICKS) {
-                    state.currentMessage = null;
-                    if (state.queue.isEmpty() && state.despawnWhenReady) {
-                        state.phase = Phase.IDLE;
-                        state.despawnDelay = 200;
-                    } else {
-                        state.phase = Phase.IDLE;
-                        state.tickCount = 0;
-                    }
+                clearActionBar(player);
+                state.currentMessage = null;
+                if (state.queue.isEmpty() && state.despawnWhenReady) {
+                    state.despawnDelay = DESPAWN_DELAY_TICKS;
                 } else {
-                    sendPartialMessage(player, state);
+                    state.tickCount = 0;
                 }
+                state.phase = Phase.IDLE;
                 break;
         }
     }
@@ -134,17 +122,16 @@ public class TypewriterHandler {
         String full = state.currentMessage.text;
         int len = Math.min(state.charIndex, full.length());
 
-        if (state.phase == Phase.DISAPPEAR) {
-            int fade = DISAPPEAR_TICKS - state.tickCount;
-            len = (int) ((float) len * ((float) fade / DISAPPEAR_TICKS));
-        }
-
         String displayed = full.substring(0, Math.max(0, len));
 
         TextComponentString component = new TextComponentString(
             TextFormatting.GOLD + "\u2726 " + TextFormatting.WHITE + displayed + TextFormatting.RESET
         );
         player.sendStatusMessage(component, true);
+    }
+
+    private static void clearActionBar(EntityPlayer player) {
+        player.sendStatusMessage(new TextComponentString(""), true);
     }
 
     public static void despawnWhenReady(EntityPlayer player) {

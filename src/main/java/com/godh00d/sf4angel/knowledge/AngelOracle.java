@@ -60,7 +60,7 @@ public class AngelOracle {
     private static void loadDefaultStages() {
         addStage("s0", "First Steps", "age1",
             "Punch a tree, craft a table, get dirt.",
-            "Dirt", "oak_sapling", "dirt", "cobblestone");
+            "The Descent of Dirt", "oak_sapling", "dirt", "cobblestone");
         addStage("s1", "Cobblestone Age", "age1",
             "You have stone. Now shape it.",
             "Cobblestone Generator", "cobblestone", "gravel", "iron_ingot");

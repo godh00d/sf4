@@ -6,7 +6,6 @@ import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -63,11 +62,11 @@ public class PlayerJoinHandler {
         World world = player.world;
         EntityAngel angel = new EntityAngel(world);
         angel.setOwnerId(player.getUniqueID());
-        Vec3d lookVec = player.getLookVec();
+        double yaw = Math.toRadians(player.rotationYaw);
         angel.setPosition(
-            player.posX + lookVec.x * 5,
+            player.posX - Math.sin(yaw) * 6.0D,
             player.posY + player.getEyeHeight() - 0.5,
-            player.posZ + lookVec.z * 5
+            player.posZ + Math.cos(yaw) * 6.0D
         );
         world.spawnEntity(angel);
 
@@ -90,11 +89,11 @@ public class PlayerJoinHandler {
         World world = player.world;
         EntityAngel angel = new EntityAngel(world);
         angel.setOwnerId(player.getUniqueID());
-        Vec3d lookVec = player.getLookVec();
+        double yaw = Math.toRadians(player.rotationYaw);
         angel.setPosition(
-            player.posX + lookVec.x * 5,
+            player.posX - Math.sin(yaw) * 6.0D,
             player.posY + player.getEyeHeight() - 0.5,
-            player.posZ + lookVec.z * 5
+            player.posZ + Math.cos(yaw) * 6.0D
         );
         world.spawnEntity(angel);
 
@@ -112,11 +111,11 @@ public class PlayerJoinHandler {
         World world = player.world;
         EntityAngel angel = new EntityAngel(world);
         angel.setOwnerId(player.getUniqueID());
-        Vec3d lookVec = player.getLookVec();
+        double yaw = Math.toRadians(player.rotationYaw);
         angel.setPosition(
-            player.posX + lookVec.x * 5,
+            player.posX - Math.sin(yaw) * 6.0D,
             player.posY + player.getEyeHeight() - 0.5,
-            player.posZ + lookVec.z * 5
+            player.posZ + Math.cos(yaw) * 6.0D
         );
         world.spawnEntity(angel);
 

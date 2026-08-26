@@ -25,6 +25,7 @@ public class TickHandler {
     private static final Map<UUID, Integer> idleTimers = new HashMap<>();
     private static final Map<String, Integer> healthWarnTimers = new HashMap<>();
     private static final Map<UUID, Integer> advScanTimers = new HashMap<>();
+    private static final Map<UUID, Integer> movementTimers = new HashMap<>();
     private static final int MIN_IDLE_TICKS = 6000;
     private static final int MAX_IDLE_TICKS = 12000;
     private static final int ADV_SCAN_INTERVAL = 200;
@@ -97,35 +98,49 @@ public class TickHandler {
 
         for (EntityAngel angel : angels) {
             if (angel.getOwnerId() != null && angel.getOwnerId().equals(player.getUniqueID())) {
-                Vec3d lookVec = player.getLookVec();
+                UUID id = player.getUniqueID();
+                int timer = movementTimers.getOrDefault(id, 0) + 1;
+                movementTimers.put(id, timer);
 
-                boolean playerLookingAtAngel = isPlayerLookingAt(player, angel);
+                double yaw = Math.toRadians(player.rotationYaw);
+                double forwardX = -Math.sin(yaw);
+                double forwardZ = Math.cos(yaw);
+                double rightX = Math.cos(yaw);
+                double rightZ = Math.sin(yaw);
+                double wave = Math.sin(timer * 0.035D);
+                int mode = (timer / 240) % 3;
 
-                if (playerLookingAtAngel) {
-                    angel.motionX = 0;
-                    angel.motionY = 0;
-                    angel.motionZ = 0;
+                double targetX;
+                double targetZ;
+                if (mode == 0) {
+                    targetX = player.posX + forwardX * 6.0D;
+                    targetZ = player.posZ + forwardZ * 6.0D;
+                } else if (mode == 1) {
+                    double orbit = timer * 0.015D;
+                    targetX = player.posX + Math.cos(orbit) * 5.0D;
+                    targetZ = player.posZ + Math.sin(orbit) * 5.0D;
                 } else {
-                    double targetX = player.posX + lookVec.x * 5;
-                    double targetY = player.posY + player.getEyeHeight() - 0.5;
-                    double targetZ = player.posZ + lookVec.z * 5;
-
-                    double dx = targetX - angel.posX;
-                    double dy = targetY - angel.posY;
-                    double dz = targetZ - angel.posZ;
-
-                    double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                    if (dist > 0.5) {
-                        double speed = 0.15;
-                        angel.motionX += (dx / dist) * speed;
-                        angel.motionY += (dy / dist) * speed;
-                        angel.motionZ += (dz / dist) * speed;
-                    }
+                    targetX = player.posX + forwardX * 4.5D + rightX * wave * 2.0D;
+                    targetZ = player.posZ + forwardZ * 4.5D + rightZ * wave * 2.0D;
                 }
 
-                angel.motionX *= 0.9;
-                angel.motionY *= 0.9;
-                angel.motionZ *= 0.9;
+                double targetY = player.posY + player.getEyeHeight() - 0.45D + Math.sin(timer * 0.05D) * 0.35D;
+
+                double dx = targetX - angel.posX;
+                double dy = targetY - angel.posY;
+                double dz = targetZ - angel.posZ;
+
+                double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                if (dist > 0.25D) {
+                    double speed = isPlayerLookingAt(player, angel) ? 0.045D : 0.11D;
+                    angel.motionX += (dx / dist) * speed;
+                    angel.motionY += (dy / dist) * speed;
+                    angel.motionZ += (dz / dist) * speed;
+                }
+
+                angel.motionX *= 0.86D;
+                angel.motionY *= 0.86D;
+                angel.motionZ *= 0.86D;
             }
         }
     }
@@ -138,6 +153,7 @@ public class TickHandler {
             angel.posZ - player.posZ
         );
 
+        if (toAngel.lengthVector() < 0.001D) return false;
         double dot = lookVec.dotProduct(toAngel.normalize());
         return dot > 0.95;
     }
