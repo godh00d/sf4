@@ -53,8 +53,8 @@ public class TypewriterHandler {
                 break;
 
             case WAITING_DELAY:
-                state.delayTimer--;
-                if (state.delayTimer <= 0) {
+                state.currentMessage.delayBefore--;
+                if (state.currentMessage.delayBefore <= 0) {
                     state.phase = Phase.APPEAR;
                     state.tickCount = 0;
                 }

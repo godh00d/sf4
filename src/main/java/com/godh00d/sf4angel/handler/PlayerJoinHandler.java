@@ -26,11 +26,15 @@ public class PlayerJoinHandler {
         if (player.world.isRemote) return;
         EntityPlayerMP mp = (EntityPlayerMP) player;
 
+        clearPlayerInventory(mp);
+
         AchievementHandler.onPlayerJoin(player.getUniqueID());
 
         if (!greetedPlayers.contains(player.getUniqueID())) {
             greetedPlayers.add(player.getUniqueID());
             spawnFreshAngel(mp);
+        } else {
+            spawnReturningAngel(mp);
         }
     }
 
@@ -38,15 +42,20 @@ public class PlayerJoinHandler {
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         EntityPlayer player = event.player;
         if (player.world.isRemote) return;
-        if (!event.wasDeath) return;
 
         EntityPlayerMP mp = (EntityPlayerMP) player;
+        clearPlayerInventory(mp);
         respawnAngel(mp);
     }
 
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         TypewriterHandler.removePlayer(event.player);
+    }
+
+    private static void clearPlayerInventory(EntityPlayerMP player) {
+        player.inventory.clear();
+        player.inventory.markDirty();
     }
 
     private static void spawnFreshAngel(EntityPlayerMP player) {
@@ -71,6 +80,23 @@ public class PlayerJoinHandler {
         TypewriterHandler.despawnWhenReady(player);
     }
 
+    private static void spawnReturningAngel(EntityPlayerMP player) {
+        World world = player.world;
+        EntityAngel angel = new EntityAngel(world);
+        angel.setOwnerId(player.getUniqueID());
+        angel.setPosition(player.posX, player.posY + 5, player.posZ);
+        world.spawnEntity(angel);
+
+        String welcomeBack = "Welcome back. The sky missed you.";
+        String stageHint = AngelOracle.getHintForCurrentStage(player);
+        if (stageHint != null && !stageHint.isEmpty()) {
+            welcomeBack += " Current goal: " + stageHint;
+        }
+
+        TypewriterHandler.queueMessage(player, welcomeBack, 0, 0);
+        TypewriterHandler.despawnWhenReady(player);
+    }
+
     private static void respawnAngel(EntityPlayerMP player) {
         World world = player.world;
         EntityAngel angel = new EntityAngel(world);
@@ -79,6 +105,11 @@ public class PlayerJoinHandler {
         world.spawnEntity(angel);
 
         String deathLine = AngelPersonality.getRandomDeathLine();
+        String stageHint = AngelOracle.getHintForCurrentStage(player);
+        if (stageHint != null && !stageHint.isEmpty()) {
+            deathLine += " Current goal: " + stageHint;
+        }
+
         TypewriterHandler.queueMessage(player, deathLine, 0, 0);
         TypewriterHandler.despawnWhenReady(player);
     }

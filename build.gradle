@@ -1,44 +1,73 @@
 buildscript {
     repositories {
+        maven { url = 'https://maven.minecraftforge.net/' }
         mavenCentral()
-        maven { name = "forge"; url = "https://maven.minecraftforge.net" }
     }
     dependencies {
-        classpath("com.anatawa12.forge:ForgeGradle:2.3-1.0.+") { changing = true }
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
     }
 }
 
-apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
 
-version = "1.0.0"
+version = '1.0.0'
 group = 'com.godh00d.sf4angel'
 archivesBaseName = 'sf4angel'
 
-sourceCompatibility = targetCompatibility = '1.8'
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
-}
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 minecraft {
-    version = '1.12.2-14.23.5.2859'
-    runDir = 'run'
-    mappings = 'stable_39'
-    makeObfSourceJar = false
+    mappings channel: 'snapshot', version: '20171003-1.12'
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+        }
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+        }
+    }
 }
 
+sourceSets.main.resources { srcDir 'src/main/resources' }
+
 dependencies {
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2859'
 }
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "sf4angel",
+            "Specification-Vendor": "godh00d",
+            "Specification-Version": "1",
+            "Implementation-Title": project.name,
+            "Implementation-Version": "${version}",
+            "Implementation-Vendor": "godh00d",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')
 
 processResources {
     inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "mcversion", "1.12.2"
 
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-        expand 'version': project.version, 'mcversion': project.minecraft.version
+        expand 'version': project.version, 'mcversion': '1.12.2'
     }
 
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
 }
+

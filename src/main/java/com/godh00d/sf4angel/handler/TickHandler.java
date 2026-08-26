@@ -23,6 +23,7 @@ public class TickHandler {
 
     private static final Random RANDOM = new Random();
     private static final Map<UUID, Integer> idleTimers = new HashMap<>();
+    private static final Map<String, Integer> healthWarnTimers = new HashMap<>();
     private static final int MIN_IDLE_TICKS = 6000;
     private static final int MAX_IDLE_TICKS = 12000;
 
@@ -54,7 +55,7 @@ public class TickHandler {
             );
             List<EntityAngel> angels = world.getEntitiesWithinAABB(EntityAngel.class, searchBox);
             for (EntityAngel angel : angels) {
-                angel.startDespawn();
+                angel.startDespawn(0);
             }
         }
     }
@@ -97,7 +98,9 @@ public class TickHandler {
                 boolean playerLookingAtAngel = isPlayerLookingAt(player, angel);
 
                 if (playerLookingAtAngel) {
-                    angel.setMotion(0, 0, 0);
+                    angel.motionX = 0;
+                    angel.motionY = 0;
+                    angel.motionZ = 0;
                 } else {
                     double targetX = player.posX - lookVec.x * 3;
                     double targetY = player.posY + 4;
@@ -139,13 +142,13 @@ public class TickHandler {
         if (player.getHealth() < player.getMaxHealth() * 0.3f) {
             UUID id = player.getUniqueID();
             String lastWarnKey = id.toString() + "_healthwarn";
-            int lastWarn = idleTimers.getOrDefault(lastWarnKey.hashCode(), 0);
+            int lastWarn = healthWarnTimers.getOrDefault(lastWarnKey, 0);
 
             if (lastWarn == 0 || lastWarn > 200) {
                 if (!TypewriterHandler.hasActiveMessages(player)) {
                     String warning = AngelPersonality.getRandomHealthWarning();
                     TypewriterHandler.queueMessage(player, warning, 0, 0);
-                    idleTimers.put(lastWarnKey.hashCode(), 1);
+                    healthWarnTimers.put(lastWarnKey, 1);
                 }
             }
         }

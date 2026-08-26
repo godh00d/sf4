@@ -95,9 +95,8 @@ public class AngelPersonality {
     private static final String[] FIRST_LOGIN_INTRO = {
         "The Angel descends...",
         "I am your guide through the sky.",
-        "Type {GOAL_AND_HINT}",
-        "Type pray help for commands.",
-        "Drop items near me for better advice."
+        "{GOAL_AND_HINT}",
+        "Complete achievements and I will show you what to do next."
     };
 
     private static final String[] AGE_COMMENTS = {

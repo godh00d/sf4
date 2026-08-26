@@ -15,7 +15,7 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataAccessor;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -65,7 +65,7 @@ public class EntityAngel extends EntityCreature {
         this.setSize(1.0F, 1.0F);
         this.noClip = true;
         this.setNoGravity(true);
-        this.setImmovable(true);
+
     }
 
     @Override
@@ -131,7 +131,6 @@ public class EntityAngel extends EntityCreature {
         int timer = getStateTimer() + 1;
         setStateTimer(timer);
 
-        absorbNearbyItems();
         checkDespawn();
     }
 
@@ -141,33 +140,6 @@ public class EntityAngel extends EntityCreature {
 
         if (timer >= DESPAWN_TICKS) {
             setDead();
-        }
-    }
-
-    private void absorbNearbyItems() {
-        EntityPlayer owner = getOwnerEntity();
-        if (owner == null) return;
-
-        AxisAlignedBB box = new AxisAlignedBB(
-            this.posX - 3, this.posY - 2, this.posZ - 3,
-            this.posX + 3, this.posY + 3, this.posZ + 3
-        );
-
-        List<EntityItem> items = world.getEntitiesWithinAABB(EntityItem.class, box);
-        if (!items.isEmpty() && owner instanceof EntityPlayerMP) {
-            EntityPlayerMP mp = (EntityPlayerMP) owner;
-            int totalAbsorbed = 0;
-            for (EntityItem item : items) {
-                totalAbsorbed += item.getItem().getCount();
-                item.setDead();
-            }
-
-            String advice = AngelPersonality.getContributionLine(totalAbsorbed);
-            TypewriterHandler.queueMessage(mp, advice, 0, 0);
-
-            ChestScanner.ScanResult scan = ChestScanner.scanNearbyInventories(mp);
-            String analysis = ChestScanner.analyzeAndAdvise(mp, scan);
-            TypewriterHandler.queueMessage(mp, analysis, 60, 0);
         }
     }
 
@@ -194,7 +166,7 @@ public class EntityAngel extends EntityCreature {
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount) {
         if (source == DamageSource.OUT_OF_WORLD) return false;
-        if (source == DamageSource.WALL) return false;
+        if (source == DamageSource.IN_WALL) return false;
         if (source.isProjectile()) return false;
 
         if (source.getTrueSource() instanceof EntityPlayer) {
@@ -230,21 +202,11 @@ public class EntityAngel extends EntityCreature {
     }
 
     @Override
-    protected boolean canBeRidden(EntityLivingBase entity) {
-        return false;
-    }
-
-    @Override
     public void onStruckByLightning(net.minecraft.entity.effect.EntityLightningBolt bolt) {
     }
 
     @Override
     protected boolean canDespawn() {
-        return false;
-    }
-
-    @Override
-    public boolean canRenderName() {
         return false;
     }
 
@@ -306,8 +268,8 @@ public class EntityAngel extends EntityCreature {
     public UUID getOwnerId() {
         int id = this.dataManager.get(OWNER_ID);
         if (id == -1) return null;
-        if (world.getPlayerEntities().isEmpty()) return null;
-        for (Object obj : world.getPlayerEntities()) {
+        if (world.playerEntities.isEmpty()) return null;
+        for (Object obj : world.playerEntities) {
             EntityPlayer p = (EntityPlayer) obj;
             if (p.getEntityId() == id) return p.getUniqueID();
         }
@@ -315,7 +277,7 @@ public class EntityAngel extends EntityCreature {
     }
 
     public void setOwnerId(UUID uuid) {
-        for (Object obj : world.getPlayerEntities()) {
+        for (Object obj : world.playerEntities) {
             EntityPlayer p = (EntityPlayer) obj;
             if (p.getUniqueID().equals(uuid)) {
                 this.dataManager.set(OWNER_ID, p.getEntityId());
@@ -382,7 +344,7 @@ public class EntityAngel extends EntityCreature {
     // ---- NBT ----
 
     @Override
-    protected void writeEntityToNBT(NBTTagCompound compound) {
+    public void writeEntityToNBT(NBTTagCompound compound) {
         super.writeEntityToNBT(compound);
         compound.setInteger("VisualState", getVisualState());
         compound.setInteger("AnimationType", getAnimationType());
@@ -393,7 +355,7 @@ public class EntityAngel extends EntityCreature {
     }
 
     @Override
-    protected void readEntityFromNBT(NBTTagCompound compound) {
+    public void readEntityFromNBT(NBTTagCompound compound) {
         super.readEntityFromNBT(compound);
         setVisualState(compound.getInteger("VisualState"));
         setAnimationType(compound.getInteger("AnimationType"));
