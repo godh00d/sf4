@@ -1,6 +1,7 @@
 package com.godh00d.sf4angel.init;
 
 import com.godh00d.sf4angel.Reference;
+import com.godh00d.sf4angel.SF4Angel;
 import com.godh00d.sf4angel.entity.EntityAngel;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
@@ -15,7 +16,7 @@ public class ModEntities {
             EntityAngel.class,
             Reference.MOD_ID + ".angel",
             entityId++,
-            null,
+            SF4Angel.instance,
             64, 20, false
         );
     }
