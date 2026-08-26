@@ -1,0 +1,175 @@
+package com.godh00d.sf4angel.typewriter;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
+
+import java.util.*;
+
+public class TypewriterHandler {
+
+    private static final int CHARS_PER_TICK = 3;
+    private static final int APPEAR_TICKS = 4;
+    private static final int SHOW_TICKS = 40;
+    private static final int DISAPPEAR_TICKS = 4;
+
+    private static final Map<UUID, PlayerTypewriterState> states = new HashMap<>();
+
+    public static void queueMessage(EntityPlayer player, String message, int delayAfter) {
+        queueMessage(player, message, 0, delayAfter);
+    }
+
+    public static void queueMessage(EntityPlayer player, String message, int delayBefore, int delayAfter) {
+        PlayerTypewriterState state = states.computeIfAbsent(player.getUniqueID(), k -> new PlayerTypewriterState());
+        state.queue.add(new TypewriterMessage(message, delayBefore, delayAfter));
+    }
+
+    public static boolean hasActiveMessages(EntityPlayer player) {
+        PlayerTypewriterState state = states.get(player.getUniqueID());
+        return state != null && (!state.queue.isEmpty() || state.currentMessage != null);
+    }
+
+    public static void clearMessages(EntityPlayer player) {
+        PlayerTypewriterState state = states.get(player.getUniqueID());
+        if (state != null) {
+            state.queue.clear();
+            state.currentMessage = null;
+            state.phase = Phase.IDLE;
+        }
+    }
+
+    public static void tick(EntityPlayer player) {
+        if (player.world.isRemote) return;
+
+        PlayerTypewriterState state = states.get(player.getUniqueID());
+        if (state == null) return;
+
+        state.tickCount++;
+
+        switch (state.phase) {
+            case IDLE:
+                advanceQueue(state);
+                break;
+
+            case WAITING_DELAY:
+                state.delayTimer--;
+                if (state.delayTimer <= 0) {
+                    state.phase = Phase.APPEAR;
+                    state.tickCount = 0;
+                }
+                break;
+
+            case APPEAR:
+                if (state.tickCount >= APPEAR_TICKS) {
+                    state.phase = Phase.TYPING;
+                    state.tickCount = 0;
+                    state.charIndex = 0;
+                }
+                break;
+
+            case TYPING:
+                state.charIndex += CHARS_PER_TICK;
+                if (state.charIndex >= state.currentMessage.text.length()) {
+                    state.charIndex = state.currentMessage.text.length();
+                    state.phase = Phase.SHOWING;
+                    state.tickCount = 0;
+                }
+                sendPartialMessage(player, state);
+                break;
+
+            case SHOWING:
+                sendPartialMessage(player, state);
+                if (state.tickCount >= SHOW_TICKS) {
+                    state.phase = Phase.DISAPPEAR;
+                    state.tickCount = 0;
+                }
+                break;
+
+            case DISAPPEAR:
+                if (state.tickCount >= DISAPPEAR_TICKS) {
+                    state.currentMessage = null;
+                    state.phase = Phase.IDLE;
+                    state.tickCount = 0;
+                } else {
+                    sendPartialMessage(player, state);
+                }
+                break;
+        }
+    }
+
+    private static void advanceQueue(PlayerTypewriterState state) {
+        if (state.queue.isEmpty()) return;
+
+        TypewriterMessage next = state.queue.peek();
+        if (next.delayBefore > 0) {
+            next.delayBefore--;
+            return;
+        }
+        state.queue.poll();
+        state.currentMessage = next;
+        state.phase = Phase.APPEAR;
+        state.tickCount = 0;
+        state.charIndex = 0;
+    }
+
+    private static void sendPartialMessage(EntityPlayer player, PlayerTypewriterState state) {
+        if (state.currentMessage == null) return;
+
+        String full = state.currentMessage.text;
+        int len = Math.min(state.charIndex, full.length());
+
+        if (state.phase == Phase.DISAPPEAR) {
+            int fade = DISAPPEAR_TICKS - state.tickCount;
+            len = (int) ((float) len * ((float) fade / DISAPPEAR_TICKS));
+        }
+
+        String displayed = full.substring(0, Math.max(0, len));
+
+        TextComponentString component = new TextComponentString(
+            TextFormatting.GOLD + "\u2726 " + TextFormatting.WHITE + displayed + TextFormatting.RESET
+        );
+        player.sendStatusMessage(component, true);
+    }
+
+    public static void despawnWhenReady(EntityPlayer player) {
+        PlayerTypewriterState state = states.get(player.getUniqueID());
+        if (state != null) {
+            state.despawnWhenReady = true;
+        }
+    }
+
+    public static boolean shouldDespawn(EntityPlayer player) {
+        PlayerTypewriterState state = states.get(player.getUniqueID());
+        return state != null && state.despawnWhenReady && state.queue.isEmpty() && state.currentMessage == null;
+    }
+
+    public static void removePlayer(EntityPlayer player) {
+        states.remove(player.getUniqueID());
+    }
+
+    private static class PlayerTypewriterState {
+        final Queue<TypewriterMessage> queue = new LinkedList<>();
+        TypewriterMessage currentMessage;
+        Phase phase = Phase.IDLE;
+        int tickCount = 0;
+        int charIndex = 0;
+        boolean despawnWhenReady = false;
+    }
+
+    public static class TypewriterMessage {
+        public final String text;
+        public int delayBefore;
+        public final int delayAfter;
+
+        public TypewriterMessage(String text, int delayBefore, int delayAfter) {
+            this.text = text;
+            this.delayBefore = delayBefore;
+            this.delayAfter = delayAfter;
+        }
+    }
+
+    public enum Phase {
+        IDLE, WAITING_DELAY, APPEAR, TYPING, SHOWING, DISAPPEAR
+    }
+}

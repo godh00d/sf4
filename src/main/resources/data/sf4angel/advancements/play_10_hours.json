@@ -1,0 +1,16 @@
+{
+  "display": {
+    "icon": {"item": "minecraft:clock"},
+    "title": "advancements.sf4angel.play_10_hours.title",
+    "description": "advancements.sf4angel.play_10_hours.desc",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "sf4angel:root",
+  "criteria": {
+    "impossible": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

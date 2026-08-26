@@ -1,0 +1,17 @@
+{
+  "display": {
+    "icon": {"item": "minecraft:nether_brick"},
+    "title": "advancements.sf4angel.nether_gateway.title",
+    "description": "advancements.sf4angel.nether_gateway.desc",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "sf4angel:diamond_find",
+  "criteria": {
+    "entered_nether": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {"to": "minecraft:the_nether"}
+    }
+  }
+}

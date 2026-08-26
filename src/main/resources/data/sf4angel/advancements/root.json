@@ -1,0 +1,16 @@
+{
+  "display": {
+    "icon": {"item": "minecraft:nether_star"},
+    "title": "advancements.sf4angel.root.title",
+    "description": "advancements.sf4angel.root.desc",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "background": "minecraft:textures/blocks/end_stone.png"
+  },
+  "criteria": {
+    "impossible": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

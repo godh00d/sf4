@@ -1,0 +1,17 @@
+{
+  "display": {
+    "icon": {"item": "minecraft:iron_ingot"},
+    "title": "advancements.sf4angel.iron_age.title",
+    "description": "advancements.sf4angel.iron_age.desc",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "sf4angel:cobble_gen",
+  "criteria": {
+    "got_iron": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {"items": [{"items": ["minecraft:iron_ingot"]}]}
+    }
+  }
+}

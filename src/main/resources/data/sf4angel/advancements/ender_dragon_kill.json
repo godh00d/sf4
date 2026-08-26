@@ -1,0 +1,17 @@
+{
+  "display": {
+    "icon": {"item": "minecraft:dragon_breath"},
+    "title": "advancements.sf4angel.ender_dragon_kill.title",
+    "description": "advancements.sf4angel.ender_dragon_kill.desc",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "sf4angel:nether_gateway",
+  "criteria": {
+    "killed_dragon": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {"entity": [{"type": "minecraft:ender_dragon"}]}
+    }
+  }
+}

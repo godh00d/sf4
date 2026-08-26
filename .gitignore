@@ -2,6 +2,8 @@
 .gradle/
 build/
 out/
+eclipse/
+run/
 
 # IDE
 .idea/
@@ -17,9 +19,7 @@ Thumbs.db
 # Logs
 *.log
 
-# Fabric
-run/
-*.mapping
-
-# Local config
-gradle.properties.local
+# Forge
+*.map
+*.csv
+src/main/java/META-INF/

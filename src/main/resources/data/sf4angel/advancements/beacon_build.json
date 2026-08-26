@@ -1,0 +1,17 @@
+{
+  "display": {
+    "icon": {"item": "minecraft:beacon"},
+    "title": "advancements.sf4angel.beacon_build.title",
+    "description": "advancements.sf4angel.beacon_build.desc",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "sf4angel:wither_kill",
+  "criteria": {
+    "placed_beacon": {
+      "trigger": "minecraft:placed_block",
+      "conditions": {"block": "minecraft:beacon"}
+    }
+  }
+}

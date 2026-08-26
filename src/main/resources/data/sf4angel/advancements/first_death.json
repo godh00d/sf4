@@ -1,0 +1,16 @@
+{
+  "display": {
+    "icon": {"item": "minecraft:skull"},
+    "title": "advancements.sf4angel.first_death.title",
+    "description": "advancements.sf4angel.first_death.desc",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "sf4angel:root",
+  "criteria": {
+    "died": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
