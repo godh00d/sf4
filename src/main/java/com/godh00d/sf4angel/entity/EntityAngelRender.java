@@ -7,7 +7,6 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.opengl.GL11;
@@ -19,6 +18,11 @@ public class EntityAngelRender extends Render<EntityAngel> {
     private static final ResourceLocation TEXTURE = new ResourceLocation("sf4angel", "textures/entity/angel.png");
     private static final Random RANDOM = new Random();
 
+    private static final float CUBE_SIZE = 0.7F;
+    private static final float HALO_Y = 0.55F;
+    private static final float HALO_SIZE = 0.55F;
+    private static final int HALO_SEGMENTS = 32;
+
     public EntityAngelRender(RenderManager renderManager) {
         super(renderManager);
         this.shadowOpaque = 0.0F;
@@ -27,80 +31,98 @@ public class EntityAngelRender extends Render<EntityAngel> {
     @Override
     public void doRender(EntityAngel angel, double x, double y, double z, float entityYaw, float partialTicks) {
         GlStateManager.pushMatrix();
-        GlStateManager.translate(x, y + 0.5, z);
+        GlStateManager.translate(x, y, z);
 
         float scale = angel.getRenderScale();
         float spin = angel.getRenderSpin();
+        int animType = angel.getAnimationType();
+        int state = angel.getVisualState();
 
+        // DESCEND: slide down from above; ASCEND: slide up
+        float yOffset = 0.5F;
+        if (state == EntityAngel.STATE_SPAWNING && animType == EntityAngel.ANIM_DESCEND) {
+            float progress = (float) angel.getStateTimer() / 30.0F;
+            yOffset += (1.0F - progress) * 3.0F;
+        }
+        if (state == EntityAngel.STATE_DESPAWNING && animType == EntityAngel.ANIM_ASCEND) {
+            float progress = (float) angel.getStateTimer() / 30.0F;
+            yOffset += progress * 3.0F;
+        }
+
+        GlStateManager.translate(0, yOffset, 0);
         GlStateManager.scale(scale, scale, scale);
         GlStateManager.rotate(spin, 0, 1, 0);
+
+        float alpha = getAlpha(angel);
+
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         GlStateManager.disableCull();
 
-        renderBody(angel);
-        renderHalo(angel);
-        spawnParticles(angel);
+        renderBody(angel, alpha);
+        renderHalo(angel, alpha);
+        renderBeams(angel, alpha);
 
         GlStateManager.enableCull();
         GlStateManager.disableBlend();
         GlStateManager.popMatrix();
+
+        spawnParticles(angel);
     }
 
-    private void renderBody(EntityAngel angel) {
+    private float getAlpha(EntityAngel angel) {
+        int state = angel.getVisualState();
+        if (state == EntityAngel.STATE_SPAWNING) {
+            return 0.1F + angel.getRenderScale() * 0.8F;
+        }
+        if (state == EntityAngel.STATE_DESPAWNING) {
+            return angel.getRenderScale();
+        }
+        return 0.9F;
+    }
+
+    private void renderBody(EntityAngel angel, float alpha) {
         float timer = (float) angel.ticksExisted + Minecraft.getMinecraft().getRenderPartialTicks();
-        float bob = MathHelper.sin(timer * 0.05F) * 0.1F;
+        float bob = MathHelper.sin(timer * 0.05F) * 0.08F;
 
         GlStateManager.translate(0, bob, 0);
 
-        Tessellator tess = Tessellator.getInstance();
-        BufferBuilder buf = tess.getBuffer();
+        this.bindTexture(TEXTURE);
+        GlStateManager.color(1.0F, 1.0F, 1.0F, alpha);
 
-        float r = 1.0F, g = 1.0F, b = 1.0F, a = 0.9F;
-
-        int state = angel.getVisualState();
-        if (state == EntityAngel.STATE_SPAWNING || state == EntityAngel.STATE_DESPAWNING) {
-            a = 0.5F + angel.getRenderScale() * 0.4F;
-        }
-
-        GlStateManager.color(r, g, b, a);
-
-        float s = 0.7F;
+        float s = CUBE_SIZE;
         float hs = s / 2.0F;
 
+        Tessellator tess = Tessellator.getInstance();
+        BufferBuilder buf = tess.getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 
-        // Front face
+        // Front
         buf.pos(-hs, -hs, hs).tex(0, 0).endVertex();
         buf.pos(hs, -hs, hs).tex(1, 0).endVertex();
         buf.pos(hs, hs, hs).tex(1, 1).endVertex();
         buf.pos(-hs, hs, hs).tex(0, 1).endVertex();
-
-        // Back face
+        // Back
         buf.pos(hs, -hs, -hs).tex(0, 0).endVertex();
         buf.pos(-hs, -hs, -hs).tex(1, 0).endVertex();
         buf.pos(-hs, hs, -hs).tex(1, 1).endVertex();
         buf.pos(hs, hs, -hs).tex(0, 1).endVertex();
-
-        // Left face
+        // Left
         buf.pos(-hs, -hs, -hs).tex(0, 0).endVertex();
         buf.pos(-hs, -hs, hs).tex(1, 0).endVertex();
         buf.pos(-hs, hs, hs).tex(1, 1).endVertex();
         buf.pos(-hs, hs, -hs).tex(0, 1).endVertex();
-
-        // Right face
+        // Right
         buf.pos(hs, -hs, hs).tex(0, 0).endVertex();
         buf.pos(hs, -hs, -hs).tex(1, 0).endVertex();
         buf.pos(hs, hs, -hs).tex(1, 1).endVertex();
         buf.pos(hs, hs, hs).tex(0, 1).endVertex();
-
-        // Top face
+        // Top
         buf.pos(-hs, hs, hs).tex(0, 0).endVertex();
         buf.pos(hs, hs, hs).tex(1, 0).endVertex();
         buf.pos(hs, hs, -hs).tex(1, 1).endVertex();
         buf.pos(-hs, hs, -hs).tex(0, 1).endVertex();
-
-        // Bottom face
+        // Bottom
         buf.pos(-hs, -hs, -hs).tex(0, 0).endVertex();
         buf.pos(hs, -hs, -hs).tex(1, 0).endVertex();
         buf.pos(hs, -hs, hs).tex(1, 1).endVertex();
@@ -111,43 +133,86 @@ public class EntityAngelRender extends Render<EntityAngel> {
         GlStateManager.translate(0, -bob, 0);
     }
 
-    private void renderHalo(EntityAngel angel) {
+    private void renderHalo(EntityAngel angel, float alpha) {
         float haloAngle = angel.getHaloAngle();
         float timer = (float) angel.ticksExisted + Minecraft.getMinecraft().getRenderPartialTicks();
-        float bob = MathHelper.sin(timer * 0.05F) * 0.1F;
+        float bob = MathHelper.sin(timer * 0.05F) * 0.08F;
 
-        GlStateManager.translate(0, bob + 0.45F, 0);
-        GlStateManager.rotate(90, 1, 0, 0);
-        GlStateManager.rotate((float) Math.toDegrees(haloAngle), 0, 0, 1);
+        GlStateManager.translate(0, bob + HALO_Y, 0);
+        GlStateManager.rotate((float) Math.toDegrees(haloAngle), 0, 1, 0);
 
         GlStateManager.disableTexture2D();
-        GlStateManager.color(1.0F, 0.85F, 0.0F, 0.9F);
+        GlStateManager.color(1.0F, 0.85F, 0.0F, alpha);
 
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
+
+        // Square halo: 4 edges
+        float hs = HALO_SIZE;
+        float y = 0.0F;
+
         buf.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION);
-
-        float radius = 0.45F;
-        int segments = 32;
-
-        for (int i = 0; i <= segments; i++) {
-            float angle = (float) (2.0 * Math.PI * i / segments);
-            float hx = MathHelper.cos(angle) * radius;
-            float hy = MathHelper.sin(angle) * radius;
-            buf.pos(hx, hy, 0).endVertex();
-        }
-
+        // Start at corner 0, go around square, close loop
+        buf.pos(-hs, y, -hs).endVertex();
+        buf.pos(hs, y, -hs).endVertex();
+        buf.pos(hs, y, hs).endVertex();
+        buf.pos(-hs, y, hs).endVertex();
+        buf.pos(-hs, y, -hs).endVertex();
         tess.draw();
 
-        // Second ring for thickness
+        // Second pass slightly offset for thickness
         buf.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION);
-        float radius2 = 0.42F;
-        for (int i = 0; i <= segments; i++) {
-            float angle = (float) (2.0 * Math.PI * i / segments);
-            float hx = MathHelper.cos(angle) * radius2;
-            float hy = MathHelper.sin(angle) * radius2;
-            buf.pos(hx, hy, 0).endVertex();
-        }
+        float y2 = 0.02F;
+        buf.pos(-hs, y2, -hs).endVertex();
+        buf.pos(hs, y2, -hs).endVertex();
+        buf.pos(hs, y2, hs).endVertex();
+        buf.pos(-hs, y2, hs).endVertex();
+        buf.pos(-hs, y2, -hs).endVertex();
+        tess.draw();
+
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.enableTexture2D();
+    }
+
+    private void renderBeams(EntityAngel angel, float alpha) {
+        float haloAngle = angel.getHaloAngle();
+        float timer = (float) angel.ticksExisted + Minecraft.getMinecraft().getRenderPartialTicks();
+        float bob = MathHelper.sin(timer * 0.05F) * 0.08F;
+
+        GlStateManager.translate(0, bob, 0);
+        GlStateManager.rotate((float) Math.toDegrees(haloAngle), 0, 1, 0);
+
+        GlStateManager.disableTexture2D();
+        GlStateManager.color(1.0F, 0.85F, 0.0F, alpha * 0.7F);
+
+        float hs = HALO_SIZE;
+        float beamTop = HALO_Y;
+        float beamBottom = CUBE_SIZE / 2.0F + 0.05F;
+
+        Tessellator tess = Tessellator.getInstance();
+        BufferBuilder buf = tess.getBuffer();
+        buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
+
+        // 4 beams: one from each corner of the square halo down to cube top
+        // Corner positions match the halo square corners
+        // [-hs, beamTop, -hs] -> [-hs*0.4, beamBottom, -hs*0.4]
+        // [ hs, beamTop, -hs] -> [ hs*0.4, beamBottom, -hs*0.4]
+        // [ hs, beamTop,  hs] -> [ hs*0.4, beamBottom,  hs*0.4]
+        // [-hs, beamTop,  hs] -> [-hs*0.4, beamBottom,  hs*0.4]
+        float inset = 0.4F;
+
+        buf.pos(-hs, beamTop, -hs).endVertex();
+        buf.pos(-hs * inset, beamBottom, -hs * inset).endVertex();
+
+        buf.pos(hs, beamTop, -hs).endVertex();
+        buf.pos(hs * inset, beamBottom, -hs * inset).endVertex();
+
+        buf.pos(hs, beamTop, hs).endVertex();
+        buf.pos(hs * inset, beamBottom, hs * inset).endVertex();
+
+        buf.pos(-hs, beamTop, hs).endVertex();
+        buf.pos(-hs * inset, beamBottom, hs * inset).endVertex();
+
         tess.draw();
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
