@@ -9,10 +9,10 @@ import java.util.*;
 
 public class TypewriterHandler {
 
-    private static final int CHARS_PER_TICK = 3;
-    private static final int APPEAR_TICKS = 4;
-    private static final int SHOW_TICKS = 40;
-    private static final int DISAPPEAR_TICKS = 4;
+    private static final int CHARS_PER_TICK = 1;
+    private static final int APPEAR_TICKS = 6;
+    private static final int SHOW_TICKS = 80;
+    private static final int DISAPPEAR_TICKS = 6;
 
     private static final Map<UUID, PlayerTypewriterState> states = new HashMap<>();
 

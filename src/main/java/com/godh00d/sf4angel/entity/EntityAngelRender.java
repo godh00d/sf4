@@ -134,9 +134,11 @@ public class EntityAngelRender extends Render<EntityAngel> {
     }
 
     private void renderHalo(EntityAngel angel, float alpha) {
-        float haloAngle = angel.getHaloAngle();
+        GlStateManager.pushMatrix();
+
         float timer = (float) angel.ticksExisted + Minecraft.getMinecraft().getRenderPartialTicks();
         float bob = MathHelper.sin(timer * 0.05F) * 0.08F;
+        float haloAngle = angel.getHaloAngle();
 
         GlStateManager.translate(0, bob + HALO_Y, 0);
         GlStateManager.rotate((float) Math.toDegrees(haloAngle), 0, 1, 0);
@@ -147,37 +149,35 @@ public class EntityAngelRender extends Render<EntityAngel> {
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
 
-        // Square halo: 4 edges
         float hs = HALO_SIZE;
-        float y = 0.0F;
 
         buf.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION);
-        // Start at corner 0, go around square, close loop
-        buf.pos(-hs, y, -hs).endVertex();
-        buf.pos(hs, y, -hs).endVertex();
-        buf.pos(hs, y, hs).endVertex();
-        buf.pos(-hs, y, hs).endVertex();
-        buf.pos(-hs, y, -hs).endVertex();
+        buf.pos(-hs, 0.0F, -hs).endVertex();
+        buf.pos(hs, 0.0F, -hs).endVertex();
+        buf.pos(hs, 0.0F, hs).endVertex();
+        buf.pos(-hs, 0.0F, hs).endVertex();
+        buf.pos(-hs, 0.0F, -hs).endVertex();
         tess.draw();
 
-        // Second pass slightly offset for thickness
         buf.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION);
-        float y2 = 0.02F;
-        buf.pos(-hs, y2, -hs).endVertex();
-        buf.pos(hs, y2, -hs).endVertex();
-        buf.pos(hs, y2, hs).endVertex();
-        buf.pos(-hs, y2, hs).endVertex();
-        buf.pos(-hs, y2, -hs).endVertex();
+        buf.pos(-hs, 0.02F, -hs).endVertex();
+        buf.pos(hs, 0.02F, -hs).endVertex();
+        buf.pos(hs, 0.02F, hs).endVertex();
+        buf.pos(-hs, 0.02F, hs).endVertex();
+        buf.pos(-hs, 0.02F, -hs).endVertex();
         tess.draw();
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableTexture2D();
+        GlStateManager.popMatrix();
     }
 
     private void renderBeams(EntityAngel angel, float alpha) {
-        float haloAngle = angel.getHaloAngle();
+        GlStateManager.pushMatrix();
+
         float timer = (float) angel.ticksExisted + Minecraft.getMinecraft().getRenderPartialTicks();
         float bob = MathHelper.sin(timer * 0.05F) * 0.08F;
+        float haloAngle = angel.getHaloAngle();
 
         GlStateManager.translate(0, bob, 0);
         GlStateManager.rotate((float) Math.toDegrees(haloAngle), 0, 1, 0);
@@ -188,18 +188,11 @@ public class EntityAngelRender extends Render<EntityAngel> {
         float hs = HALO_SIZE;
         float beamTop = HALO_Y;
         float beamBottom = CUBE_SIZE / 2.0F + 0.05F;
+        float inset = 0.4F;
 
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
         buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
-
-        // 4 beams: one from each corner of the square halo down to cube top
-        // Corner positions match the halo square corners
-        // [-hs, beamTop, -hs] -> [-hs*0.4, beamBottom, -hs*0.4]
-        // [ hs, beamTop, -hs] -> [ hs*0.4, beamBottom, -hs*0.4]
-        // [ hs, beamTop,  hs] -> [ hs*0.4, beamBottom,  hs*0.4]
-        // [-hs, beamTop,  hs] -> [-hs*0.4, beamBottom,  hs*0.4]
-        float inset = 0.4F;
 
         buf.pos(-hs, beamTop, -hs).endVertex();
         buf.pos(-hs * inset, beamBottom, -hs * inset).endVertex();
@@ -217,6 +210,7 @@ public class EntityAngelRender extends Render<EntityAngel> {
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableTexture2D();
+        GlStateManager.popMatrix();
     }
 
     private void spawnParticles(EntityAngel angel) {

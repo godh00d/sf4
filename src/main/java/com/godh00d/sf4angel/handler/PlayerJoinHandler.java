@@ -6,6 +6,7 @@ import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -62,16 +63,21 @@ public class PlayerJoinHandler {
         World world = player.world;
         EntityAngel angel = new EntityAngel(world);
         angel.setOwnerId(player.getUniqueID());
-        angel.setPosition(player.posX, player.posY + 5, player.posZ);
+        Vec3d lookVec = player.getLookVec();
+        angel.setPosition(
+            player.posX + lookVec.x * 3,
+            player.posY + 3,
+            player.posZ + lookVec.z * 3
+        );
         world.spawnEntity(angel);
 
         String[] intro = AngelPersonality.getFirstLoginIntro();
-        String goalHint = AngelOracle.getGoalAndHint(player);
+        String nextGoal = AngelOracle.getNextGoal(player);
 
         for (int i = 0; i < intro.length; i++) {
             String line = intro[i];
-            if (line.contains("{GOAL_AND_HINT}")) {
-                line = goalHint;
+            if (line.contains("{NEXT_GOAL}")) {
+                line = nextGoal != null ? "Your first task: " + nextGoal : "Your first task: Get dirt. Punch a tree and work toward dirt.";
             }
             int delay = (i == 0) ? 0 : 80;
             TypewriterHandler.queueMessage(player, line, delay, 0);
@@ -84,13 +90,18 @@ public class PlayerJoinHandler {
         World world = player.world;
         EntityAngel angel = new EntityAngel(world);
         angel.setOwnerId(player.getUniqueID());
-        angel.setPosition(player.posX, player.posY + 5, player.posZ);
+        Vec3d lookVec = player.getLookVec();
+        angel.setPosition(
+            player.posX + lookVec.x * 3,
+            player.posY + 3,
+            player.posZ + lookVec.z * 3
+        );
         world.spawnEntity(angel);
 
+        String nextGoal = AngelOracle.getNextGoal(player);
         String welcomeBack = "Welcome back. The sky missed you.";
-        String stageHint = AngelOracle.getHintForCurrentStage(player);
-        if (stageHint != null && !stageHint.isEmpty()) {
-            welcomeBack += " Current goal: " + stageHint;
+        if (nextGoal != null && !nextGoal.isEmpty()) {
+            welcomeBack += " Next goal: " + nextGoal;
         }
 
         TypewriterHandler.queueMessage(player, welcomeBack, 0, 0);
@@ -105,9 +116,9 @@ public class PlayerJoinHandler {
         world.spawnEntity(angel);
 
         String deathLine = AngelPersonality.getRandomDeathLine();
-        String stageHint = AngelOracle.getHintForCurrentStage(player);
-        if (stageHint != null && !stageHint.isEmpty()) {
-            deathLine += " Current goal: " + stageHint;
+        String nextGoal = AngelOracle.getNextGoal(player);
+        if (nextGoal != null && !nextGoal.isEmpty()) {
+            deathLine += " Next goal: " + nextGoal;
         }
 
         TypewriterHandler.queueMessage(player, deathLine, 0, 0);

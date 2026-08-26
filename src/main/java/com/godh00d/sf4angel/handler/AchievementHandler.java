@@ -6,22 +6,33 @@ import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementManager;
+import net.minecraft.advancements.PlayerAdvancements;
 import net.minecraftforge.event.entity.player.AdvancementEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
 @Mod.EventBusSubscriber(modid = "sf4angel")
 public class AchievementHandler {
 
+    private static final Logger LOGGER = LogManager.getLogger("sf4angel");
     private static final Map<UUID, Integer> angelAppearanceCount = new HashMap<>();
     private static final Map<UUID, Long> joinTimes = new HashMap<>();
+    private static final Map<UUID, Set<String>> completedGoals = new HashMap<>();
+    private static final Map<UUID, Integer> scanTimers = new HashMap<>();
 
     private static final LinkedHashMap<String, String> PROGRESSION_PATH = new LinkedHashMap<>();
 
@@ -279,6 +290,7 @@ public class AchievementHandler {
 
     public static void onPlayerJoin(UUID playerId) {
         joinTimes.put(playerId, System.currentTimeMillis());
+        completedGoals.putIfAbsent(playerId, new HashSet<>());
     }
 
     public static int getAngelAppearances(EntityPlayer player) {
@@ -313,6 +325,57 @@ public class AchievementHandler {
         return result.toString();
     }
 
+    public static void onAdvancementCompleted(EntityPlayerMP player, String advancementId) {
+        Set<String> completed = completedGoals.computeIfAbsent(player.getUniqueID(), k -> new HashSet<>());
+        if (completed.contains(advancementId)) return;
+        completed.add(advancementId);
+
+        angelAppearanceCount.merge(player.getUniqueID(), 1, Integer::sum);
+        int count = getAngelAppearances(player);
+
+        LOGGER.info("Advancement completed for {}: {}", player.getName(), advancementId);
+
+        String advTitle = advancementId.substring(advancementId.lastIndexOf('/') + 1).replace('_', ' ');
+        advTitle = capitalizeWords(advTitle);
+
+        String greeting = AngelPersonality.getAdvancementGreeting(advTitle);
+        TypewriterHandler.queueMessage(player, greeting, 0, 0);
+
+        String nextAdv = getNextAdvancement(advancementId);
+        if (nextAdv != null) {
+            TypewriterHandler.queueMessage(player, "Next goal: " + nextAdv, 80, 0);
+        }
+
+        AngelOracle.checkInventoryAndAdvance(player);
+
+        if (count >= 50) {
+            TypewriterHandler.queueMessage(player, "The angel smiles upon you, faithful companion.", 120, 0);
+        }
+
+        String farewell = AngelPersonality.getRandomDepartureLine();
+        TypewriterHandler.queueMessage(player, farewell, 160, 0);
+
+        TypewriterHandler.despawnWhenReady(player);
+
+        World world = player.world;
+        AxisAlignedBB searchBox = new AxisAlignedBB(
+            player.posX - 15, player.posY - 5, player.posZ - 15,
+            player.posX + 15, player.posY + 15, player.posZ + 15
+        );
+        List<EntityAngel> nearbyAngels = world.getEntitiesWithinAABB(EntityAngel.class, searchBox);
+        if (nearbyAngels.isEmpty()) {
+            EntityAngel angel = new EntityAngel(world);
+            angel.setOwnerId(player.getUniqueID());
+            Vec3d lookVec = player.getLookVec();
+            angel.setPosition(
+                player.posX + lookVec.x * 3,
+                player.posY + 3,
+                player.posZ + lookVec.z * 3
+            );
+            world.spawnEntity(angel);
+        }
+    }
+
     @SubscribeEvent
     public static void onAdvancement(AdvancementEvent event) {
         EntityPlayer player = event.getEntityPlayer();
@@ -321,69 +384,28 @@ public class AchievementHandler {
         Advancement advancement = event.getAdvancement();
         if (advancement == null || advancement.getId() == null) return;
 
+        String advId = advancement.getId().toString();
         String advName = advancement.getId().getResourcePath();
-        String advNamespace = advancement.getId().getResourceDomain();
         if (advName.contains("root")) return;
 
-        angelAppearanceCount.merge(player.getUniqueID(), 1, Integer::sum);
-
         EntityPlayerMP mp = (EntityPlayerMP) player;
-        World world = player.world;
-
-        AxisAlignedBB searchBox = new AxisAlignedBB(
-            player.posX - 10, player.posY - 5, player.posZ - 10,
-            player.posX + 10, player.posY + 10, player.posZ + 10
-        );
-
-        List<EntityAngel> nearbyAngels = world.getEntitiesWithinAABB(EntityAngel.class, searchBox);
-
-        if (!nearbyAngels.isEmpty()) {
-            sendAchievementMessage(mp, advancement);
-        } else {
-            spawnAngelForAchievement(mp, advancement);
-        }
+        onAdvancementCompleted(mp, advId);
     }
 
-    private static void spawnAngelForAchievement(EntityPlayerMP player, Advancement advancement) {
-        World world = player.world;
-        EntityAngel angel = new EntityAngel(world);
-        angel.setOwnerId(player.getUniqueID());
-        angel.setPosition(player.posX, player.posY + 5, player.posZ);
-        world.spawnEntity(angel);
+    public static void checkAdvancementProgress(EntityPlayerMP player) {
+        try {
+            PlayerAdvancements advancements = player.getAdvancements();
+            WorldServer ws = (WorldServer) player.world;
+            AdvancementManager manager = ws.getAdvancementManager();
 
-        sendAchievementMessage(player, advancement);
-    }
-
-    private static void sendAchievementMessage(EntityPlayerMP player, Advancement advancement) {
-        String advId = advancement.getId().toString();
-
-        String advTitle = advancement.getDisplay() != null
-            ? advancement.getDisplay().getTitle().getFormattedText()
-            : advancement.getId().getResourcePath();
-
-        String greeting = AngelPersonality.getAdvancementGreeting(advTitle);
-        TypewriterHandler.queueMessage(player, greeting, 0, 0);
-
-        String nextAdv = getNextAdvancement(advId);
-        if (nextAdv != null) {
-            TypewriterHandler.queueMessage(player, "Next goal: " + nextAdv, 60, 0);
+            for (String advId : PROGRESSION_PATH.keySet()) {
+                ResourceLocation res = new ResourceLocation(advId);
+                Advancement advancement = manager.getAdvancement(res);
+                if (advancement != null && advancements.getProgress(advancement).isDone()) {
+                    onAdvancementCompleted(player, advId);
+                }
+            }
+        } catch (Exception e) {
         }
-
-        String stageHint = AngelOracle.getHintForCurrentStage(player);
-        if (stageHint != null && !stageHint.isEmpty()) {
-            TypewriterHandler.queueMessage(player, "Hint: " + stageHint, 100, 0);
-        }
-
-        AngelOracle.checkInventoryAndAdvance(player);
-
-        int appearances = getAngelAppearances(player);
-        if (appearances >= 50) {
-            TypewriterHandler.queueMessage(player, "The angel smiles upon you, faithful companion.", 150, 0);
-        }
-
-        String farewell = AngelPersonality.getRandomDepartureLine();
-        TypewriterHandler.queueMessage(player, farewell, 200, 0);
-
-        TypewriterHandler.despawnWhenReady(player);
     }
 }

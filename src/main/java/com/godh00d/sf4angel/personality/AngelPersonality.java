@@ -76,7 +76,7 @@ public class AngelPersonality {
     private static final String[] FIRST_LOGIN_INTRO = {
         "The Angel descends...",
         "I am your guide through the sky.",
-        "{GOAL_AND_HINT}",
+        "{NEXT_GOAL}",
         "Complete achievements and I will show you what to do next."
     };
 

@@ -24,8 +24,10 @@ public class TickHandler {
     private static final Random RANDOM = new Random();
     private static final Map<UUID, Integer> idleTimers = new HashMap<>();
     private static final Map<String, Integer> healthWarnTimers = new HashMap<>();
+    private static final Map<UUID, Integer> advScanTimers = new HashMap<>();
     private static final int MIN_IDLE_TICKS = 6000;
     private static final int MAX_IDLE_TICKS = 12000;
+    private static final int ADV_SCAN_INTERVAL = 200;
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
@@ -44,6 +46,8 @@ public class TickHandler {
         handleAngelFollow(mp);
 
         handleHealthWarning(mp);
+
+        handleAdvancementScan(mp);
     }
 
     private static void handleDespawn(EntityPlayerMP player) {
@@ -102,9 +106,9 @@ public class TickHandler {
                     angel.motionY = 0;
                     angel.motionZ = 0;
                 } else {
-                    double targetX = player.posX - lookVec.x * 3;
-                    double targetY = player.posY + 4;
-                    double targetZ = player.posZ - lookVec.z * 3;
+                    double targetX = player.posX + lookVec.x * 3;
+                    double targetY = player.posY + 3;
+                    double targetZ = player.posZ + lookVec.z * 3;
 
                     double dx = targetX - angel.posX;
                     double dy = targetY - angel.posY;
@@ -152,5 +156,15 @@ public class TickHandler {
                 }
             }
         }
+    }
+
+    private static void handleAdvancementScan(EntityPlayerMP player) {
+        UUID id = player.getUniqueID();
+        int timer = advScanTimers.getOrDefault(id, 0) + 1;
+        if (timer >= ADV_SCAN_INTERVAL) {
+            AchievementHandler.checkAdvancementProgress(player);
+            timer = 0;
+        }
+        advScanTimers.put(id, timer);
     }
 }
