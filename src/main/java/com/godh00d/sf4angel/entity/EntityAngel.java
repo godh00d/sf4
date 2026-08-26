@@ -165,6 +165,7 @@ public class EntityAngel extends EntityCreature {
 
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount) {
+        if (world.isRemote) return false;
         if (source == DamageSource.OUT_OF_WORLD) return false;
         if (source == DamageSource.IN_WALL) return false;
         if (source.isProjectile()) return false;
@@ -173,14 +174,16 @@ public class EntityAngel extends EntityCreature {
             EntityPlayer attacker = (EntityPlayer) source.getTrueSource();
             attacker.attackEntityFrom(DamageSource.causeMobDamage(this), 4.0F);
 
-            WorldServer ws = (WorldServer) attacker.world;
-            ws.addScheduledTask(() -> {
-                attacker.world.addWeatherEffect(
-                    new net.minecraft.entity.effect.EntityLightningBolt(
-                        attacker.world, attacker.posX, attacker.posY, attacker.posZ, false
-                    )
-                );
-            });
+            if (attacker.world instanceof WorldServer) {
+                WorldServer ws = (WorldServer) attacker.world;
+                ws.addScheduledTask(() -> {
+                    attacker.world.addWeatherEffect(
+                        new net.minecraft.entity.effect.EntityLightningBolt(
+                            attacker.world, attacker.posX, attacker.posY, attacker.posZ, false
+                        )
+                    );
+                });
+            }
 
             if (attacker instanceof EntityPlayerMP) {
                 String response = AngelPersonality.getRandomAttackResponse();
@@ -338,7 +341,7 @@ public class EntityAngel extends EntityCreature {
         if (anim == ANIM_SPIN_GROW || anim == ANIM_SPIN_SHRINK) {
             return tickCounter * 0.2F;
         }
-        return 0.0F;
+        return tickCounter * 0.05F;
     }
 
     // ---- NBT ----

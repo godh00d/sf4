@@ -217,51 +217,51 @@ public class EntityAngelRender extends Render<EntityAngel> {
         if (!angel.world.isRemote) return;
         if (angel.getVisualState() != EntityAngel.STATE_VISIBLE) return;
 
-        int count = RANDOM.nextInt(3);
+        int count = 3 + RANDOM.nextInt(4);
         for (int i = 0; i < count; i++) {
-            double px = angel.posX + (RANDOM.nextDouble() - 0.5) * 2;
-            double py = angel.posY + RANDOM.nextDouble() * 2;
-            double pz = angel.posZ + (RANDOM.nextDouble() - 0.5) * 2;
+            double px = angel.posX + (RANDOM.nextDouble() - 0.5) * 1.2;
+            double py = angel.posY + 0.5 + RANDOM.nextDouble() * 1.5;
+            double pz = angel.posZ + (RANDOM.nextDouble() - 0.5) * 1.2;
 
             int type = RANDOM.nextInt(5);
             switch (type) {
                 case 0:
                     angel.world.spawnParticle(
                         net.minecraft.util.EnumParticleTypes.END_ROD,
-                        px, py, pz, 0, 0.02, 0
+                        px, py, pz, 0, 0.03, 0
                     );
                     break;
                 case 1:
                     angel.world.spawnParticle(
                         net.minecraft.util.EnumParticleTypes.ENCHANTMENT_TABLE,
                         px, py, pz,
-                        (RANDOM.nextDouble() - 0.5) * 0.5,
-                        0.1,
-                        (RANDOM.nextDouble() - 0.5) * 0.5
+                        (RANDOM.nextDouble() - 0.5) * 0.3,
+                        0.05,
+                        (RANDOM.nextDouble() - 0.5) * 0.3
                     );
                     break;
                 case 2:
                     angel.world.spawnParticle(
                         net.minecraft.util.EnumParticleTypes.VILLAGER_HAPPY,
-                        px, py, pz, 0, 0, 0
+                        px, py, pz, 0, 0.02, 0
                     );
                     break;
                 case 3:
                     angel.world.spawnParticle(
                         net.minecraft.util.EnumParticleTypes.CLOUD,
                         px, py, pz,
-                        (RANDOM.nextDouble() - 0.5) * 0.1,
-                        0.05,
-                        (RANDOM.nextDouble() - 0.5) * 0.1
+                        (RANDOM.nextDouble() - 0.5) * 0.05,
+                        0.03,
+                        (RANDOM.nextDouble() - 0.5) * 0.05
                     );
                     break;
                 case 4:
                     angel.world.spawnParticle(
                         net.minecraft.util.EnumParticleTypes.FIREWORKS_SPARK,
                         px, py, pz,
-                        (RANDOM.nextDouble() - 0.5) * 0.3,
-                        0.1,
-                        (RANDOM.nextDouble() - 0.5) * 0.3
+                        (RANDOM.nextDouble() - 0.5) * 0.2,
+                        0.05,
+                        (RANDOM.nextDouble() - 0.5) * 0.2
                     );
                     break;
             }

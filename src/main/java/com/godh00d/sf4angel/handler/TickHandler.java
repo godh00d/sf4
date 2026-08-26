@@ -106,9 +106,9 @@ public class TickHandler {
                     angel.motionY = 0;
                     angel.motionZ = 0;
                 } else {
-                    double targetX = player.posX + lookVec.x * 3;
-                    double targetY = player.posY + 3;
-                    double targetZ = player.posZ + lookVec.z * 3;
+                    double targetX = player.posX + lookVec.x * 5;
+                    double targetY = player.posY + player.getEyeHeight() - 0.5;
+                    double targetZ = player.posZ + lookVec.z * 5;
 
                     double dx = targetX - angel.posX;
                     double dy = targetY - angel.posY;

@@ -35,6 +35,185 @@ public class AchievementHandler {
     private static final Map<UUID, Integer> scanTimers = new HashMap<>();
 
     private static final LinkedHashMap<String, String> PROGRESSION_PATH = new LinkedHashMap<>();
+    private static final Map<String, String> CREATIVE_NAMES = new HashMap<>();
+
+    static {
+        CREATIVE_NAMES.put("sf4angel:basic/log", "The First Branch");
+        CREATIVE_NAMES.put("sf4angel:basic/crafting_table", "The Carpenter's Gift");
+        CREATIVE_NAMES.put("sf4angel:basic/sand", "Whispers of Sand");
+        CREATIVE_NAMES.put("sf4angel:basic/gravel", "The Gravel Path");
+        CREATIVE_NAMES.put("sf4angel:basic/dirt", "The Descent of Dirt");
+        CREATIVE_NAMES.put("sf4angel:basic/petrified_sapling", "Petrified Promise");
+        CREATIVE_NAMES.put("sf4angel:basic/cobblestone", "Stone Eternal");
+        CREATIVE_NAMES.put("sf4angel:basic/sieve", "The Sifter's Truth");
+        CREATIVE_NAMES.put("sf4angel:basic/watering_can", "Rain in a Can");
+        CREATIVE_NAMES.put("sf4angel:basic/tinkers_station", "The Tinker's Dawn");
+        CREATIVE_NAMES.put("sf4angel:basic/furnace", "Fire's Embrace");
+        CREATIVE_NAMES.put("sf4angel:basic/iron", "Iron Will");
+        CREATIVE_NAMES.put("sf4angel:basic/anvil", "The Anvil's Song");
+        CREATIVE_NAMES.put("sf4angel:basic/lava", "Lava's Vein");
+        CREATIVE_NAMES.put("sf4angel:basic/obsidian", "Obsidian Heart");
+        CREATIVE_NAMES.put("sf4angel:basic/diamond", "Diamond Clarity");
+        CREATIVE_NAMES.put("sf4angel:basic/flint_and_steel", "Spark of Creation");
+        CREATIVE_NAMES.put("sf4angel:basic/ender_pearl", "Ender's Tear");
+        CREATIVE_NAMES.put("sf4angel:basic/ender_cake", "The Ender Cake");
+        CREATIVE_NAMES.put("sf4angel:basic/nether_portal", "Gateway to Fire");
+        CREATIVE_NAMES.put("sf4angel:basic/drying_rack", "Sun-Dried Fortune");
+        CREATIVE_NAMES.put("sf4angel:basic/diamond_sapling", "Sapling of Stars");
+        CREATIVE_NAMES.put("sf4angel:basic/soul_vial", "Vessel of Souls");
+        CREATIVE_NAMES.put("sf4angel:basic/mob_head", "Trophy of the Fallen");
+        CREATIVE_NAMES.put("sf4angel:basic/enchanting_table", "The Enchanter's Altar");
+        CREATIVE_NAMES.put("sf4angel:basic/obsidian_spawner", "Obsidian Cradle");
+        CREATIVE_NAMES.put("sf4angel:basic/nether_spawner", "Nether's Cradle");
+        CREATIVE_NAMES.put("sf4angel:basic/tree_router", "The Tree Router");
+        CREATIVE_NAMES.put("sf4angel:basic/pouch", "Pouch of Holding");
+        CREATIVE_NAMES.put("sf4angel:basic/hopper", "The Hopper's Grasp");
+        CREATIVE_NAMES.put("sf4angel:basic/chest", "Chest of Origins");
+        CREATIVE_NAMES.put("sf4angel:farming/bonsai_pot", "Tiny Tree, Grand Vision");
+        CREATIVE_NAMES.put("sf4angel:farming/hopping_bonsai", "The Hopping Grove");
+        CREATIVE_NAMES.put("sf4angel:farming/fertile_soil", "Blessed Earth");
+        CREATIVE_NAMES.put("sf4angel:farming/watering_can", "Rain Caller");
+        CREATIVE_NAMES.put("sf4angel:farming/sprinkler", "Automated Rain");
+        CREATIVE_NAMES.put("sf4angel:farming/animal_seeds", "Seeds of Life");
+        CREATIVE_NAMES.put("sf4angel:farming/chicken_feed", "Feathered Feast");
+        CREATIVE_NAMES.put("sf4angel:farming/market", "The Merchant's Call");
+        CREATIVE_NAMES.put("sf4angel:farming/sky_orchards", "Orchards in the Void");
+        CREATIVE_NAMES.put("sf4angel:farming/farming_complete", "Harvest Lord");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_tool_station", "The Tool Station");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_part_builder", "Part by Part");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_stencil_table", "Stenciled Dreams");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_cast", "Cast in Metal");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_pattern_chest", "Pattern Keeper");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_tool_forge", "Forge of Tools");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_tool_modifier", "Modifying Fate");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_level_up", "Leveling Up");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_unbreakable", "Unbreakable Will");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_mattock", "The Mattock's Might");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_lumber_axe", "Lumberjack's Dream");
+        CREATIVE_NAMES.put("sf4angel:enhancement/tinkers_yoyo", "Yo-Yo Mastery");
+        CREATIVE_NAMES.put("sf4angel:enhancement/construct_armory_station", "Armory Station");
+        CREATIVE_NAMES.put("sf4angel:enhancement/construct_armory_forge", "Forge of Armor");
+        CREATIVE_NAMES.put("sf4angel:enhancement/construct_armory_modifiers", "Armor Modified");
+        CREATIVE_NAMES.put("sf4angel:enhancement/melter", "The Melter's Flame");
+        CREATIVE_NAMES.put("sf4angel:enhancement/alloy_tank", "Alloy Alchemy");
+        CREATIVE_NAMES.put("sf4angel:enhancement/heater", "Heated Resolve");
+        CREATIVE_NAMES.put("sf4angel:enhancement/mekanism_speed", "Speed of Mekanism");
+        CREATIVE_NAMES.put("sf4angel:enhancement/mekanism_energy", "Energy Unleashed");
+        CREATIVE_NAMES.put("sf4angel:enhancement/mekanism_muffling", "Silent Machines");
+        CREATIVE_NAMES.put("sf4angel:enhancement/nc_speed", "Nuclear Velocity");
+        CREATIVE_NAMES.put("sf4angel:enhancement/nc_energy", "Atomic Power");
+        CREATIVE_NAMES.put("sf4angel:enhancement/ender_pouch", "Ender's Pocket");
+        CREATIVE_NAMES.put("sf4angel:enhancement/glitch_armor", "Glitch in the Fabric");
+        CREATIVE_NAMES.put("sf4angel:enhancement/enchanting_table", "The Enchanter's Table");
+        CREATIVE_NAMES.put("sf4angel:enhancement/weirding_gadget", "Weirding Way");
+        CREATIVE_NAMES.put("sf4angel:enhancement/paxel", "The Paxel's Power");
+        CREATIVE_NAMES.put("sf4angel:enhancement/heart_container", "Heart of the Void");
+        CREATIVE_NAMES.put("sf4angel:enhancement/crafting_upgrade", "Crafting Ascended");
+        CREATIVE_NAMES.put("sf4angel:enhancement/inventory_upgrade", "Inventory Infinite");
+        CREATIVE_NAMES.put("sf4angel:enhancement/damage_20", "Damage Dealt");
+        CREATIVE_NAMES.put("sf4angel:enhancement/modifier_master", "Master of Modifiers");
+        CREATIVE_NAMES.put("sf4angel:enhancement/enhancement_complete", "Enhancement Complete");
+        CREATIVE_NAMES.put("sf4angel:power/simple_generator", "First Spark");
+        CREATIVE_NAMES.put("sf4angel:power/upgradeable_generator", "Generator Evolved");
+        CREATIVE_NAMES.put("sf4angel:power/speed_mod", "Speed Infused");
+        CREATIVE_NAMES.put("sf4angel:power/charger_1", "Charger I");
+        CREATIVE_NAMES.put("sf4angel:power/charger_2", "Charger II");
+        CREATIVE_NAMES.put("sf4angel:power/charger_3", "Charger III");
+        CREATIVE_NAMES.put("sf4angel:power/rf_over_10k", "Ten Thousand RF");
+        CREATIVE_NAMES.put("sf4angel:power/rf_over_100k", "Hundred Thousand RF");
+        CREATIVE_NAMES.put("sf4angel:power/deep_learner", "Deep Learning");
+        CREATIVE_NAMES.put("sf4angel:power/data_model_zombie", "Zombie Data");
+        CREATIVE_NAMES.put("sf4angel:power/data_model_enderman", "Enderman Data");
+        CREATIVE_NAMES.put("sf4angel:power/data_model_ghast", "Ghast Data");
+        CREATIVE_NAMES.put("sf4angel:power/data_model_blaze", "Blaze Data");
+        CREATIVE_NAMES.put("sf4angel:power/simulation_chamber", "Simulation Chamber");
+        CREATIVE_NAMES.put("sf4angel:power/overworldian_matter", "Overworldian Matter");
+        CREATIVE_NAMES.put("sf4angel:power/hellish_matter", "Hellish Matter");
+        CREATIVE_NAMES.put("sf4angel:power/extraterrestrial_matter", "Alien Matter");
+        CREATIVE_NAMES.put("sf4angel:power/twilight_matter", "Twilight Matter");
+        CREATIVE_NAMES.put("sf4angel:power/mekanism_factory", "Mekanism Factory");
+        CREATIVE_NAMES.put("sf4angel:power/enrichment_chamber", "Enrichment Chamber");
+        CREATIVE_NAMES.put("sf4angel:power/crusher", "The Crusher");
+        CREATIVE_NAMES.put("sf4angel:power/metallurgic_infuser", "Metallurgic Infusion");
+        CREATIVE_NAMES.put("sf4angel:power/mekanism_ore_3x", "Triple Ore Yield");
+        CREATIVE_NAMES.put("sf4angel:power/digital_miner", "Digital Miner");
+        CREATIVE_NAMES.put("sf4angel:power/teleporter", "Teleportation Master");
+        CREATIVE_NAMES.put("sf4angel:power/mekanism_jetpack", "Jetpack Soaring");
+        CREATIVE_NAMES.put("sf4angel:power/mekasuit", "Mekasuit Online");
+        CREATIVE_NAMES.put("sf4angel:power/atomic_disassembler", "Atomic Disassembly");
+        CREATIVE_NAMES.put("sf4angel:power/nuclear_reactor", "Nuclear Dawn");
+        CREATIVE_NAMES.put("sf4angel:power/fusion_reactor", "Fusion Ignition");
+        CREATIVE_NAMES.put("sf4angel:power/rtg", "RTG Steady");
+        CREATIVE_NAMES.put("sf4angel:power/powercell_low", "Powercell I");
+        CREATIVE_NAMES.put("sf4angel:power/powercell_med", "Powercell II");
+        CREATIVE_NAMES.put("sf4angel:power/powercell_high", "Powercell III");
+        CREATIVE_NAMES.put("sf4angel:power/rftools_powercell", "RFTools Powercell");
+        CREATIVE_NAMES.put("sf4angel:power/rftools_dimension", "Dimension Builder");
+        CREATIVE_NAMES.put("sf4angel:power/rftools_spawner", "RFTools Spawner");
+        CREATIVE_NAMES.put("sf4angel:power/rftools_screen", "RFTools Screen");
+        CREATIVE_NAMES.put("sf4angel:power/autoclicker", "Auto Clicker");
+        CREATIVE_NAMES.put("sf4angel:power/auto_packager", "Auto Packager");
+        CREATIVE_NAMES.put("sf4angel:power/dehydrator", "Dehydrator");
+        CREATIVE_NAMES.put("sf4angel:power/extraction_chamber", "Extraction Chamber");
+        CREATIVE_NAMES.put("sf4angel:power/ingot_former", "Ingot Former");
+        CREATIVE_NAMES.put("sf4angel:power/froster", "The Froster");
+        CREATIVE_NAMES.put("sf4angel:power/uncrafting_grinder", "Uncrafting Grinder");
+        CREATIVE_NAMES.put("sf4angel:power/building_gadget", "Building Gadget");
+        CREATIVE_NAMES.put("sf4angel:power/exchange_tool", "Exchange Tool");
+        CREATIVE_NAMES.put("sf4angel:power/configurator", "Configurator");
+        CREATIVE_NAMES.put("sf4angel:power/treadmill", "Treadmill");
+        CREATIVE_NAMES.put("sf4angel:power/information_screen", "Info Screen");
+        CREATIVE_NAMES.put("sf4angel:power/wireless_charger", "Wireless Charge");
+        CREATIVE_NAMES.put("sf4angel:power/ultimate_installer", "Ultimate Installer");
+        CREATIVE_NAMES.put("sf4angel:power/mob_grinder", "Mob Grinder");
+        CREATIVE_NAMES.put("sf4angel:power/xp_farm", "XP Farm");
+        CREATIVE_NAMES.put("sf4angel:power/automation_king", "Automation King");
+        CREATIVE_NAMES.put("sf4angel:power/power_complete", "Power Complete");
+        CREATIVE_NAMES.put("sf4angel:storage/wooden_barrel", "Wooden Barrel");
+        CREATIVE_NAMES.put("sf4angel:storage/metal_barrel", "Metal Barrel");
+        CREATIVE_NAMES.put("sf4angel:storage/shipping_container", "Shipping Container");
+        CREATIVE_NAMES.put("sf4angel:storage/barrel_upgrade_1", "Barrel Upgrade I");
+        CREATIVE_NAMES.put("sf4angel:storage/barrel_upgrade_2", "Barrel Upgrade II");
+        CREATIVE_NAMES.put("sf4angel:storage/barrel_upgrade_3", "Barrel Upgrade III");
+        CREATIVE_NAMES.put("sf4angel:storage/barrel_upgrade_4", "Barrel Upgrade IV");
+        CREATIVE_NAMES.put("sf4angel:storage/barrel_upgrade_5", "Barrel Upgrade V");
+        CREATIVE_NAMES.put("sf4angel:storage/barrel_upgrade_6", "Barrel Upgrade VI");
+        CREATIVE_NAMES.put("sf4angel:storage/wooden_crate", "Wooden Crate");
+        CREATIVE_NAMES.put("sf4angel:storage/metal_crate", "Metal Crate");
+        CREATIVE_NAMES.put("sf4angel:storage/simple_storage_master", "Simple Storage Master");
+        CREATIVE_NAMES.put("sf4angel:storage/simple_storage_cable", "Storage Cable");
+        CREATIVE_NAMES.put("sf4angel:storage/simple_storage_remote", "Storage Remote");
+        CREATIVE_NAMES.put("sf4angel:storage/simple_storage_request", "Request Table");
+        CREATIVE_NAMES.put("sf4angel:storage/simple_storage_controller", "Storage Controller");
+        CREATIVE_NAMES.put("sf4angel:storage/wooden_hopper", "Wooden Hopper");
+        CREATIVE_NAMES.put("sf4angel:storage/hopper", "The Hopper");
+        CREATIVE_NAMES.put("sf4angel:storage/upper", "Upper Storage");
+        CREATIVE_NAMES.put("sf4angel:storage/drawer_controller", "Drawer Controller");
+        CREATIVE_NAMES.put("sf4angel:storage/drawer_void", "Void Drawer");
+        CREATIVE_NAMES.put("sf4angel:storage/drawer_emerald", "Emerald Drawer");
+        CREATIVE_NAMES.put("sf4angel:storage/drawer_compact", "Compact Drawer");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_silicon_press", "Silicon Press");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_logic_press", "Logic Press");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_logic_processor", "Logic Processor");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_engineering_press", "Engineering Press");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_calculation_press", "Calculation Press");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_fluix_crystal", "Fluix Crystal");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_energy_acceptor", "Energy Acceptor");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_controller", "ME Controller");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_terminal", "ME Terminal");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_drive_bay", "Drive Bay");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_1k_cell", "1K Cell");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_4k_cell", "4K Cell");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_16k_cell", "16K Cell");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_64k_cell", "64K Cell");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_autocraft", "Auto Crafting");
+        CREATIVE_NAMES.put("sf4angel:storage/ae2_energy_cell", "Energy Cell");
+        CREATIVE_NAMES.put("sf4angel:storage/compact_storage_chest", "Compact Chest");
+        CREATIVE_NAMES.put("sf4angel:storage/compact_storage_backpack", "Compact Backpack");
+        CREATIVE_NAMES.put("sf4angel:storage/storage_50k", "50K Storage");
+        CREATIVE_NAMES.put("sf4angel:storage/uninstall_upgrade", "Uninstall Upgrade");
+        CREATIVE_NAMES.put("sf4angel:storage/storage_complete", "Storage Complete");
+    }
 
     static {
         PROGRESSION_PATH.put("sf4angel:basic/log", "sf4angel:basic/crafting_table");
@@ -301,6 +480,8 @@ public class AchievementHandler {
         for (Map.Entry<String, String> entry : PROGRESSION_PATH.entrySet()) {
             if (entry.getKey().equals(completedAdvancement)) {
                 String nextId = entry.getValue();
+                String creativeName = CREATIVE_NAMES.get(nextId);
+                if (creativeName != null) return creativeName;
                 String shortName = nextId.substring(nextId.lastIndexOf('/') + 1).replace('_', ' ');
                 return capitalizeWords(shortName);
             }
@@ -368,9 +549,9 @@ public class AchievementHandler {
             angel.setOwnerId(player.getUniqueID());
             Vec3d lookVec = player.getLookVec();
             angel.setPosition(
-                player.posX + lookVec.x * 3,
-                player.posY + 3,
-                player.posZ + lookVec.z * 3
+                player.posX + lookVec.x * 5,
+                player.posY + player.getEyeHeight() - 0.5,
+                player.posZ + lookVec.z * 5
             );
             world.spawnEntity(angel);
         }

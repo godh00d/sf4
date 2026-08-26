@@ -65,9 +65,9 @@ public class PlayerJoinHandler {
         angel.setOwnerId(player.getUniqueID());
         Vec3d lookVec = player.getLookVec();
         angel.setPosition(
-            player.posX + lookVec.x * 3,
-            player.posY + 3,
-            player.posZ + lookVec.z * 3
+            player.posX + lookVec.x * 5,
+            player.posY + player.getEyeHeight() - 0.5,
+            player.posZ + lookVec.z * 5
         );
         world.spawnEntity(angel);
 
@@ -77,7 +77,7 @@ public class PlayerJoinHandler {
         for (int i = 0; i < intro.length; i++) {
             String line = intro[i];
             if (line.contains("{NEXT_GOAL}")) {
-                line = nextGoal != null ? "Your first task: " + nextGoal : "Your first task: Get dirt. Punch a tree and work toward dirt.";
+                line = nextGoal != null ? "Your first task: " + nextGoal : "Your first task: The Descent of Dirt.";
             }
             int delay = (i == 0) ? 0 : 80;
             TypewriterHandler.queueMessage(player, line, delay, 0);
@@ -92,9 +92,9 @@ public class PlayerJoinHandler {
         angel.setOwnerId(player.getUniqueID());
         Vec3d lookVec = player.getLookVec();
         angel.setPosition(
-            player.posX + lookVec.x * 3,
-            player.posY + 3,
-            player.posZ + lookVec.z * 3
+            player.posX + lookVec.x * 5,
+            player.posY + player.getEyeHeight() - 0.5,
+            player.posZ + lookVec.z * 5
         );
         world.spawnEntity(angel);
 
@@ -112,7 +112,12 @@ public class PlayerJoinHandler {
         World world = player.world;
         EntityAngel angel = new EntityAngel(world);
         angel.setOwnerId(player.getUniqueID());
-        angel.setPosition(player.posX, player.posY + 5, player.posZ);
+        Vec3d lookVec = player.getLookVec();
+        angel.setPosition(
+            player.posX + lookVec.x * 5,
+            player.posY + player.getEyeHeight() - 0.5,
+            player.posZ + lookVec.z * 5
+        );
         world.spawnEntity(angel);
 
         String deathLine = AngelPersonality.getRandomDeathLine();

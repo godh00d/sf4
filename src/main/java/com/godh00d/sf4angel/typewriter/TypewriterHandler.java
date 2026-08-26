@@ -49,6 +49,13 @@ public class TypewriterHandler {
 
         switch (state.phase) {
             case IDLE:
+                if (state.despawnDelay > 0) {
+                    state.despawnDelay--;
+                    if (state.despawnDelay == 0) {
+                        state.despawnWhenReady = false;
+                    }
+                    return;
+                }
                 advanceQueue(state);
                 break;
 
@@ -61,6 +68,9 @@ public class TypewriterHandler {
                 break;
 
             case APPEAR:
+                if (state.tickCount == 0) {
+                    state.charIndex = 0;
+                }
                 if (state.tickCount >= APPEAR_TICKS) {
                     state.phase = Phase.TYPING;
                     state.tickCount = 0;
@@ -89,8 +99,13 @@ public class TypewriterHandler {
             case DISAPPEAR:
                 if (state.tickCount >= DISAPPEAR_TICKS) {
                     state.currentMessage = null;
-                    state.phase = Phase.IDLE;
-                    state.tickCount = 0;
+                    if (state.queue.isEmpty() && state.despawnWhenReady) {
+                        state.phase = Phase.IDLE;
+                        state.despawnDelay = 200;
+                    } else {
+                        state.phase = Phase.IDLE;
+                        state.tickCount = 0;
+                    }
                 } else {
                     sendPartialMessage(player, state);
                 }
@@ -141,7 +156,7 @@ public class TypewriterHandler {
 
     public static boolean shouldDespawn(EntityPlayer player) {
         PlayerTypewriterState state = states.get(player.getUniqueID());
-        return state != null && state.despawnWhenReady && state.queue.isEmpty() && state.currentMessage == null;
+        return state != null && state.despawnWhenReady && state.queue.isEmpty() && state.currentMessage == null && state.despawnDelay == 0;
     }
 
     public static void removePlayer(EntityPlayer player) {
@@ -155,6 +170,7 @@ public class TypewriterHandler {
         int tickCount = 0;
         int charIndex = 0;
         boolean despawnWhenReady = false;
+        int despawnDelay = 0;
     }
 
     public static class TypewriterMessage {
