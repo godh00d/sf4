@@ -1,14 +1,16 @@
-{
-  "modid": "sf4angel",
-  "name": "SF4 Angel Guide",
-  "description": "A floating angel entity that acts as an in-game guide for Sky Factory 4",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
-  "url": "",
-  "updateUrl": "",
-  "authorList": ["godh00d"],
-  "credits": "",
-  "logoFile": "",
-  "screenshots": [],
-  "dependencies": []
-}
+[
+  {
+    "modid": "sf4angel",
+    "name": "SF4 Angel Guide",
+    "description": "A floating angel entity that acts as an in-game guide for Sky Factory 4",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["godh00d"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
