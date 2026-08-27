@@ -7,9 +7,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.opengl.GL11;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ModelAngel extends ModelBase {
 
     private final ModelRenderer body;
@@ -109,6 +106,7 @@ public class ModelAngel extends ModelBase {
         if (body.rotateAngleX != 0.0F) GlStateManager.rotate(body.rotateAngleX * 57.295776F, 1.0F, 0.0F, 0.0F);
 
         float[] basis = inverseBodyBasis(createEyeBasis(yawDegrees, pitchDegrees));
+        EyePlacement placement = placeEye(basis, 2.0F);
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glDisable(GL11.GL_LIGHTING);
@@ -118,18 +116,18 @@ public class ModelAngel extends ModelBase {
         GL11.glDepthMask(false);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
         GL11.glColor4f(1.0F, 0.58F, 0.02F, 0.08F);
-        drawSurfaceShape(basis, 6.1F, scale, 0.37F);
+        drawFaceSquare(placement, 6.1F, 2.35F, scale);
 
         GL11.glDepthMask(true);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glColor4f(1.0F, 0.7F, 0.05F, 1.0F);
-        drawSurfaceShape(basis, 6.06F, scale, 0.32F);
+        drawFaceSquare(placement, 6.06F, 2.0F, scale);
         if (mood == EntityAngel.MOOD_IRRITATED) {
             GL11.glColor4f(0.28F, 0.0F, 0.0F, 1.0F);
         } else {
             GL11.glColor4f(0.015F, 0.02F, 0.025F, 1.0F);
         }
-        drawSurfaceShape(basis, 6.11F, scale, 0.14F);
+        drawFaceSquare(placement, 6.11F, 0.9F, scale);
         GL11.glPopAttrib();
         GlStateManager.popMatrix();
     }
@@ -175,98 +173,79 @@ public class ModelAngel extends ModelBase {
         output[offset + 2] = finalZ;
     }
 
-    private void drawSurfaceShape(float[] basis, float radius, float scale, float halfSize) {
-        List<EyePoint> shape = new ArrayList<>(4);
-        shape.add(new EyePoint(-halfSize, -halfSize));
-        shape.add(new EyePoint(halfSize, -halfSize));
-        shape.add(new EyePoint(halfSize, halfSize));
-        shape.add(new EyePoint(-halfSize, halfSize));
+    private EyePlacement placeEye(float[] basis, float halfSize) {
+        float x = basis[0];
+        float y = basis[1];
+        float z = basis[2];
+        float absX = Math.abs(x);
+        float absY = Math.abs(y);
+        float absZ = Math.abs(z);
+        float dominant = Math.max(absX, Math.max(absY, absZ));
+        float distance = 6.06F / Math.max(0.001F, dominant);
+        float centerX = x * distance;
+        float centerY = y * distance;
+        float centerZ = z * distance;
+        float limit = 6.0F - halfSize;
+        int face;
 
-        for (int face = 0; face < 6; face++) {
-            List<EyePoint> clipped = shape;
-            for (int constraint = 0; constraint < 5 && !clipped.isEmpty(); constraint++) {
-                clipped = clipToFace(clipped, basis, face, constraint);
-            }
-            if (clipped.size() < 3) continue;
-
-            GL11.glBegin(GL11.GL_TRIANGLE_FAN);
-            for (EyePoint point : clipped) {
-                emitFaceVertex(basis, point, face, radius, scale);
-            }
-            GL11.glEnd();
+        if (absY >= absX && absY >= absZ) {
+            face = y > 0.0F ? 2 : 3;
+            centerX = MathHelper.clamp(centerX, -limit, limit);
+            centerZ = MathHelper.clamp(centerZ, -limit, limit);
+        } else if (absX >= absZ) {
+            face = x > 0.0F ? 0 : 1;
+            centerY = MathHelper.clamp(centerY, -limit, limit);
+            centerZ = MathHelper.clamp(centerZ, -limit, limit);
+        } else {
+            face = z > 0.0F ? 4 : 5;
+            centerX = MathHelper.clamp(centerX, -limit, limit);
+            centerY = MathHelper.clamp(centerY, -limit, limit);
         }
+        return new EyePlacement(face, centerX, centerY, centerZ);
     }
 
-    private List<EyePoint> clipToFace(List<EyePoint> input, float[] basis,
-                                      int face, int constraint) {
-        List<EyePoint> output = new ArrayList<>(input.size() + 2);
-        EyePoint previous = input.get(input.size() - 1);
-        float previousValue = faceConstraint(basis, previous, face, constraint);
-        for (EyePoint current : input) {
-            float currentValue = faceConstraint(basis, current, face, constraint);
-            boolean previousInside = previousValue >= 0.0F;
-            boolean currentInside = currentValue >= 0.0F;
-            if (previousInside != currentInside) {
-                float amount = previousValue / (previousValue - currentValue);
-                output.add(new EyePoint(previous.u + (current.u - previous.u) * amount,
-                    previous.v + (current.v - previous.v) * amount));
-            }
-            if (currentInside) output.add(current);
-            previous = current;
-            previousValue = currentValue;
+    private void drawFaceSquare(EyePlacement placement, float radius, float halfSize, float scale) {
+        float x = placement.x;
+        float y = placement.y;
+        float z = placement.z;
+        GL11.glBegin(GL11.GL_QUADS);
+        if (placement.face == 0 || placement.face == 1) {
+            x = placement.face == 0 ? radius : -radius;
+            vertex(x, y - halfSize, z - halfSize, scale);
+            vertex(x, y + halfSize, z - halfSize, scale);
+            vertex(x, y + halfSize, z + halfSize, scale);
+            vertex(x, y - halfSize, z + halfSize, scale);
+        } else if (placement.face == 2 || placement.face == 3) {
+            y = placement.face == 2 ? radius : -radius;
+            vertex(x - halfSize, y, z - halfSize, scale);
+            vertex(x + halfSize, y, z - halfSize, scale);
+            vertex(x + halfSize, y, z + halfSize, scale);
+            vertex(x - halfSize, y, z + halfSize, scale);
+        } else {
+            z = placement.face == 4 ? radius : -radius;
+            vertex(x - halfSize, y - halfSize, z, scale);
+            vertex(x + halfSize, y - halfSize, z, scale);
+            vertex(x + halfSize, y + halfSize, z, scale);
+            vertex(x - halfSize, y + halfSize, z, scale);
         }
-        return output;
+        GL11.glEnd();
     }
 
-    private float faceConstraint(float[] basis, EyePoint point, int face, int constraint) {
-        float x = basis[0] + basis[3] * point.u + basis[6] * point.v;
-        float y = basis[1] + basis[4] * point.u + basis[7] * point.v;
-        float z = basis[2] + basis[5] * point.u + basis[8] * point.v;
-        float primary;
-        float firstOther;
-        float secondOther;
-        switch (face) {
-            case 0: primary = x; firstOther = y; secondOther = z; break;
-            case 1: primary = -x; firstOther = y; secondOther = z; break;
-            case 2: primary = y; firstOther = x; secondOther = z; break;
-            case 3: primary = -y; firstOther = x; secondOther = z; break;
-            case 4: primary = z; firstOther = x; secondOther = y; break;
-            default: primary = -z; firstOther = x; secondOther = y; break;
-        }
-        switch (constraint) {
-            case 0: return primary;
-            case 1: return primary - firstOther;
-            case 2: return primary + firstOther;
-            case 3: return primary - secondOther;
-            default: return primary + secondOther;
-        }
+    private void vertex(float x, float y, float z, float scale) {
+        GL11.glVertex3f(x * scale, y * scale, z * scale);
     }
 
-    private void emitFaceVertex(float[] basis, EyePoint point, int face,
-                                float radius, float scale) {
-        float x = basis[0] + basis[3] * point.u + basis[6] * point.v;
-        float y = basis[1] + basis[4] * point.u + basis[7] * point.v;
-        float z = basis[2] + basis[5] * point.u + basis[8] * point.v;
-        float primary;
-        switch (face) {
-            case 0: primary = x; break;
-            case 1: primary = -x; break;
-            case 2: primary = y; break;
-            case 3: primary = -y; break;
-            case 4: primary = z; break;
-            default: primary = -z; break;
-        }
-        float distance = radius / Math.max(0.001F, primary);
-        GL11.glVertex3f(x * distance * scale, y * distance * scale, z * distance * scale);
-    }
+    private static class EyePlacement {
+        final int face;
+        final float x;
+        final float y;
+        final float z;
 
-    private static class EyePoint {
-        final float u;
-        final float v;
-
-        EyePoint(float u, float v) {
-            this.u = u;
-            this.v = v;
+        EyePlacement(int face, float x, float y, float z) {
+            this.face = face;
+            this.x = x;
+            this.y = y;
+            this.z = z;
         }
     }
 
