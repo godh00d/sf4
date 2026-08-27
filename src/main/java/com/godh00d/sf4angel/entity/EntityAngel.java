@@ -409,6 +409,8 @@ public class EntityAngel extends EntityCreature {
         previousClientPupilYaw = clientPupilYaw;
         previousClientPupilPitch = clientPupilPitch;
         net.minecraft.entity.Entity target = getLookTarget();
+        if (target == null) target = getOwnerEntity();
+        if (target == null) target = world.getClosestPlayerToEntity(this, 32.0D);
         float targetYawOffset = 0.0F;
         float targetPitch = 0.0F;
         if (target != null) {
@@ -417,11 +419,13 @@ public class EntityAngel extends EntityCreature {
             double lookY = target instanceof EntityLivingBase
                 ? target.posY + ((EntityLivingBase) target).getEyeHeight()
                 : target.posY + target.height * 0.5D;
-            double horizontal = Math.sqrt(dx * dx + dz * dz);
-            float targetYaw = (float) (Math.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
-            targetYawOffset = MathHelper.wrapDegrees(renderYawOffset - targetYaw);
-            targetPitch = (float) -(Math.atan2(lookY - (posY + 0.75D), horizontal)
-                * 180.0D / Math.PI);
+            double rotation = Math.toRadians(180.0F - renderYawOffset);
+            double localX = -(Math.cos(rotation) * dx - Math.sin(rotation) * dz);
+            double localZ = Math.sin(rotation) * dx + Math.cos(rotation) * dz;
+            double localY = -(lookY - (posY + 0.75D));
+            double horizontal = Math.sqrt(localX * localX + localZ * localZ);
+            targetYawOffset = (float) Math.toDegrees(Math.atan2(localX, -localZ));
+            targetPitch = (float) Math.toDegrees(Math.atan2(localY, horizontal));
         }
 
         int mood = getMood();
