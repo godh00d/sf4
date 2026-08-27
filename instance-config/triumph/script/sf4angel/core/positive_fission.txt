@@ -3,6 +3,5 @@ setDescription("Player completes a valid NuclearCraft fission reactor identified
 setIcon(<minecraft:nether_star>)
 setPos(54,432)
 addParent("sf4angel:core/alloyed_allegiance")
-addParent("sf4angel:core/lost_and_found")
 setRequiresParents()
 criteria = addCriteria("custom", "minecraft:impossible")

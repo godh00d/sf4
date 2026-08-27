@@ -46,7 +46,7 @@ This manifest resolves the 85 `RVR` targets formerly present in `ACHIEVEMENT_PLA
 | Achievement | Resolution | Evidence | Confidence |
 | --- | --- | --- | --- |
 | `core/first_spark` | Eight metadata `0` IDs: `simplegenerators:{combustion,culinary,ender,nether,soul,geothermal,fluid_combustion,turbine}_simple` | `ITEMS:19785-19799`; `TRIUMPH:compactmachines/test/5x5x52.txt` | High |
-| `core/battery_included` | `cyclicmagic:battery` | `Cyclic-1.12.2-1.20.3.jar` blockstate/item model and `BlockBattery` class | High |
+| `core/battery_included` | `mekanism:energytablet` | `ITEMS:13295`; installed Mekanism recipes use Energy Tablets as the energy-storage ingredient for Energy Cubes. The disabled Cyclic battery is not a valid pack progression target. | High |
 | `core/redstone_in_a_box` | `mekanism:machineblock` metadata `8` | `ITEMS:13464`; shipped Triumph Metallurgic Infuser script | High |
 | `core/steel_yourself` | `mekanism:ingot` metadata `4` | `ITEMS:13285`; `TRIUMPH:sf4angel/basic/steel_ingot.txt` | High |
 | `core/enriched_expectations` | `mekanism:machineblock` metadata `0` | `ITEMS:13432` | High |
@@ -64,7 +64,8 @@ This manifest resolves the 85 `RVR` targets formerly present in `ACHIEVEMENT_PLA
 | `core/mob_rules` | Integration-only: `industrialforegoing:mob_relocator` (runtime display name "Mob Crusher") | `ITEMS:19270` | High |
 | `core/black_hole_inventory` | `industrialforegoing:black_hole_unit` | `ITEMS:19277`; Industrial Foregoing blockstate/recipes | High |
 | `core/learn_deeply` | `deepmoblearning:deep_learner` | `ITEMS:12979`; shipped Triumph script | High |
-| `core/model_citizen` | Integration-only registry family `deepmoblearning:data_model_*`, excluding `data_model_blank` | `ITEMS:12980,12991-13011`; Deep Mob Learning jar models/recipes | High |
+| `core/model_citizen` | Integration-only concrete registry family `deepmoblearning:data_model_*`, excluding `data_model_blank`; concrete icon `deepmoblearning:data_model_zombie` | `ITEMS:12991-13011`; Deep Mob Learning jar models/recipes | High |
+| `core/data_with_experience` | Integration-only carried concrete model with NBT `tier >= 1`, directly in inventory or inside a carried Deep Learner | `CT:recipes/mods/deepMobLearning.zs:15-170` creates pacifist models with `{tier:1,totalKillCount:6}`; normal DML kills also advance model tier | High |
 | `core/simulation_theory` | Integration-only: `deepmoblearning:simulation_chamber` | `ITEMS:12973`; shipped Triumph script | High |
 | `core/reality_armor` | Integration-only: `deepmoblearning:glitch_infused_{helmet,chestplate,leggings,boots}` | `ITEMS:12986-12989`; `TRIUMPH:sf4angel/enhancement/full_glitch.txt` | High |
 

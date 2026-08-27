@@ -3,6 +3,5 @@ setDescription("One player-owned realfilingcabinet:modelcabinet metadata 0 cabin
 setIcon(<realfilingcabinet:modelcabinet>)
 setPos(432,480)
 addParent("sf4angel:core/paperwork_begins")
-addParent("sf4angel:core/autocraft_authority")
 setRequiresParents()
 criteria = addCriteria("custom", "minecraft:impossible")

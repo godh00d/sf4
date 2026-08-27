@@ -3,5 +3,6 @@ setDescription("That player-owned fission reactor consumes fuel and exports at l
 setIcon(<minecraft:redstone>)
 setPos(108,432)
 addParent("sf4angel:core/positive_fission")
+addParent("sf4angel:core/lost_and_found")
 setRequiresParents()
 criteria = addCriteria("custom", "minecraft:impossible")

@@ -3,6 +3,6 @@ setDescription("Player opens an ME Terminal on a powered network containing an M
 setIcon(<minecraft:redstone>)
 setPos(324,384)
 addParent("sf4angel:core/acceptable_energy")
-addParent("sf4angel:core/items_in_transit")
+addParent("sf4angel:core/pressing_engagement")
 setRequiresParents()
 criteria = addCriteria("custom", "minecraft:impossible")

@@ -3,7 +3,6 @@ setDescription("First inventory acquisition of at least 1 snad:snad metadata 0."
 setIcon(<snad:snad>)
 setPos(486,96)
 addParent("sf4angel:core/beachfront_property")
-addParent("sf4angel:core/oh_the_irony")
 setRequiresParents()
 criteria = addCriteria("item", "minecraft:inventory_changed")
 criteria.addItem(<snad:snad>)

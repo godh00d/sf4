@@ -6,6 +6,7 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $PlanPath = Join-Path $ProjectRoot "ACHIEVEMENT_PLAN.md"
 $TreePath = Join-Path $ProjectRoot "ACHIEVEMENT_TREE.md"
+$CoreCatalogPath = Join-Path $ProjectRoot "src\main\java\com\godh00d\sf4angel\handler\CoreAdvancementCatalog.java"
 $OutputRoot = Join-Path $PSScriptRoot "triumph"
 $ScriptRoot = Join-Path $OutputRoot "script\sf4angel"
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
@@ -52,6 +53,7 @@ $IconOverrides = @{
     "sf4angel:core/smeltery_authority" = "<minecraft:lava_bucket>"
     "sf4angel:core/modifier_motive" = "<tconstruct:toolforge>"
     "sf4angel:core/level_headed_tool" = "<tconstruct:toolforge>"
+    "sf4angel:core/model_citizen" = "<deepmoblearning:data_model_zombie>"
     "sf4angel:core/wither_or_not" = "<minecraft:nether_star>"
     "sf4angel:core/dragon_eviction_notice" = "<minecraft:dragon_egg>"
     "sf4angel:core/naga_have_i_ever" = "<minecraft:skull>"
@@ -81,6 +83,12 @@ $PrestigeStages = @{
     "sf4angel:prestige/aperture_unlocked" = "portal_gun"
     "sf4angel:prestige/written_in_another_age" = "mystcraft"
     "sf4angel:prestige/empowered_recursion" = "parabox_two"
+}
+
+$AchievementStages = @{
+    "sf4angel:core/into_the_twilight" = "twilight_forest"
+    "sf4angel:optional/android_dreams" = "android"
+    "sf4angel:optional/robot_did_it" = "open_computers"
 }
 
 function Write-AsciiFile([string]$Path, [string[]]$Lines) {
@@ -115,8 +123,34 @@ function Get-Catalog {
         throw "Authority catalog count mismatch: $($Rows.Count) total; $($Counts.core)/$($Counts.optional)/$($Counts.prestige)"
     }
     if (@($Rows.Id | Sort-Object -Unique).Count -ne $Rows.Count) { throw "Duplicate authority ID" }
+    Test-Prerequisites @($Rows | ForEach-Object { $_ })
     Test-TreeParents @($Rows | ForEach-Object { $_ })
+    Test-CoreCatalog @($Rows | ForEach-Object { $_ })
     return @($Rows | ForEach-Object { $_ })
+}
+
+function Test-Prerequisites($Rows) {
+    $ById = @{}
+    foreach ($Row in $Rows) { $ById[$Row.Id] = $Row }
+    foreach ($Row in $Rows) {
+        foreach ($Parent in $Row.Parents) {
+            if (-not $ById.ContainsKey($Parent)) { throw "Unknown achievement prerequisite $Parent for $($Row.Id)" }
+            if ($Row.Id.StartsWith('sf4angel:core/') -and $Parent.StartsWith('sf4angel:optional/')) {
+                throw "Optional achievement cannot parent core achievement $($Row.Id)"
+            }
+        }
+    }
+    $Visiting = @{}
+    $Visited = @{}
+    function Visit([string]$Id) {
+        if ($Visiting.ContainsKey($Id)) { throw "Achievement prerequisite cycle at $Id" }
+        if ($Visited.ContainsKey($Id)) { return }
+        $Visiting[$Id] = $true
+        foreach ($Parent in $ById[$Id].Parents) { Visit $Parent }
+        $Visiting.Remove($Id)
+        $Visited[$Id] = $true
+    }
+    foreach ($Row in $Rows) { Visit $Row.Id }
 }
 
 function Test-TreeParents($Rows) {
@@ -145,6 +179,25 @@ function Test-TreeParents($Rows) {
     $Extra = @($TreeEdges.Keys | Where-Object { -not $PlanEdges.ContainsKey($_) } | Sort-Object)
     if ($Missing.Count -gt 0 -or $Extra.Count -gt 0) {
         throw "Achievement tree differs from plan. Missing edges: $($Missing -join ', '); extra edges: $($Extra -join ', ')"
+    }
+}
+
+function Test-CoreCatalog($Rows) {
+    $Content = [System.IO.File]::ReadAllText($CoreCatalogPath)
+    $Actual = @{}
+    foreach ($Match in [regex]::Matches($Content, 'add\("(?<path>[^"]+)"(?<parents>(?:,\s*"[^"]+")*)\);')) {
+        $Parents = @([regex]::Matches($Match.Groups['parents'].Value, '"([^"]+)"') | ForEach-Object {
+            "sf4angel:core/$($_.Groups[1].Value)"
+        })
+        $Actual["sf4angel:core/$($Match.Groups['path'].Value)"] = $Parents
+    }
+    $CoreRows = @($Rows | Where-Object { $_.Id.StartsWith('sf4angel:core/') })
+    if ($Actual.Count -ne $CoreRows.Count) { throw "Core Java catalog count mismatch: $($Actual.Count)" }
+    foreach ($Row in $CoreRows) {
+        if (-not $Actual.ContainsKey($Row.Id)) { throw "Core Java catalog is missing $($Row.Id)" }
+        if (($Actual[$Row.Id] -join '|') -ne ($Row.Parents -join '|')) {
+            throw "Core Java prerequisites differ for $($Row.Id)"
+        }
     }
 }
 
@@ -207,6 +260,16 @@ function Get-CriterionLines($Row) {
     throw "Unsupported type $($Row.Type)"
 }
 
+function Get-RequiredStages($Row) {
+    $Stages = New-Object System.Collections.Generic.List[string]
+    if ($AchievementStages.ContainsKey($Row.Id)) { $Stages.Add($AchievementStages[$Row.Id]) }
+    if ($Row.Id.StartsWith('sf4angel:prestige/')) {
+        $Stages.Add('parabox')
+        if ($PrestigeStages.ContainsKey($Row.Id)) { $Stages.Add($PrestigeStages[$Row.Id]) }
+    }
+    return @($Stages | ForEach-Object { $_ })
+}
+
 function Get-AchievementLines($Row, [int]$Index) {
     $Page = $Row.Id.Split(':')[1].Split('/')[0]
     $Columns = @{ core = 10; optional = 7; prestige = 3 }[$Page]
@@ -219,12 +282,22 @@ function Get-AchievementLines($Row, [int]$Index) {
     $Lines.Add("setDescription(`"$Description`")")
     $Lines.Add("setIcon($(Get-Icon $Row))")
     $Lines.Add("setPos($X,$Y)")
-    foreach ($Parent in $Row.Parents) { $Lines.Add("addParent(`"$Parent`")") }
-    if ($Row.Parents.Count -gt 0) { $Lines.Add('setRequiresParents()') }
+    if ($Row.Parents.Count -eq 0) {
+        $Lines.Add("addParent(`"sf4angel:$Page/root`")")
+    } else {
+        foreach ($Parent in $Row.Parents) { $Lines.Add("addParent(`"$Parent`")") }
+        $Lines.Add('setRequiresParents()')
+    }
+    if ($AchievementStages.ContainsKey($Row.Id)) { $Lines.Add("hiddenUnless(`"$($AchievementStages[$Row.Id])`")") }
     if ($Page -eq 'prestige') {
-        $Lines.Add('setHidden(true)')
         $Lines.Add('hiddenUnless("parabox")')
         if ($PrestigeStages.ContainsKey($Row.Id)) { $Lines.Add("hiddenUnless(`"$($PrestigeStages[$Row.Id])`")") }
+    }
+    $StageIndex = 1
+    foreach ($Stage in (Get-RequiredStages $Row)) {
+        $Lines.Add("criteriaStage$StageIndex = addCriteria(`"stage_$StageIndex`", `"triumph:gamestage`")")
+        $Lines.Add("criteriaStage$StageIndex.setStage(`"$Stage`")")
+        $StageIndex++
     }
     foreach ($Line in (Get-CriterionLines $Row)) { $Lines.Add($Line) }
     return @($Lines | ForEach-Object { $_ })
@@ -295,10 +368,14 @@ function Test-Configuration($Rows) {
         }
         if (-not [regex]::IsMatch($Content, '(?m)^setIcon\(<[a-z0-9_]+:[a-z0-9_]+>\)$')) { $Errors.Add("Malformed icon for $Id") }
         $Parents = @([regex]::Matches($Content, '(?m)^addParent\("([^"]+)"\)$') | ForEach-Object { $_.Groups[1].Value })
-        if (($Parents -join '|') -ne ($Row.Parents -join '|')) { $Errors.Add("Parent mismatch for $Id") }
-        foreach ($Parent in $Parents) { if (-not $Expected.ContainsKey($Parent)) { $Errors.Add("Unknown parent $Parent for $Id") } }
+        $Page = $Id.Split(':')[1].Split('/')[0]
+        $ExpectedParents = if ($Row.Parents.Count -eq 0) { @("sf4angel:$Page/root") } else { @($Row.Parents) }
+        if (($Parents -join '|') -ne ($ExpectedParents -join '|')) { $Errors.Add("Display parent mismatch for $Id") }
+        foreach ($Parent in $Parents) {
+            if (-not $Expected.ContainsKey($Parent) -and $Parent -ne "sf4angel:$Page/root") { $Errors.Add("Unknown parent $Parent for $Id") }
+        }
         $Requires = [regex]::Matches($Content, '(?m)^setRequiresParents\(\)$').Count
-        if ($Requires -ne [int]($Parents.Count -gt 0)) { $Errors.Add("setRequiresParents mismatch for $Id") }
+        if ($Requires -ne [int]($Row.Parents.Count -gt 0)) { $Errors.Add("Achievement prerequisite mismatch for $Id") }
         $Position = [regex]::Match($Content, '(?m)^setPos\((-?[0-9]+),(-?[0-9]+)\)$')
         if ($Position.Success) {
             $Page = $Id.Split(':')[1].Split('/')[0]
@@ -306,26 +383,52 @@ function Test-Configuration($Rows) {
             if ($Positions[$Page].ContainsKey($Key)) { $Errors.Add("Duplicate $Page position $Key") } else { $Positions[$Page][$Key] = $true }
         }
         $Criteria = @([regex]::Matches($Content, 'addCriteria\("([^"]+)", "([^"]+)"\)'))
+        $FunctionalCriteria = @($Criteria | Where-Object { $_.Groups[2].Value -ne 'triumph:gamestage' })
+        $GameStageCriteria = @([regex]::Matches($Content, '(?m)^criteriaStage([0-9]+) = addCriteria\("stage_([0-9]+)", "triumph:gamestage"\)$'))
+        $ActualStages = @([regex]::Matches($Content, '(?m)^criteriaStage[0-9]+\.setStage\("([^"]+)"\)$') | ForEach-Object { $_.Groups[1].Value })
+        $ExpectedStages = @(Get-RequiredStages $Row)
+        if (($ActualStages -join '|') -ne ($ExpectedStages -join '|')) { $Errors.Add("Eligibility stage mismatch for $Id") }
+        if ($GameStageCriteria.Count -ne $ExpectedStages.Count) { $Errors.Add("Eligibility criterion count mismatch for $Id") }
+        for ($StageOffset = 0; $StageOffset -lt $ExpectedStages.Count; $StageOffset++) {
+            $StageIndex = $StageOffset + 1
+            if (-not $Content.Contains("criteriaStage$StageIndex = addCriteria(`"stage_$StageIndex`", `"triumph:gamestage`")") -or
+                -not $Content.Contains("criteriaStage$StageIndex.setStage(`"$($ExpectedStages[$StageOffset])`")")) {
+                $Errors.Add("Invalid eligibility criterion $StageIndex for $Id")
+            }
+        }
+        $HiddenStages = @([regex]::Matches($Content, '(?m)^hiddenUnless\("([^"]+)"\)$') | ForEach-Object { $_.Groups[1].Value })
+        if (($HiddenStages -join '|') -ne ($ExpectedStages -join '|')) { $Errors.Add("Eligibility visibility mismatch for $Id") }
+        if ($ExpectedStages.Count -gt 0 -and $Content.Contains('setHidden(true)')) {
+            $Errors.Add("Stage-gated achievement must not use setHidden(true): $Id")
+        }
         if ($Row.Type.StartsWith('J-')) {
-            if ($Criteria.Count -ne 1 -or $Criteria[0].Groups[1].Value -ne 'custom' -or $Criteria[0].Groups[2].Value -ne 'minecraft:impossible') { $Errors.Add("Invalid Java criterion for $Id") }
+            if ($FunctionalCriteria.Count -ne 1 -or $FunctionalCriteria[0].Groups[1].Value -ne 'custom' -or $FunctionalCriteria[0].Groups[2].Value -ne 'minecraft:impossible') { $Errors.Add("Invalid Java criterion for $Id") }
         } elseif ($Row.Type -eq 'T-ANY') {
-            if ($Criteria.Count -ne $AnyItems[$Id].Count -or -not $Content.Contains('setRequirements("any")')) { $Errors.Add("Invalid T-ANY criteria for $Id") }
+            if ($FunctionalCriteria.Count -ne $AnyItems[$Id].Count -or -not $Content.Contains('setRequirements("any")')) { $Errors.Add("Invalid T-ANY criteria for $Id") }
             $ActualItems = @([regex]::Matches($Content, '(?m)\.addItem\((<.*>)\)$') | ForEach-Object { $_.Groups[1].Value })
             if (($ActualItems -join '|') -ne ($AnyItems[$Id] -join '|')) { $Errors.Add("T-ANY alternatives mismatch for $Id") }
         } elseif ($Row.Type -eq 'T-ITEM') {
-            if ($Criteria.Count -ne 1 -or $Criteria[0].Groups[2].Value -ne 'minecraft:inventory_changed') { $Errors.Add("Invalid item criterion for $Id") }
+            if ($FunctionalCriteria.Count -ne 1 -or $FunctionalCriteria[0].Groups[2].Value -ne 'minecraft:inventory_changed') { $Errors.Add("Invalid item criterion for $Id") }
             $ActualItems = @([regex]::Matches($Content, '(?m)^criteria\.addItem\((<.*>)\)$') | ForEach-Object { $_.Groups[1].Value })
             if (($ActualItems -join '|') -ne ((Get-ItemExpressions $Row) -join '|')) { $Errors.Add("Item predicate mismatch for $Id") }
         } elseif ($Row.Type -eq 'T-LOCATION') {
-            if ($Criteria.Count -ne 1 -or -not $Content.Contains("criteria.setDimID($($Dimensions[$Id]))")) { $Errors.Add("Invalid location criterion for $Id") }
+            if ($FunctionalCriteria.Count -ne 1 -or -not $Content.Contains("criteria.setDimID($($Dimensions[$Id]))")) { $Errors.Add("Invalid location criterion for $Id") }
         } elseif ($Row.Type -eq 'T-ADV') {
-            if ($Criteria.Count -ne 1 -or $Criteria[0].Groups[2].Value -ne 'triumph:completed_advancement') { $Errors.Add("Invalid parent criterion for $Id") }
+            $AdvancementTargets = @([regex]::Matches($Content, '(?m)^criteria\.setAdvancement\("([^"]+)"\)$') | ForEach-Object { $_.Groups[1].Value })
+            if ($FunctionalCriteria.Count -ne 1 -or $FunctionalCriteria[0].Groups[1].Value -ne 'parents' -or
+                $FunctionalCriteria[0].Groups[2].Value -ne 'triumph:completed_advancement' -or
+                $AdvancementTargets.Count -ne 1 -or $AdvancementTargets[0] -ne $Row.Parents[-1]) {
+                $Errors.Add("Invalid parent criterion target for $Id")
+            }
         }
-        if ($Id.StartsWith('sf4angel:prestige/') -and (-not $Content.Contains('hiddenUnless("parabox")') -or -not $Content.Contains('setHidden(true)'))) {
+        if ($Id.StartsWith('sf4angel:prestige/') -and -not $Content.Contains('hiddenUnless("parabox")')) {
             $Errors.Add("Missing Prestige gate for $Id")
         }
         if ($PrestigeStages.ContainsKey($Id) -and -not $Content.Contains("hiddenUnless(`"$($PrestigeStages[$Id])`")")) {
             $Errors.Add("Missing unlock stage $($PrestigeStages[$Id]) for $Id")
+        }
+        if ($AchievementStages.ContainsKey($Id) -and -not $Content.Contains("hiddenUnless(`"$($AchievementStages[$Id])`")")) {
+            $Errors.Add("Missing stage $($AchievementStages[$Id]) for $Id")
         }
     }
     foreach ($Page in @('core', 'optional', 'prestige')) {
@@ -350,7 +453,7 @@ function Test-Configuration($Rows) {
     if (-not $TriumphContent.Contains($Order)) { $Errors.Add('Page order mismatch') }
     if (-not $TriumphContent.EndsWith("`n") -or $TriumphContent.Contains("`r") -or $TriumphContent -match '(?m) +$') { $Errors.Add('Invalid Triumph.txt whitespace') }
     if ($Errors.Count -gt 0) { throw "Validation failed:`n- $($Errors -join "`n- ")" }
-    Write-Output 'Validated 129 achievements, 3 roots, all IDs/parents/criteria/positions/Prestige gates/whitespace.'
+    Write-Output 'Validated 129 achievements, 3 roots, Java/plan/tree parity, prerequisite/display parents, criteria, positions, stage gates, and whitespace.'
 }
 
 $Catalog = Get-Catalog

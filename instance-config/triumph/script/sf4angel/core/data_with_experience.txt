@@ -1,5 +1,5 @@
 setTitle("Data with Experience")
-setDescription("A Data Model carried in a Deep Learner increases from its initial/untrained tier to the next tier through player kills.")
+setDescription("A carried concrete Deep Mob Learning model, either directly in inventory or inside a carried Deep Learner, is Basic tier (tier NBT at least 1) or higher, whether trained by kills or created by a pacifist recipe.")
 setIcon(<minecraft:redstone>)
 setPos(108,288)
 addParent("sf4angel:core/model_citizen")

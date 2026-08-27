@@ -3,6 +3,7 @@ setDescription("First inventory acquisition of at least 1 mekanism:ingot metadat
 setIcon(<mekanism:ingot>)
 setPos(162,192)
 addParent("sf4angel:core/redstone_in_a_box")
+addParent("sf4angel:core/first_spark")
 setRequiresParents()
 criteria = addCriteria("item", "minecraft:inventory_changed")
 criteria.addItem(<mekanism:ingot:4>)

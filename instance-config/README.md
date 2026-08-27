@@ -11,7 +11,7 @@ Run from the project root with Windows PowerShell 5.1 or newer:
 .\instance-config\generate_triumph.ps1 -Check
 ```
 
-The validator requires exactly 110 core, 13 optional, and 6 Prestige achievement scripts, plus one root for each page. It compares every plan parent with the Mermaid tree, then checks IDs, parent existence, positions, native and Java criterion contracts, exact `T-ANY` alternatives, Prestige gates, ASCII output, line endings, trailing whitespace, and final newlines.
+The validator requires exactly 110 core, 13 optional, and 6 Prestige achievement scripts, plus one root for each page. It compares every achievement prerequisite with the Mermaid tree, rejects cycles and optional-to-core dependencies, and separately validates display-only page-root parents for achievements without prerequisites. It also checks IDs, positions, native and Java criterion contracts, exact `T-ANY` alternatives, installed stage gates, ASCII output, line endings, trailing whitespace, and final newlines.
 
 ## Deploy
 
@@ -23,4 +23,4 @@ The validator requires exactly 110 core, 13 optional, and 6 Prestige achievement
 6. Install the matching SF4 Angel mod jar on both client and server. Java-backed goals expose one `minecraft:impossible` criterion named `custom`; the mod must grant that exact criterion after verifying the stated condition.
 7. Start the pack and inspect `logs\latest.log` for Triumph parsing errors, invalid registry names, missing parents, or missing `custom` criteria.
 
-The generated configuration does not include or overwrite unrelated Triumph pages. `Triumph.txt` retains the installed pack's Twilight Forest exception and orders only the three SF4 Angel pages. Prestige content uses the installed `parabox`, `project_e`, `portal_gun`, `mystcraft`, and `parabox_two` game-stage conventions and remains fail-closed through Java integration.
+The generated configuration does not include or overwrite unrelated Triumph pages. `Triumph.txt` retains the installed pack's Twilight Forest exception and orders only the three SF4 Angel pages. Conditional achievements use the installed `twilight_forest`, `android`, and `open_computers` stages. Prestige content uses the installed `parabox`, `project_e`, `portal_gun`, `mystcraft`, and `parabox_two` conventions and remains fail-closed through Java integration.

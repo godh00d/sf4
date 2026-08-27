@@ -1,6 +1,5 @@
 package com.godh00d.sf4angel.handler;
 
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -11,11 +10,9 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
@@ -85,17 +82,6 @@ public final class IntegrationEngine {
         PLAYER_STATES.remove(playerId);
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void onPlayerKill(LivingDeathEvent event) {
-        if (event.getEntityLiving().world.isRemote) return;
-        Entity source = event.getSource().getTrueSource();
-        if (!(source instanceof EntityPlayerMP)) return;
-        EntityPlayerMP player = (EntityPlayerMP) source;
-        PlayerState state = PLAYER_STATES.computeIfAbsent(player.getUniqueID(), ignored -> new PlayerState());
-        state.modelsBeforeKill = state.lastModels;
-        state.killCheckTicks = 2;
-    }
-
     @SubscribeEvent
     public static void onBlockPlaced(BlockEvent.PlaceEvent event) {
         if (event.getWorld().isRemote || !(event.getPlayer() instanceof EntityPlayerMP)) return;
@@ -147,7 +133,7 @@ public final class IntegrationEngine {
         for (ItemStack stack : allCarriedItems(player)) {
             if (isDataModel(stack)) return true;
         }
-        return false;
+        return !readLearnerModels(player).isEmpty();
     }
 
     private static boolean hasGlitchArmor(EntityPlayerMP player, PlayerState state) {
@@ -268,21 +254,23 @@ public final class IntegrationEngine {
     }
 
     private static void checkDataModelLevel(EntityPlayerMP player, PlayerState state) {
-        Map<ModelSlot, ModelProgress> current = readLearnerModels(player);
-        if (state.killCheckTicks > 0) {
-            for (Map.Entry<ModelSlot, ModelProgress> entry : current.entrySet()) {
-                ModelProgress before = state.modelsBeforeKill.get(entry.getKey());
-                ModelProgress after = entry.getValue();
-                if (before != null && before.tier == 0 && after.tier > before.tier
-                    && after.totalKills > before.totalKills) {
-                    grant(player, DATA_WITH_EXPERIENCE);
-                    state.killCheckTicks = 0;
-                    break;
-                }
+        if (state.submittedAdvancements.contains(DATA_WITH_EXPERIENCE)) return;
+        for (ItemStack stack : allCarriedItems(player)) {
+            if (isDataModel(stack) && modelTier(stack) >= 1) {
+                grant(player, DATA_WITH_EXPERIENCE);
+                return;
             }
-            if (state.killCheckTicks > 0) state.killCheckTicks--;
         }
-        state.lastModels = current;
+        for (ModelProgress model : readLearnerModels(player).values()) {
+            if (model.tier >= 1) {
+                grant(player, DATA_WITH_EXPERIENCE);
+                return;
+            }
+        }
+    }
+
+    private static int modelTier(ItemStack model) {
+        return model.hasTagCompound() ? model.getTagCompound().getInteger("tier") : 0;
     }
 
     private static Map<ModelSlot, ModelProgress> readLearnerModels(EntityPlayerMP player) {
@@ -294,8 +282,7 @@ public final class IntegrationEngine {
                 ItemStack model = new ItemStack(inventory.getCompoundTagAt(slot));
                 if (!isDataModel(model)) continue;
                 result.put(new ModelSlot(learner, slot, registryName(model)),
-                    new ModelProgress(model.getTagCompound() == null ? 0 : model.getTagCompound().getInteger("tier"),
-                        model.getTagCompound() == null ? 0 : model.getTagCompound().getInteger("totalKillCount")));
+                    new ModelProgress(modelTier(model)));
             }
         }
         return result;
@@ -447,9 +434,6 @@ public final class IntegrationEngine {
         private final Set<String> submittedAdvancements = new HashSet<>();
         private boolean inModificationContainer;
         private Map<String, Set<String>> modifierBaseline = Collections.emptyMap();
-        private Map<ModelSlot, ModelProgress> modelsBeforeKill = Collections.emptyMap();
-        private Map<ModelSlot, ModelProgress> lastModels = Collections.emptyMap();
-        private int killCheckTicks;
     }
 
     private static final class ModelSlot {
@@ -478,11 +462,9 @@ public final class IntegrationEngine {
 
     private static final class ModelProgress {
         private final int tier;
-        private final int totalKills;
 
-        private ModelProgress(int tier, int totalKills) {
+        private ModelProgress(int tier) {
             this.tier = tier;
-            this.totalKills = totalKills;
         }
     }
 

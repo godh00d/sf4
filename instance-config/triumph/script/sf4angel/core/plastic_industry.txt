@@ -3,6 +3,7 @@ setDescription("First inventory acquisition of at least 1 industrialforegoing:pl
 setIcon(<industrialforegoing:plastic>)
 setPos(270,240)
 addParent("sf4angel:core/latex_intentions")
+addParent("sf4angel:core/first_spark")
 setRequiresParents()
 criteria = addCriteria("item", "minecraft:inventory_changed")
 criteria.addItem(<industrialforegoing:plastic>)

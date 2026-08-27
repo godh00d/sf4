@@ -3,5 +3,6 @@ setDescription("A Resource Hog owned or bred by the player produces one truffle 
 setIcon(<resourcehogs:mud_bucket>)
 setPos(432,96)
 addParent("sf4angel:core/hog_tied")
+addParent("sf4angel:core/seeds_of_life")
 setRequiresParents()
 criteria = addCriteria("custom", "minecraft:impossible")

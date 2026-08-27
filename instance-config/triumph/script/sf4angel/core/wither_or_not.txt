@@ -3,6 +3,5 @@ setDescription("Player receives the killing-credit event for one minecraft:withe
 setIcon(<minecraft:nether_star>)
 setPos(432,288)
 addParent("sf4angel:core/blaze_of_glory")
-addParent("sf4angel:core/reality_armor")
 setRequiresParents()
 criteria = addCriteria("custom", "minecraft:impossible")

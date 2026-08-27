@@ -3,7 +3,6 @@ setDescription("First inventory acquisition of at least 1 sky_orchards:sapling_d
 setIcon(<sky_orchards:sapling_diamond>)
 setPos(270,48)
 addParent("sf4angel:core/red_tree_redemption")
-addParent("sf4angel:core/ironwood")
 setRequiresParents()
 criteria = addCriteria("item", "minecraft:inventory_changed")
 criteria.addItem(<sky_orchards:sapling_diamond>)

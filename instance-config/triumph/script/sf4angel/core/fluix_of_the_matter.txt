@@ -3,7 +3,7 @@ setDescription("First inventory acquisition of at least 1 appliedenergistics2:ma
 setIcon(<appliedenergistics2:material>)
 setPos(162,384)
 addParent("sf4angel:core/menril_state_of_mind")
-addParent("sf4angel:core/nether_say_never")
+addParent("sf4angel:core/redstone_in_a_box")
 setRequiresParents()
 criteria = addCriteria("item", "minecraft:inventory_changed")
 criteria.addItem(<appliedenergistics2:material:7>)

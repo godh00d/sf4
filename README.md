@@ -86,77 +86,16 @@ The reduced catalog contains **110 core**, **13 optional**, and **6 prestige-onl
 
 ```mermaid
 flowchart LR
-    BOOT["Bootstrap and resource trees<br/>20 core"] --> FARM["Storage, farming, and tools<br/>20 core"]
-    BOOT --> POWER["Power and processing<br/>25 core"]
-    FARM --> POWER
-    POWER --> DIM["Dimensions and bosses<br/>15 core"]
-    POWER --> LOGIC["Logic, storage, and industry<br/>20 core"]
-    DIM --> LOGIC
-    LOGIC --> END["Endgame<br/>10 core"]
-    DIM --> END
-    END --> FINAL(["core/the_sky_finally_claps"])
-    FARM -.-> OPTIONAL["13 optional"]
-    POWER -.-> OPTIONAL
-    DIM -.-> OPTIONAL
-    LOGIC -.-> OPTIONAL
-    FINAL --> PRESTIGE["6 prestige-only"]
+    ROOTS["3 display roots"] -. display only .-> CORE["110 core"]
+    ROOTS -. display only .-> OPTIONAL["13 optional"]
+    ROOTS -. display only .-> PRESTIGE["6 prestige-only"]
+    CORE --> FINAL(["core/the_sky_finally_claps"])
+    PRESTIGE --> PARABOX["time_is_a_flat_parabox"]
 ```
+
+Display-root links do not require root completion. Optional achievements never parent core achievements. Prestige Worldwide has no achievement prerequisite; the Parabox achievement follows it, and each installed Prestige unlock branch follows the Parabox while retaining its own game-stage gate.
 
 - [Detailed achievement trees](ACHIEVEMENT_TREE.md)
 - [Implementation-ready catalog of all 129 achievements](ACHIEVEMENT_PLAN.md)
 
-### Early-Game Branches
-
-```mermaid
-flowchart TD
-    A1["core/starting_from_the_bottom"] --> A2["core/that_is_dir_tree"]
-    A2 --> A3["core/dirty_dancing"]
-    A2 --> A4["core/captain_hook"] --> A5["core/stone_tree_oath"]
-    A5 --> A6["core/stone_from_trees"]
-    A5 --> A7["core/gravel_travel"] --> A8["core/beachfront_property"]
-    A3 --> A9["core/clay_aiken"]
-    A8 --> A9
-    A9 --> A10["core/water_you_waiting_for"]
-    A9 --> A11["core/clay_bucket_gamble"]
-    A8 --> A12["core/coal_in_bloom"]
-    A12 --> A13["core/ironwood"]
-    A11 --> A13
-    A13 --> A14["core/oh_the_irony"]
-    A13 --> A15["core/red_tree_redemption"]
-    A15 --> A16["core/trees_to_diamonds"]
-    A13 --> A16
-    A16 --> A17["core/diamond_clarity"]
-    A14 --> A18["core/tiny_tree_big_plans"]
-    A17 --> A18
-    A18 --> A19["core/drop_it_like_its_hopping"]
-    A19 --> A20["core/orchard_on_autopilot"]
-```
-
-### Optional Branches
-
-```mermaid
-flowchart LR
-    EARLY["Early core"] --> O1["optional/sticky_keys"]
-    EARLY --> O2["optional/nap_time"]
-    FARM["Farming core"] --> O3["optional/milk_without_the_moo"]
-    FARM --> O4["optional/a_balanced_sky_diet"]
-    FARM --> O5["optional/mob_factory_floor"]
-    TOOLS["Tools core"] --> O6["optional/armored_to_the_teeth"]
-    TOOLS --> O7["optional/unbreakable_resolve"]
-    TOOLS --> O8["optional/undo_the_apocalypse"]
-    TOOLS --> O9["optional/pixel_perfect_masonry"]
-    TOOLS --> O10["optional/around_the_void_in_eighty_throws"]
-    INDUSTRY["Industry core"] --> O11["optional/android_dreams"]
-    INDUSTRY --> O12["optional/robot_did_it"]
-    EXPLORE["Exploration core"] --> O13["optional/maximum_minimum_space"]
-
-    FINAL["core/the_sky_finally_claps"] --> P1["prestige/prestige_worldwide"]
-    P1 --> P2["prestige/equivalent_ambition_unlocked"]
-    P1 --> P3["prestige/aperture_unlocked"]
-    P1 --> P4["prestige/written_in_another_age"]
-    P1 --> P5["prestige/time_is_a_flat_parabox"]
-    P2 --> P6["prestige/empowered_recursion"]
-    P3 --> P6
-    P4 --> P6
-    P5 --> P6
-```
+The authoritative edge-by-edge diagrams are kept in `ACHIEVEMENT_TREE.md`; generated Triumph scripts are deterministic output of `instance-config/generate_triumph.ps1`.
