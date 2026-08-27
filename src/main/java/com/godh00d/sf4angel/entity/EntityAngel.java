@@ -147,7 +147,6 @@ public class EntityAngel extends EntityCreature {
         setStateTimer(timer);
 
         updatePersonality();
-        updateFacing();
         checkDespawn();
     }
 
@@ -169,7 +168,7 @@ public class EntityAngel extends EntityCreature {
 
         if (getMoodTimer() > 0) return;
 
-        if (tickCounter % 20 == 0) {
+        if (tickCounter % 160 == 0 && world.rand.nextInt(3) == 0) {
             AxisAlignedBB search = getEntityBoundingBox().grow(5.0D, 3.0D, 5.0D);
             List<EntityItem> items = world.getEntitiesWithinAABB(EntityItem.class, search,
                 item -> !item.isDead && item.getItem() != null && !item.getItem().isEmpty());
@@ -183,7 +182,7 @@ public class EntityAngel extends EntityCreature {
                 }
             }
             if (nearest != null) {
-                setMood(MOOD_CURIOUS, 45);
+                setMood(MOOD_CURIOUS, 20);
                 setLookTarget(nearest);
                 return;
             }
@@ -191,23 +190,6 @@ public class EntityAngel extends EntityCreature {
 
         setMood(MOOD_CALM, 0);
         setLookTarget(owner);
-    }
-
-    private void updateFacing() {
-        net.minecraft.entity.Entity target = getLookTarget();
-        if (target == null) return;
-        double dx = target.posX - posX;
-        double dz = target.posZ - posZ;
-        if (dx * dx + dz * dz < 0.001D) return;
-        float targetYaw = (float) (Math.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
-        rotationYawHead = approachAngle(rotationYawHead, targetYaw, 9.0F);
-        renderYawOffset = approachAngle(renderYawOffset, targetYaw, 2.5F);
-        rotationYaw = renderYawOffset;
-    }
-
-    private float approachAngle(float current, float target, float maximumStep) {
-        float difference = net.minecraft.util.math.MathHelper.wrapDegrees(target - current);
-        return current + net.minecraft.util.math.MathHelper.clamp(difference, -maximumStep, maximumStep);
     }
 
     private void updateDespawning() {
@@ -457,7 +439,7 @@ public class EntityAngel extends EntityCreature {
             double lookY = target.posY + target.height * 0.65D;
             double horizontal = Math.sqrt(dx * dx + dz * dz);
             float targetYaw = (float) (Math.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
-            targetYawOffset = MathHelper.wrapDegrees(targetYaw - renderYawOffset);
+            targetYawOffset = MathHelper.wrapDegrees(targetYaw - renderYawOffset + 180.0F);
             targetPitch = (float) -(Math.atan2(lookY - (posY + 0.75D), horizontal)
                 * 180.0D / Math.PI);
         }
@@ -469,10 +451,9 @@ public class EntityAngel extends EntityCreature {
         int dartCycle = (ticksExisted + getEntityId() * 7) / dartInterval;
         float dartYaw = 0.0F;
         float dartPitch = 0.0F;
-        if (dartTime < 8) {
-            boolean wideDart = dartCycle % 4 == 0;
-            float yawRange = wideDart ? 125.0F : 34.0F;
-            float pitchRange = wideDart ? 68.0F : 18.0F;
+        if (dartTime < 5) {
+            float yawRange = mood == MOOD_CURIOUS ? 14.0F : mood == MOOD_IRRITATED ? 18.0F : 7.0F;
+            float pitchRange = mood == MOOD_CURIOUS ? 9.0F : mood == MOOD_IRRITATED ? 11.0F : 4.0F;
             dartYaw = MathHelper.sin((dartCycle * 19 + getEntityId()) * 1.73F) * yawRange;
             dartPitch = MathHelper.cos((dartCycle * 13 + getEntityId()) * 1.31F) * pitchRange;
         }

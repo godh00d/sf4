@@ -13,6 +13,8 @@ public class ModelAngel extends ModelBase {
     private final ModelRenderer bodyGlow;
     private final ModelRenderer halo;
     private final ModelRenderer haloGlow;
+    private final ModelRenderer irisGlow;
+    private final ModelRenderer iris;
     private final ModelRenderer pupil;
 
     public ModelAngel() {
@@ -25,7 +27,9 @@ public class ModelAngel extends ModelBase {
         halo = squareHalo(11.0F, 2.0F, 2.5F);
         haloGlow = squareHalo(12.0F, 3.0F, 2.5F);
 
-        pupil = part(0.0F, 0.0F, -6.35F, -1.0F, -1.0F, -1.0F, 2, 2, 2);
+        irisGlow = part(0.0F, 0.0F, 0.0F, -3.0F, -3.0F, 0.0F, 6, 6, 0);
+        iris = part(0.0F, 0.0F, 0.0F, -2.0F, -2.0F, -0.02F, 4, 4, 0);
+        pupil = part(0.0F, 0.0F, 0.0F, -1.0F, -1.0F, -0.05F, 2, 2, 0);
     }
 
     private ModelRenderer part(float x, float y, float z, float boxX, float boxY, float boxZ,
@@ -85,7 +89,7 @@ public class ModelAngel extends ModelBase {
         haloGlow.rotateAngleZ = halo.rotateAngleZ;
         haloGlow.rotationPointY = halo.rotationPointY;
 
-        placePupil(angel.getClientPupilYaw(), angel.getClientPupilPitch());
+        placeEye(angel.getClientPupilYaw(), angel.getClientPupilPitch());
 
         color(1.0F, 1.0F, 1.0F);
         body.render(scale);
@@ -93,12 +97,11 @@ public class ModelAngel extends ModelBase {
 
         color(1.0F, mood == EntityAngel.MOOD_IRRITATED ? 0.4F : 0.88F, 0.32F);
         halo.render(scale);
-        setPupilColor(mood);
-        renderPupil(scale);
+        renderEye(mood, scale);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
-    private void placePupil(float yawDegrees, float pitchDegrees) {
+    private void placeEye(float yawDegrees, float pitchDegrees) {
         double yaw = Math.toRadians(yawDegrees);
         double pitch = Math.toRadians(pitchDegrees);
         float horizontal = (float) Math.cos(pitch);
@@ -106,24 +109,70 @@ public class ModelAngel extends ModelBase {
         float y = (float) Math.sin(pitch);
         float z = (float) -Math.cos(yaw) * horizontal;
         float dominant = Math.max(Math.abs(x), Math.max(Math.abs(y), Math.abs(z)));
-        float distance = 6.35F / Math.max(0.001F, dominant);
+        float distance = 6.08F / Math.max(0.001F, dominant);
+        float surfaceX = x * distance;
+        float surfaceY = y * distance;
+        float surfaceZ = z * distance;
+        float rotationX = 0.0F;
+        float rotationY = 0.0F;
 
-        pupil.rotationPointX = x * distance;
-        pupil.rotationPointY = y * distance;
-        pupil.rotationPointZ = z * distance;
-        pupil.rotateAngleX = 0.0F;
-        pupil.rotateAngleY = 0.0F;
-        pupil.rotateAngleZ = 0.0F;
+        if (Math.abs(y) >= Math.abs(x) && Math.abs(y) >= Math.abs(z)) {
+            surfaceX = MathHelper.clamp(surfaceX, -4.0F, 4.0F);
+            surfaceZ = MathHelper.clamp(surfaceZ, -4.0F, 4.0F);
+            rotationX = y > 0.0F ? (float) Math.PI * 0.5F : (float) -Math.PI * 0.5F;
+        } else if (Math.abs(x) >= Math.abs(z)) {
+            surfaceY = MathHelper.clamp(surfaceY, -4.0F, 4.0F);
+            surfaceZ = MathHelper.clamp(surfaceZ, -4.0F, 4.0F);
+            rotationY = x > 0.0F ? (float) -Math.PI * 0.5F : (float) Math.PI * 0.5F;
+        } else {
+            surfaceX = MathHelper.clamp(surfaceX, -4.0F, 4.0F);
+            surfaceY = MathHelper.clamp(surfaceY, -4.0F, 4.0F);
+            if (z > 0.0F) rotationY = (float) Math.PI;
+        }
+
+        positionEyePart(irisGlow, surfaceX, surfaceY, surfaceZ, rotationX, rotationY);
+        positionEyePart(iris, surfaceX, surfaceY, surfaceZ, rotationX, rotationY);
+        positionEyePart(pupil, surfaceX, surfaceY, surfaceZ, rotationX, rotationY);
     }
 
-    private void renderPupil(float scale) {
+    private void positionEyePart(ModelRenderer part, float x, float y, float z,
+                                 float rotationX, float rotationY) {
+        part.rotationPointX = x;
+        part.rotationPointY = y;
+        part.rotationPointZ = z;
+        part.rotateAngleX = rotationX;
+        part.rotateAngleY = rotationY;
+        part.rotateAngleZ = 0.0F;
+    }
+
+    private void renderEye(int mood, float scale) {
         GlStateManager.pushMatrix();
         GlStateManager.translate(body.rotationPointX * scale, body.rotationPointY * scale,
             body.rotationPointZ * scale);
         if (body.rotateAngleZ != 0.0F) GlStateManager.rotate(body.rotateAngleZ * 57.295776F, 0.0F, 0.0F, 1.0F);
         if (body.rotateAngleY != 0.0F) GlStateManager.rotate(body.rotateAngleY * 57.295776F, 0.0F, 1.0F, 0.0F);
         if (body.rotateAngleX != 0.0F) GlStateManager.rotate(body.rotateAngleX * 57.295776F, 1.0F, 0.0F, 0.0F);
+
+        GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glDepthMask(false);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        GL11.glColor4f(1.0F, 0.58F, 0.02F, 0.15F);
+        irisGlow.render(scale);
+
+        GL11.glDepthMask(true);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        float surfaceAlpha = 1.0F;
+        GL11.glColor4f(1.0F, 0.74F, 0.08F, surfaceAlpha);
+        iris.render(scale);
+        if (mood == EntityAngel.MOOD_IRRITATED) {
+            GL11.glColor4f(0.28F, 0.0F, 0.0F, surfaceAlpha);
+        } else {
+            GL11.glColor4f(0.015F, 0.02F, 0.025F, surfaceAlpha);
+        }
         pupil.render(scale);
+        GL11.glPopAttrib();
         GlStateManager.popMatrix();
     }
 
@@ -138,12 +187,6 @@ public class ModelAngel extends ModelBase {
         GL11.glColor4f(1.0F, mood == EntityAngel.MOOD_IRRITATED ? 0.08F : 0.55F, 0.04F, 0.34F);
         haloGlow.render(scale);
         GL11.glPopAttrib();
-    }
-
-    private void setPupilColor(int mood) {
-        if (mood == EntityAngel.MOOD_IRRITATED) color(0.35F, 0.0F, 0.01F);
-        else if (mood == EntityAngel.MOOD_CONCERNED) color(0.01F, 0.12F, 0.28F);
-        else color(0.015F, 0.025F, 0.04F);
     }
 
     private void color(float red, float green, float blue) {
