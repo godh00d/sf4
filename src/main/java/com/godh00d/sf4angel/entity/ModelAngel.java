@@ -12,8 +12,6 @@ import java.util.List;
 
 public class ModelAngel extends ModelBase {
 
-    private static final int IRIS_SEGMENTS = 16;
-
     private final ModelRenderer body;
     private final ModelRenderer bodyGlow;
     private final ModelRenderer halo;
@@ -120,18 +118,18 @@ public class ModelAngel extends ModelBase {
         GL11.glDepthMask(false);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
         GL11.glColor4f(1.0F, 0.58F, 0.02F, 0.08F);
-        drawSurfaceShape(basis, 6.1F, scale, 0.39F, IRIS_SEGMENTS);
+        drawSurfaceShape(basis, 6.1F, scale, 0.37F);
 
         GL11.glDepthMask(true);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glColor4f(1.0F, 0.7F, 0.05F, 1.0F);
-        drawSurfaceShape(basis, 6.06F, scale, 0.34F, IRIS_SEGMENTS);
+        drawSurfaceShape(basis, 6.06F, scale, 0.32F);
         if (mood == EntityAngel.MOOD_IRRITATED) {
             GL11.glColor4f(0.28F, 0.0F, 0.0F, 1.0F);
         } else {
             GL11.glColor4f(0.015F, 0.02F, 0.025F, 1.0F);
         }
-        drawSurfaceShape(basis, 6.11F, scale, 0.15F, 12);
+        drawSurfaceShape(basis, 6.11F, scale, 0.14F);
         GL11.glPopAttrib();
         GlStateManager.popMatrix();
     }
@@ -177,14 +175,12 @@ public class ModelAngel extends ModelBase {
         output[offset + 2] = finalZ;
     }
 
-    private void drawSurfaceShape(float[] basis, float radius, float scale,
-                                  float shapeRadius, int segments) {
-        List<EyePoint> shape = new ArrayList<>(segments);
-        for (int i = 0; i < segments; i++) {
-            double angle = Math.PI * 2.0D * i / segments;
-            shape.add(new EyePoint((float) Math.cos(angle) * shapeRadius,
-                (float) Math.sin(angle) * shapeRadius));
-        }
+    private void drawSurfaceShape(float[] basis, float radius, float scale, float halfSize) {
+        List<EyePoint> shape = new ArrayList<>(4);
+        shape.add(new EyePoint(-halfSize, -halfSize));
+        shape.add(new EyePoint(halfSize, -halfSize));
+        shape.add(new EyePoint(halfSize, halfSize));
+        shape.add(new EyePoint(-halfSize, halfSize));
 
         for (int face = 0; face < 6; face++) {
             List<EyePoint> clipped = shape;
