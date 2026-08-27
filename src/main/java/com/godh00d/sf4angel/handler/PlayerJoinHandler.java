@@ -26,9 +26,7 @@ public class PlayerJoinHandler {
         if (player.world.isRemote) return;
         EntityPlayerMP mp = (EntityPlayerMP) player;
 
-        clearPlayerInventory(mp);
-
-        AchievementHandler.onPlayerJoin(player.getUniqueID());
+        removeExistingAngels(mp);
 
         if (!greetedPlayers.contains(player.getUniqueID())) {
             greetedPlayers.add(player.getUniqueID());
@@ -44,18 +42,23 @@ public class PlayerJoinHandler {
         if (player.world.isRemote) return;
 
         EntityPlayerMP mp = (EntityPlayerMP) player;
-        clearPlayerInventory(mp);
+        removeExistingAngels(mp);
         respawnAngel(mp);
     }
 
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         TypewriterHandler.removePlayer(event.player);
+        TickHandler.removePlayer(event.player.getUniqueID());
     }
 
-    private static void clearPlayerInventory(EntityPlayerMP player) {
-        player.inventory.clear();
-        player.inventory.markDirty();
+    private static void removeExistingAngels(EntityPlayerMP player) {
+        for (EntityAngel angel : player.world.getEntities(EntityAngel.class, entity -> true)) {
+            UUID owner = angel.getOwnerId();
+            if (owner != null && owner.equals(player.getUniqueID())) {
+                angel.setDead();
+            }
+        }
     }
 
     private static void spawnFreshAngel(EntityPlayerMP player) {
@@ -69,6 +72,8 @@ public class PlayerJoinHandler {
             player.posZ + Math.cos(yaw) * 6.0D
         );
         world.spawnEntity(angel);
+        AchievementHandler.recordAngelAppearance(player);
+        AchievementHandler.grantAdvancement(player, "sf4angel:angel/angel_first");
 
         String[] intro = AngelPersonality.getFirstLoginIntro();
         String nextGoal = AngelOracle.getNextGoal(player);
@@ -96,6 +101,7 @@ public class PlayerJoinHandler {
             player.posZ + Math.cos(yaw) * 6.0D
         );
         world.spawnEntity(angel);
+        AchievementHandler.recordAngelAppearance(player);
 
         String nextGoal = AngelOracle.getNextGoal(player);
         String welcomeBack = "Welcome back. The sky missed you.";
@@ -118,6 +124,7 @@ public class PlayerJoinHandler {
             player.posZ + Math.cos(yaw) * 6.0D
         );
         world.spawnEntity(angel);
+        AchievementHandler.recordAngelAppearance(player);
 
         String deathLine = AngelPersonality.getRandomDeathLine();
         String nextGoal = AngelOracle.getNextGoal(player);

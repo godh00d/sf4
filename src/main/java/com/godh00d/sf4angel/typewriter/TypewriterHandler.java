@@ -24,6 +24,16 @@ public class TypewriterHandler {
         state.queue.add(new TypewriterMessage(message, delayBefore, delayAfter));
     }
 
+    public static void queueRedMessage(EntityPlayer player, String message, int delayBefore, int delayAfter) {
+        PlayerTypewriterState state = states.computeIfAbsent(player.getUniqueID(), k -> new PlayerTypewriterState());
+        state.queue.clear();
+        state.currentMessage = new TypewriterMessage(message, delayBefore, delayAfter, TextFormatting.RED);
+        state.phase = delayBefore > 0 ? Phase.WAITING_DELAY : Phase.APPEAR;
+        state.charIndex = 0;
+        state.tickCount = 0;
+        state.despawnDelay = 0;
+    }
+
     public static boolean hasActiveMessages(EntityPlayer player) {
         PlayerTypewriterState state = states.get(player.getUniqueID());
         return state != null && (!state.queue.isEmpty() || state.currentMessage != null);
@@ -89,13 +99,17 @@ public class TypewriterHandler {
                 break;
 
             case DISAPPEAR:
+                state.charIndex -= CHARS_PER_TICK;
+                if (state.charIndex > 0) {
+                    sendPartialMessage(player, state);
+                    break;
+                }
+                state.charIndex = 0;
+                sendPartialMessage(player, state);
                 clearActionBar(player);
                 state.currentMessage = null;
-                if (state.queue.isEmpty() && state.despawnWhenReady) {
-                    state.despawnDelay = DESPAWN_DELAY_TICKS;
-                } else {
-                    state.tickCount = 0;
-                }
+                state.despawnDelay = state.queue.isEmpty() && state.despawnWhenReady ? DESPAWN_DELAY_TICKS : 0;
+                state.tickCount = 0;
                 state.phase = Phase.IDLE;
                 break;
         }
@@ -122,11 +136,20 @@ public class TypewriterHandler {
         String full = state.currentMessage.text;
         int len = Math.min(state.charIndex, full.length());
 
-        String displayed = full.substring(0, Math.max(0, len));
+        String typed = full.substring(0, Math.max(0, len));
+        boolean showCursor = state.phase == Phase.TYPING || state.phase == Phase.APPEAR
+            || state.phase == Phase.DISAPPEAR;
 
-        TextComponentString component = new TextComponentString(
-            TextFormatting.GOLD + "\u2726 " + TextFormatting.WHITE + displayed + TextFormatting.RESET
-        );
+        TextComponentString component = new TextComponentString("\u2726 ");
+        component.getStyle().setColor(TextFormatting.GOLD);
+        TextComponentString text = new TextComponentString(typed);
+        text.getStyle().setColor(state.currentMessage.color);
+        component.appendSibling(text);
+        if (showCursor) {
+            TextComponentString cursor = new TextComponentString("_");
+            cursor.getStyle().setColor(TextFormatting.DARK_GRAY);
+            component.appendSibling(cursor);
+        }
         player.sendStatusMessage(component, true);
     }
 
@@ -164,11 +187,17 @@ public class TypewriterHandler {
         public final String text;
         public int delayBefore;
         public final int delayAfter;
+        public final TextFormatting color;
 
         public TypewriterMessage(String text, int delayBefore, int delayAfter) {
+            this(text, delayBefore, delayAfter, TextFormatting.WHITE);
+        }
+
+        public TypewriterMessage(String text, int delayBefore, int delayAfter, TextFormatting color) {
             this.text = text;
             this.delayBefore = delayBefore;
             this.delayAfter = delayAfter;
+            this.color = color;
         }
     }
 

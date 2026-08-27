@@ -24,11 +24,10 @@ public class TickHandler {
     private static final Random RANDOM = new Random();
     private static final Map<UUID, Integer> idleTimers = new HashMap<>();
     private static final Map<String, Integer> healthWarnTimers = new HashMap<>();
-    private static final Map<UUID, Integer> advScanTimers = new HashMap<>();
-    private static final Map<UUID, Integer> movementTimers = new HashMap<>();
+    private static final Map<UUID, MovementState> movementStates = new HashMap<>();
+    private static final Map<UUID, Integer> counterCheckTimers = new HashMap<>();
     private static final int MIN_IDLE_TICKS = 6000;
     private static final int MAX_IDLE_TICKS = 12000;
-    private static final int ADV_SCAN_INTERVAL = 200;
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
@@ -40,6 +39,8 @@ public class TickHandler {
 
         TypewriterHandler.tick(player);
 
+        AchievementHandler.checkTwerk(mp);
+
         handleDespawn(mp);
 
         handleIdleChatter(mp);
@@ -48,7 +49,13 @@ public class TickHandler {
 
         handleHealthWarning(mp);
 
-        handleAdvancementScan(mp);
+        int counterTimer = counterCheckTimers.getOrDefault(player.getUniqueID(), 0) + 1;
+        if (counterTimer >= 20) {
+            AchievementHandler.checkCustomCounters(mp);
+            counterTimer = 0;
+        }
+        counterCheckTimers.put(player.getUniqueID(), counterTimer);
+
     }
 
     private static void handleDespawn(EntityPlayerMP player) {
@@ -60,7 +67,9 @@ public class TickHandler {
             );
             List<EntityAngel> angels = world.getEntitiesWithinAABB(EntityAngel.class, searchBox);
             for (EntityAngel angel : angels) {
-                angel.startDespawn(0);
+                if (player.getUniqueID().equals(angel.getOwnerId())) {
+                    angel.startDespawn(0);
+                }
             }
         }
     }
@@ -77,7 +86,14 @@ public class TickHandler {
                     player.posX + 10, player.posY + 10, player.posZ + 10
                 );
                 List<EntityAngel> angels = world.getEntitiesWithinAABB(EntityAngel.class, searchBox);
-                if (!angels.isEmpty()) {
+                boolean hasOwnedAngel = false;
+                for (EntityAngel angel : angels) {
+                    if (player.getUniqueID().equals(angel.getOwnerId())) {
+                        hasOwnedAngel = true;
+                        break;
+                    }
+                }
+                if (hasOwnedAngel) {
                     String quip = AngelPersonality.getRandomSmallTalk();
                     TypewriterHandler.queueMessage(player, quip, 0, 0);
                 }
@@ -98,49 +114,80 @@ public class TickHandler {
 
         for (EntityAngel angel : angels) {
             if (angel.getOwnerId() != null && angel.getOwnerId().equals(player.getUniqueID())) {
+                if (angel.getVisualState() != EntityAngel.STATE_VISIBLE) {
+                    angel.motionX = 0.0D;
+                    angel.motionY = 0.0D;
+                    angel.motionZ = 0.0D;
+                    continue;
+                }
                 UUID id = player.getUniqueID();
-                int timer = movementTimers.getOrDefault(id, 0) + 1;
-                movementTimers.put(id, timer);
+                MovementState movement = movementStates.computeIfAbsent(id, ignored -> new MovementState());
+                movement.tick();
 
                 double yaw = Math.toRadians(player.rotationYaw);
                 double forwardX = -Math.sin(yaw);
                 double forwardZ = Math.cos(yaw);
                 double rightX = Math.cos(yaw);
                 double rightZ = Math.sin(yaw);
-                double wave = Math.sin(timer * 0.035D);
-                int mode = (timer / 240) % 3;
+                double wave = Math.sin(movement.phase + movement.elapsed * 0.025D);
 
                 double targetX;
                 double targetZ;
-                if (mode == 0) {
-                    targetX = player.posX + forwardX * 6.0D;
-                    targetZ = player.posZ + forwardZ * 6.0D;
-                } else if (mode == 1) {
-                    double orbit = timer * 0.015D;
-                    targetX = player.posX + Math.cos(orbit) * 5.0D;
-                    targetZ = player.posZ + Math.sin(orbit) * 5.0D;
-                } else {
-                    targetX = player.posX + forwardX * 4.5D + rightX * wave * 2.0D;
-                    targetZ = player.posZ + forwardZ * 4.5D + rightZ * wave * 2.0D;
+                switch (movement.mode) {
+                    case 0: // Watch from in front, gently shifting weight.
+                        targetX = player.posX + forwardX * 6.5D + rightX * wave * 0.55D;
+                        targetZ = player.posZ + forwardZ * 6.5D + rightZ * wave * 0.55D;
+                        break;
+                    case 1: // Slow orbit that remains near the player's field of view.
+                        double orbit = yaw + movement.phase + movement.elapsed * 0.009D;
+                        targetX = player.posX + Math.cos(orbit) * 6.2D;
+                        targetZ = player.posZ + Math.sin(orbit) * 6.2D;
+                        break;
+                    case 2: // Drift from one side of the player to the other.
+                        targetX = player.posX + forwardX * 5.8D + rightX * movement.side * (1.7D + wave * 0.8D);
+                        targetZ = player.posZ + forwardZ * 5.8D + rightZ * movement.side * (1.7D + wave * 0.8D);
+                        break;
+                    case 3: // Briefly move closer as if inspecting what the player is doing.
+                        double closeDistance = 5.0D + wave * 0.3D;
+                        targetX = player.posX + forwardX * closeDistance + rightX * movement.side * 0.65D;
+                        targetZ = player.posZ + forwardZ * closeDistance + rightZ * movement.side * 0.65D;
+                        break;
+                    default: // Wander in a loose arc without leaving the player behind.
+                        double wanderAngle = yaw + movement.phase + Math.sin(movement.elapsed * 0.012D) * 0.75D;
+                        double wanderDistance = 5.5D + Math.sin(movement.elapsed * 0.019D) * 0.8D;
+                        targetX = player.posX - Math.sin(wanderAngle) * wanderDistance;
+                        targetZ = player.posZ + Math.cos(wanderAngle) * wanderDistance;
+                        break;
                 }
 
-                double targetY = player.posY + player.getEyeHeight() - 0.45D + Math.sin(timer * 0.05D) * 0.35D;
+                double targetY = player.posY + player.getEyeHeight() - 0.55D
+                    + Math.sin(movement.phase + movement.elapsed * 0.04D) * 0.32D;
 
                 double dx = targetX - angel.posX;
                 double dy = targetY - angel.posY;
                 double dz = targetZ - angel.posZ;
 
                 double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                double playerDx = angel.posX - player.posX;
+                double playerDz = angel.posZ - player.posZ;
+                double horizontalDistance = Math.sqrt(playerDx * playerDx + playerDz * playerDz);
+                if (horizontalDistance < 4.75D) {
+                    double safeDistance = Math.max(horizontalDistance, 0.01D);
+                    double push = (4.75D - horizontalDistance) * 0.055D + 0.035D;
+                    angel.motionX += playerDx / safeDistance * push;
+                    angel.motionZ += playerDz / safeDistance * push;
+                }
                 if (dist > 0.25D) {
-                    double speed = isPlayerLookingAt(player, angel) ? 0.045D : 0.11D;
+                    double speed = isPlayerLookingAt(player, angel) ? 0.025D : 0.045D;
+                    if (dist > 8.0D) speed = 0.09D;
                     angel.motionX += (dx / dist) * speed;
                     angel.motionY += (dy / dist) * speed;
                     angel.motionZ += (dz / dist) * speed;
                 }
 
-                angel.motionX *= 0.86D;
-                angel.motionY *= 0.86D;
-                angel.motionZ *= 0.86D;
+                angel.motionX *= 0.89D;
+                angel.motionY *= 0.89D;
+                angel.motionZ *= 0.89D;
             }
         }
     }
@@ -174,13 +221,33 @@ public class TickHandler {
         }
     }
 
-    private static void handleAdvancementScan(EntityPlayerMP player) {
-        UUID id = player.getUniqueID();
-        int timer = advScanTimers.getOrDefault(id, 0) + 1;
-        if (timer >= ADV_SCAN_INTERVAL) {
-            AchievementHandler.checkAdvancementProgress(player);
-            timer = 0;
+    public static void removePlayer(UUID id) {
+        idleTimers.remove(id);
+        movementStates.remove(id);
+        counterCheckTimers.remove(id);
+        healthWarnTimers.remove(id.toString() + "_healthwarn");
+        AchievementHandler.removePlayer(id);
+    }
+
+    private static class MovementState {
+        int mode = RANDOM.nextInt(5);
+        int elapsed;
+        int duration = 180 + RANDOM.nextInt(260);
+        int side = RANDOM.nextBoolean() ? 1 : -1;
+        double phase = RANDOM.nextDouble() * Math.PI * 2.0D;
+
+        void tick() {
+            elapsed++;
+            if (elapsed < duration) return;
+
+            int previous = mode;
+            do {
+                mode = RANDOM.nextInt(5);
+            } while (mode == previous);
+            elapsed = 0;
+            duration = 180 + RANDOM.nextInt(260);
+            side = RANDOM.nextBoolean() ? 1 : -1;
+            phase = RANDOM.nextDouble() * Math.PI * 2.0D;
         }
-        advScanTimers.put(id, timer);
     }
 }

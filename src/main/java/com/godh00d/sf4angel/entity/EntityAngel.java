@@ -1,6 +1,7 @@
 package com.godh00d.sf4angel.entity;
 
 import com.godh00d.sf4angel.handler.TickHandler;
+import com.godh00d.sf4angel.handler.AchievementHandler;
 import com.godh00d.sf4angel.knowledge.AngelOracle;
 import com.godh00d.sf4angel.knowledge.ChestScanner;
 import com.godh00d.sf4angel.personality.AngelPersonality;
@@ -17,6 +18,7 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -46,15 +48,11 @@ public class EntityAngel extends EntityCreature {
     public static final int STATE_VISIBLE = 2;
     public static final int STATE_DESPAWNING = 3;
 
-    public static final int ANIM_DESCEND = 0;
-    public static final int ANIM_SMOKE_FORM = 1;
-    public static final int ANIM_SPIN_GROW = 2;
-    public static final int ANIM_SMOKE = 3;
-    public static final int ANIM_ASCEND = 4;
-    public static final int ANIM_SPIN_SHRINK = 5;
+    public static final int ANIM_SMOKE = 0;
+    public static final int ANIM_SPIN = 1;
+    public static final int ANIM_SKY = 2;
 
-    private static final int SPAWN_TICKS = 30;
-    private static final int DESPAWN_TICKS = 30;
+    public static final int TRANSITION_TICKS = 24;
 
     private UUID ownerId;
     private boolean despawnQueued = false;
@@ -121,7 +119,7 @@ public class EntityAngel extends EntityCreature {
         int timer = getStateTimer() + 1;
         setStateTimer(timer);
 
-        if (timer >= SPAWN_TICKS) {
+        if (timer >= TRANSITION_TICKS) {
             setVisualState(STATE_VISIBLE);
             setStateTimer(0);
         }
@@ -138,7 +136,7 @@ public class EntityAngel extends EntityCreature {
         int timer = getStateTimer() + 1;
         setStateTimer(timer);
 
-        if (timer >= DESPAWN_TICKS) {
+        if (timer >= TRANSITION_TICKS) {
             setDead();
         }
     }
@@ -186,8 +184,12 @@ public class EntityAngel extends EntityCreature {
             }
 
             if (attacker instanceof EntityPlayerMP) {
+                AchievementHandler.grantAdvancement((EntityPlayerMP) attacker, "sf4angel:angel/angel_strike");
+                if (attacker.getHealth() <= 4.0F) {
+                    AchievementHandler.grantAdvancement((EntityPlayerMP) attacker, "sf4angel:angel/angel_killed_by");
+                }
                 String response = AngelPersonality.getRandomAttackResponse();
-                TypewriterHandler.queueMessage((EntityPlayerMP) attacker, response, 0, 0);
+                TypewriterHandler.queueRedMessage((EntityPlayerMP) attacker, response, 0, 0);
             }
         }
 
@@ -216,6 +218,16 @@ public class EntityAngel extends EntityCreature {
     @Override
     public boolean isSilent() {
         return true;
+    }
+
+    @Override
+    public int getBrightnessForRender() {
+        return 15728880;
+    }
+
+    @Override
+    public float getBrightness() {
+        return 1.0F;
     }
 
     @Nullable
@@ -269,6 +281,7 @@ public class EntityAngel extends EntityCreature {
     }
 
     public UUID getOwnerId() {
+        if (ownerId != null) return ownerId;
         int id = this.dataManager.get(OWNER_ID);
         if (id == -1) return null;
         if (world.playerEntities.isEmpty()) return null;
@@ -304,19 +317,59 @@ public class EntityAngel extends EntityCreature {
     // ---- Animation helpers ----
 
     private int getRandomSpawnAnim() {
-        int[] anims = {ANIM_DESCEND, ANIM_SMOKE_FORM, ANIM_SPIN_GROW};
-        return anims[world.rand.nextInt(anims.length)];
+        return world.rand.nextInt(3);
     }
 
     private int getRandomDespawnAnim() {
-        int[] anims = {ANIM_SMOKE, ANIM_ASCEND, ANIM_SPIN_SHRINK};
-        return anims[world.rand.nextInt(anims.length)];
+        return world.rand.nextInt(3);
     }
 
     private void updateClientVisuals() {
         float halo = getHaloAngle() + 0.05F;
         if (halo > 6.283F) halo -= 6.283F;
         setHaloAngle(halo);
+
+        if (getVisualState() != STATE_HIDDEN) {
+            spawnClientParticles();
+        }
+    }
+
+    private void spawnClientParticles() {
+        boolean transitioning = getVisualState() == STATE_SPAWNING || getVisualState() == STATE_DESPAWNING;
+        int count = transitioning ? 18 : 8;
+        float progress = Math.min(1.0F, (float) getStateTimer() / TRANSITION_TICKS);
+        double transitionY = 0.0D;
+        if (transitioning && getAnimationType() == ANIM_SKY) {
+            transitionY = (getVisualState() == STATE_SPAWNING ? 1.0F - progress : progress) * 10.0D;
+        }
+        for (int i = 0; i < count; i++) {
+            double direction = getVisualState() == STATE_SPAWNING ? -1.0D : 1.0D;
+            double angle = direction * ticksExisted * (getAnimationType() == ANIM_SPIN ? 0.45D : 0.13D)
+                + i * Math.PI * 2.0D / count;
+            double radius = transitioning ? 0.2D + getRenderScale() * 0.8D : 0.55D + world.rand.nextDouble() * 0.35D;
+            double px = posX + Math.cos(angle) * radius;
+            double py = posY + transitionY + 0.35D + world.rand.nextDouble() * 1.1D;
+            double pz = posZ + Math.sin(angle) * radius;
+            double mx = (world.rand.nextDouble() - 0.5D) * 0.015D;
+            double my = 0.015D + world.rand.nextDouble() * 0.025D;
+            double mz = (world.rand.nextDouble() - 0.5D) * 0.015D;
+
+            EnumParticleTypes particle;
+            if (transitioning && getAnimationType() == ANIM_SMOKE) {
+                particle = i % 2 == 0 ? EnumParticleTypes.SMOKE_LARGE : EnumParticleTypes.CLOUD;
+            } else if (transitioning && getAnimationType() == ANIM_SKY) {
+                particle = i % 2 == 0 ? EnumParticleTypes.END_ROD : EnumParticleTypes.FIREWORKS_SPARK;
+            } else {
+                switch (i % 5) {
+                    case 0: particle = EnumParticleTypes.END_ROD; break;
+                    case 1: particle = EnumParticleTypes.FIREWORKS_SPARK; break;
+                    case 2: particle = EnumParticleTypes.VILLAGER_HAPPY; break;
+                    case 3: particle = EnumParticleTypes.SPELL_INSTANT; break;
+                    default: particle = EnumParticleTypes.ENCHANTMENT_TABLE; break;
+                }
+            }
+            world.spawnParticle(particle, px, py, pz, mx, my, mz);
+        }
     }
 
     // ---- Scale for renderer ----
@@ -326,22 +379,25 @@ public class EntityAngel extends EntityCreature {
         int timer = getStateTimer();
 
         if (state == STATE_SPAWNING) {
-            float progress = (float) timer / SPAWN_TICKS;
-            return 0.1F + progress * 0.9F;
+            float progress = (float) timer / TRANSITION_TICKS;
+            if (getAnimationType() != ANIM_SPIN) return 1.0F;
+            return 0.05F + progress * 0.95F;
         }
         if (state == STATE_DESPAWNING) {
-            float progress = (float) timer / DESPAWN_TICKS;
-            return 1.0F - progress * 0.9F;
+            float progress = (float) timer / TRANSITION_TICKS;
+            if (getAnimationType() != ANIM_SPIN) return 1.0F;
+            return Math.max(0.05F, 1.0F - progress * 0.95F);
         }
         return 1.0F;
     }
 
     public float getRenderSpin() {
         int anim = getAnimationType();
-        if (anim == ANIM_SPIN_GROW || anim == ANIM_SPIN_SHRINK) {
-            return tickCounter * 0.2F;
+        if (getVisualState() != STATE_VISIBLE) {
+            float direction = getVisualState() == STATE_SPAWNING ? -1.0F : 1.0F;
+            if (anim == ANIM_SPIN) return direction * ticksExisted * 18.0F;
         }
-        return tickCounter * 0.05F;
+        return -ticksExisted * 2.0F;
     }
 
     // ---- NBT ----

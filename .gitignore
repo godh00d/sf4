@@ -1,17 +1,21 @@
-﻿# Build system
+﻿# Generated build state
 build/
 .gradle/
 fg3_src/
 localRepo/
 forge-mdk/
 forge-mdk.zip
-gradle/
-gradlew.bat
-build.gradle
-gradle.properties
-settings.gradle
 
 # Runtime
 run/
 logs/
-*.jar
+
+# IDE and OS files
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+.DS_Store
+Thumbs.db

@@ -6,14 +6,22 @@ import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.EntityList;
+import net.minecraft.init.Blocks;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
+import net.minecraft.stats.StatList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.advancements.Advancement;
-import net.minecraft.advancements.AdvancementManager;
 import net.minecraft.advancements.PlayerAdvancements;
 import net.minecraftforge.event.entity.player.AdvancementEvent;
+import net.minecraftforge.event.entity.living.BabyEntitySpawnEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
@@ -26,14 +34,11 @@ public class AchievementHandler {
 
     private static final Logger LOGGER = LogManager.getLogger("sf4angel");
     private static final Map<UUID, Integer> angelAppearanceCount = new HashMap<>();
-    private static final Map<UUID, Long> joinTimes = new HashMap<>();
-    private static final Map<UUID, Set<String>> completedGoals = new HashMap<>();
-    private static final Map<UUID, Integer> scanTimers = new HashMap<>();
-    private static final Map<UUID, Integer> progressionIndex = new HashMap<>();
+    private static final Map<UUID, Boolean> sneakingStates = new HashMap<>();
+    private static final Map<UUID, Integer> twerkWindows = new HashMap<>();
 
     private static final LinkedHashMap<String, String> PROGRESSION_PATH = new LinkedHashMap<>();
     private static final Map<String, String> CREATIVE_NAMES = new HashMap<>();
-    private static final String FIRST_ADVANCEMENT = "sf4angel:basic/dirt";
 
     static {
         CREATIVE_NAMES.put("sf4angel:basic/log", "The First Branch");
@@ -736,21 +741,192 @@ public class AchievementHandler {
         PROGRESSION_PATH.put("sf4angel:endgame/collectible_all", "sf4angel:endgame/endgame_complete");
     }
 
-    public static void onPlayerJoin(UUID playerId) {
-        joinTimes.put(playerId, System.currentTimeMillis());
-        completedGoals.putIfAbsent(playerId, new HashSet<>());
-        progressionIndex.putIfAbsent(playerId, getProgressionIndex(FIRST_ADVANCEMENT));
+    public static void grantAdvancement(EntityPlayerMP player, String advancementId) {
+        WorldServer world = (WorldServer) player.world;
+        Advancement advancement = world.getAdvancementManager().getAdvancement(new ResourceLocation(advancementId));
+        if (advancement == null) {
+            LOGGER.warn("Cannot grant missing advancement {}", advancementId);
+            return;
+        }
+
+        PlayerAdvancements advancements = player.getAdvancements();
+        List<String> remaining = new ArrayList<>();
+        for (String criterion : advancements.getProgress(advancement).getRemaningCriteria()) {
+            remaining.add(criterion);
+        }
+        for (String criterion : remaining) {
+            advancements.grantCriterion(advancement, criterion);
+        }
+    }
+
+    public static void checkCustomCounters(EntityPlayerMP player) {
+        int playTicks = player.getStatFile().readStat(StatList.PLAY_ONE_MINUTE);
+        int mobKills = player.getStatFile().readStat(StatList.MOB_KILLS);
+        int deaths = player.getStatFile().readStat(StatList.DEATHS);
+        NBTTagCompound persisted = getPersistedData(player);
+        int blocksMined = persisted.getInteger("sf4angelBlocksMined");
+
+        int inventoryItems = 0;
+        for (int slot = 0; slot < player.inventory.getSizeInventory(); slot++) {
+            if (!player.inventory.getStackInSlot(slot).isEmpty()) {
+                inventoryItems += player.inventory.getStackInSlot(slot).getCount();
+            }
+        }
+
+        if (playTicks >= 20 * 60 * 60 * 10) grantAdvancement(player, "sf4angel:angel/play_10_hours");
+        if (playTicks >= 20 * 60 * 60 * 50) grantAdvancement(player, "sf4angel:angel/play_50_hours");
+        if (mobKills >= 100) grantAdvancement(player, "sf4angel:angel/kill_100_mobs");
+        if (mobKills >= 1000) grantAdvancement(player, "sf4angel:angel/kill_1000_mobs");
+        if (deaths >= 1) grantAdvancement(player, "sf4angel:angel/first_death");
+        if (deaths >= 50) grantAdvancement(player, "sf4angel:angel/death_50");
+        if (blocksMined >= 1000) grantAdvancement(player, "sf4angel:angel/mine_1000_blocks");
+        if (blocksMined >= 10000) grantAdvancement(player, "sf4angel:angel/mine_10000_blocks");
+        if (player.experienceLevel >= 1) grantAdvancement(player, "sf4angel:enhancement/levelup");
+        if (inventoryItems >= 1000) grantAdvancement(player, "sf4angel:basic/resource_monopoly");
+
+        int dimension = player.dimension;
+        recordVisitedDimension(persisted, dimension);
+        if (dimension == 7) grantAdvancement(player, "sf4angel:exploration/twilight_forest");
+        if (dimension == 111) grantAdvancement(player, "sf4angel:exploration/lost_cities");
+        if (dimension == 144) grantAdvancement(player, "sf4angel:exploration/compact_machine");
+        if (dimension == 28885) grantAdvancement(player, "sf4angel:exploration/hunting_dimension");
+        if (player.posY <= 5.0D) grantAdvancement(player, "sf4angel:exploration/deep_sky");
+        if (player.posY <= 0.0D) grantAdvancement(player, "sf4angel:exploration/void_crossing");
+        if (player.world.provider.getDimensionType().getName().toLowerCase(Locale.ROOT).contains("rftools")) {
+            grantAdvancement(player, "sf4angel:power/rftools_dimension");
+        }
+        if (persisted.getTagList("sf4angelVisitedDimensions", 8).tagCount() >= 6) {
+            grantAdvancement(player, "sf4angel:exploration/sky_explorer");
+        }
+    }
+
+    public static void checkTwerk(EntityPlayerMP player) {
+        UUID id = player.getUniqueID();
+        boolean sneaking = player.isSneaking();
+        boolean wasSneaking = sneakingStates.getOrDefault(id, sneaking);
+        sneakingStates.put(id, sneaking);
+
+        int window = Math.max(0, twerkWindows.getOrDefault(id, 0) - 1);
+        if (sneaking && !wasSneaking && isNearSapling(player)) {
+            NBTTagCompound persisted = getPersistedData(player);
+            int changes = window > 0 ? persisted.getInteger("sf4angelTwerkChanges") + 1 : 1;
+            persisted.setInteger("sf4angelTwerkChanges", changes);
+            window = 100;
+            if (changes >= 5) {
+                grantAdvancement(player, "sf4angel:basic/twerk");
+                persisted.setInteger("sf4angelTwerkChanges", 0);
+                window = 0;
+            }
+        }
+        twerkWindows.put(id, window);
+    }
+
+    private static boolean isNearSapling(EntityPlayerMP player) {
+        int originX = (int) Math.floor(player.posX);
+        int originY = (int) Math.floor(player.posY);
+        int originZ = (int) Math.floor(player.posZ);
+        for (int x = originX - 4; x <= originX + 4; x++) {
+            for (int y = originY - 2; y <= originY + 2; y++) {
+                for (int z = originZ - 4; z <= originZ + 4; z++) {
+                    if (player.world.getBlockState(new net.minecraft.util.math.BlockPos(x, y, z)).getBlock() == Blocks.SAPLING) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static void recordAngelAppearance(EntityPlayerMP player) {
+        NBTTagCompound persisted = getPersistedData(player);
+        int appearances = persisted.getInteger("sf4angelAppearances") + 1;
+        persisted.setInteger("sf4angelAppearances", appearances);
+        if (appearances >= 500) {
+            grantAdvancement(player, "sf4angel:angel/angel_friend");
+        }
+    }
+
+    @SubscribeEvent
+    public static void onBlockBreak(BlockEvent.BreakEvent event) {
+        if (event.getWorld().isRemote || !(event.getPlayer() instanceof EntityPlayerMP)) return;
+        EntityPlayerMP player = (EntityPlayerMP) event.getPlayer();
+        NBTTagCompound persisted = getPersistedData(player);
+        persisted.setInteger("sf4angelBlocksMined", persisted.getInteger("sf4angelBlocksMined") + 1);
+    }
+
+    @SubscribeEvent
+    public static void onBlockPlaced(BlockEvent.PlaceEvent event) {
+        if (event.getWorld().isRemote || !(event.getPlayer() instanceof EntityPlayerMP)) return;
+        if (event.getWorld().provider.getDimension() == -1
+            && (event.getPlacedBlock().getBlock() == Blocks.WATER
+                || event.getPlacedBlock().getBlock() == Blocks.FLOWING_WATER)) {
+            grantAdvancement((EntityPlayerMP) event.getPlayer(), "sf4angel:exploration/water_in_nether");
+        }
+    }
+
+    @SubscribeEvent
+    public static void onBabySpawn(BabyEntitySpawnEvent event) {
+        EntityPlayer player = event.getCausedByPlayer();
+        if (!(player instanceof EntityPlayerMP) || player.world.isRemote) return;
+
+        EntityPlayerMP mp = (EntityPlayerMP) player;
+        NBTTagCompound persisted = getPersistedData(mp);
+        int bred = persisted.getInteger("sf4angelAnimalsBred") + 1;
+        persisted.setInteger("sf4angelAnimalsBred", bred);
+        if (bred >= 50) {
+            grantAdvancement(mp, "sf4angel:farming/animal_army");
+        }
+
+        ResourceLocation childId = EntityList.getKey(event.getChild());
+        if (childId != null && "resourcehogs".equals(childId.getResourceDomain())) {
+            grantAdvancement(mp, "sf4angel:farming/resource_hog_breed");
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLivingDamage(LivingDamageEvent event) {
+        if (event.getEntityLiving().world.isRemote || event.getAmount() < 20.0F) return;
+        if (event.getSource().getTrueSource() instanceof EntityPlayerMP) {
+            grantAdvancement((EntityPlayerMP) event.getSource().getTrueSource(), "sf4angel:enhancement/twenty_damage");
+        }
+    }
+
+    public static void removePlayer(UUID id) {
+        sneakingStates.remove(id);
+        twerkWindows.remove(id);
+    }
+
+    private static NBTTagCompound getPersistedData(EntityPlayer player) {
+        NBTTagCompound entityData = player.getEntityData();
+        if (!entityData.hasKey(EntityPlayer.PERSISTED_NBT_TAG)) {
+            entityData.setTag(EntityPlayer.PERSISTED_NBT_TAG, new NBTTagCompound());
+        }
+        return entityData.getCompoundTag(EntityPlayer.PERSISTED_NBT_TAG);
+    }
+
+    private static void recordVisitedDimension(NBTTagCompound persisted, int dimension) {
+        NBTTagList visited = persisted.getTagList("sf4angelVisitedDimensions", 8);
+        String id = Integer.toString(dimension);
+        for (int i = 0; i < visited.tagCount(); i++) {
+            if (id.equals(visited.getStringTagAt(i))) return;
+        }
+        visited.appendTag(new NBTTagString(id));
+        persisted.setTag("sf4angelVisitedDimensions", visited);
     }
 
     public static int getAngelAppearances(EntityPlayer player) {
         return angelAppearanceCount.getOrDefault(player.getUniqueID(), 0);
     }
 
-    private static String getNextAdvancement(String completedAdvancement) {
-        for (Map.Entry<String, String> entry : PROGRESSION_PATH.entrySet()) {
-            if (entry.getKey().equals(completedAdvancement)) {
-                return getCreativeName(entry.getValue());
+    private static String getNextAdvancement(EntityPlayerMP player, String completedAdvancement) {
+        String candidate = PROGRESSION_PATH.get(completedAdvancement);
+        WorldServer world = (WorldServer) player.world;
+        for (int checked = 0; candidate != null && checked <= PROGRESSION_PATH.size(); checked++) {
+            Advancement advancement = world.getAdvancementManager().getAdvancement(new ResourceLocation(candidate));
+            if (advancement != null && !player.getAdvancements().getProgress(advancement).isDone()) {
+                return getCreativeName(candidate);
             }
+            candidate = PROGRESSION_PATH.get(candidate);
         }
         return null;
     }
@@ -799,36 +975,19 @@ public class AchievementHandler {
         return result.toString();
     }
 
-    private static int getProgressionIndex(String advancementId) {
-        int index = 0;
+    private static boolean isNextProgressionAdvancement(EntityPlayerMP player, String advancementId) {
+        WorldServer world = (WorldServer) player.world;
         for (String id : PROGRESSION_PATH.keySet()) {
-            if (id.equals(advancementId)) return index;
-            index++;
+            Advancement advancement = world.getAdvancementManager().getAdvancement(new ResourceLocation(id));
+            if (advancement == null) continue;
+            if (id.equals(advancementId)) return true;
+            if (!player.getAdvancements().getProgress(advancement).isDone()) return false;
         }
-        return 0;
-    }
-
-    private static String getExpectedAdvancement(UUID playerId) {
-        int index = progressionIndex.getOrDefault(playerId, getProgressionIndex(FIRST_ADVANCEMENT));
-        int current = 0;
-        for (String id : PROGRESSION_PATH.keySet()) {
-            if (current == index) return id;
-            current++;
-        }
-        return null;
+        return false;
     }
 
     public static void onAdvancementCompleted(EntityPlayerMP player, String advancementId) {
-        String expected = getExpectedAdvancement(player.getUniqueID());
-        if (expected == null || !expected.equals(advancementId)) {
-            LOGGER.info("Ignoring non-progression advancement for {}: {}", player.getName(), advancementId);
-            return;
-        }
-
-        Set<String> completed = completedGoals.computeIfAbsent(player.getUniqueID(), k -> new HashSet<>());
-        if (completed.contains(advancementId)) return;
-        completed.add(advancementId);
-        progressionIndex.put(player.getUniqueID(), progressionIndex.getOrDefault(player.getUniqueID(), getProgressionIndex(FIRST_ADVANCEMENT)) + 1);
+        boolean advancesProgression = isNextProgressionAdvancement(player, advancementId);
 
         angelAppearanceCount.merge(player.getUniqueID(), 1, Integer::sum);
         int count = getAngelAppearances(player);
@@ -840,14 +999,16 @@ public class AchievementHandler {
         String greeting = AngelPersonality.getAdvancementGreeting(advTitle);
         TypewriterHandler.queueMessage(player, greeting, 0, 0);
 
-        String nextAdv = getNextAdvancement(advancementId);
+        String nextAdv = advancesProgression ? getNextAdvancement(player, advancementId) : null;
         if (nextAdv != null) {
             TypewriterHandler.queueMessage(player, "Next goal: " + nextAdv, 80, 0);
         }
 
-        AngelOracle.checkInventoryAndAdvance(player);
+        if (advancesProgression) {
+            AngelOracle.checkInventoryAndAdvance(player);
+        }
 
-        if (count >= 50) {
+        if (count == 50) {
             TypewriterHandler.queueMessage(player, "The angel smiles upon you, faithful companion.", 120, 0);
         }
 
@@ -862,7 +1023,14 @@ public class AchievementHandler {
             player.posX + 15, player.posY + 15, player.posZ + 15
         );
         List<EntityAngel> nearbyAngels = world.getEntitiesWithinAABB(EntityAngel.class, searchBox);
-        if (nearbyAngels.isEmpty()) {
+        boolean hasOwnedAngel = false;
+        for (EntityAngel nearby : nearbyAngels) {
+            if (player.getUniqueID().equals(nearby.getOwnerId())) {
+                hasOwnedAngel = true;
+                break;
+            }
+        }
+        if (!hasOwnedAngel) {
             EntityAngel angel = new EntityAngel(world);
             angel.setOwnerId(player.getUniqueID());
             double yaw = Math.toRadians(player.rotationYaw);
@@ -872,6 +1040,7 @@ public class AchievementHandler {
                 player.posZ + Math.cos(yaw) * 6.0D
             );
             world.spawnEntity(angel);
+            recordAngelAppearance(player);
         }
     }
 
@@ -885,27 +1054,11 @@ public class AchievementHandler {
 
         String advId = advancement.getId().toString();
         String advName = advancement.getId().getResourcePath();
-        if (advName.contains("root")) return;
+        if (!advId.startsWith("sf4angel:")) return;
+        if (advName.equals("root") || advName.endsWith("/root")) return;
 
         EntityPlayerMP mp = (EntityPlayerMP) player;
         onAdvancementCompleted(mp, advId);
     }
 
-    public static void checkAdvancementProgress(EntityPlayerMP player) {
-        try {
-            PlayerAdvancements advancements = player.getAdvancements();
-            WorldServer ws = (WorldServer) player.world;
-            AdvancementManager manager = ws.getAdvancementManager();
-
-            String expected = getExpectedAdvancement(player.getUniqueID());
-            if (expected == null) return;
-
-            ResourceLocation res = new ResourceLocation(expected);
-            Advancement advancement = manager.getAdvancement(res);
-            if (advancement != null && advancements.getProgress(advancement).isDone()) {
-                onAdvancementCompleted(player, expected);
-            }
-        } catch (Exception e) {
-        }
-    }
 }
