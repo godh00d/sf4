@@ -8,7 +8,6 @@ import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
@@ -19,7 +18,6 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -27,7 +25,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.UUID;
 
 public class EntityAngel extends EntityCreature {
@@ -70,6 +67,8 @@ public class EntityAngel extends EntityCreature {
     private boolean despawnQueued = false;
     private int tickCounter = 0;
     private int moodTimer;
+    private float previousClientPupilYaw;
+    private float previousClientPupilPitch;
     private float clientPupilYaw;
     private float clientPupilPitch;
 
@@ -167,26 +166,6 @@ public class EntityAngel extends EntityCreature {
         }
 
         if (getMoodTimer() > 0) return;
-
-        if (tickCounter % 160 == 0 && world.rand.nextInt(3) == 0) {
-            AxisAlignedBB search = getEntityBoundingBox().grow(5.0D, 3.0D, 5.0D);
-            List<EntityItem> items = world.getEntitiesWithinAABB(EntityItem.class, search,
-                item -> !item.isDead && item.getItem() != null && !item.getItem().isEmpty());
-            EntityItem nearest = null;
-            double nearestDistance = Double.MAX_VALUE;
-            for (EntityItem item : items) {
-                double distance = getDistanceSq(item);
-                if (distance < nearestDistance) {
-                    nearest = item;
-                    nearestDistance = distance;
-                }
-            }
-            if (nearest != null) {
-                setMood(MOOD_CURIOUS, 20);
-                setLookTarget(nearest);
-                return;
-            }
-        }
 
         setMood(MOOD_CALM, 0);
         setLookTarget(owner);
@@ -359,22 +338,19 @@ public class EntityAngel extends EntityCreature {
         this.dataManager.set(LOOK_TARGET_ID, target == null ? -1 : target.getEntityId());
     }
 
-    public void setLookTarget(@Nullable EntityItem target) {
-        this.dataManager.set(LOOK_TARGET_ID, target == null ? -1 : target.getEntityId());
-    }
-
     @Nullable
     public net.minecraft.entity.Entity getLookTarget() {
         int id = this.dataManager.get(LOOK_TARGET_ID);
         return id < 0 ? null : world.getEntityByID(id);
     }
 
-    public float getClientPupilYaw() {
-        return clientPupilYaw;
+    public float getClientPupilYaw(float partialTicks) {
+        return previousClientPupilYaw
+            + MathHelper.wrapDegrees(clientPupilYaw - previousClientPupilYaw) * partialTicks;
     }
 
-    public float getClientPupilPitch() {
-        return clientPupilPitch;
+    public float getClientPupilPitch(float partialTicks) {
+        return previousClientPupilPitch + (clientPupilPitch - previousClientPupilPitch) * partialTicks;
     }
 
     public UUID getOwnerId() {
@@ -430,16 +406,20 @@ public class EntityAngel extends EntityCreature {
     }
 
     private void updateClientGaze() {
+        previousClientPupilYaw = clientPupilYaw;
+        previousClientPupilPitch = clientPupilPitch;
         net.minecraft.entity.Entity target = getLookTarget();
         float targetYawOffset = 0.0F;
         float targetPitch = 0.0F;
         if (target != null) {
             double dx = target.posX - posX;
             double dz = target.posZ - posZ;
-            double lookY = target.posY + target.height * 0.65D;
+            double lookY = target instanceof EntityLivingBase
+                ? target.posY + ((EntityLivingBase) target).getEyeHeight()
+                : target.posY + target.height * 0.5D;
             double horizontal = Math.sqrt(dx * dx + dz * dz);
             float targetYaw = (float) (Math.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
-            targetYawOffset = MathHelper.wrapDegrees(targetYaw - renderYawOffset + 180.0F);
+            targetYawOffset = MathHelper.wrapDegrees(renderYawOffset - targetYaw);
             targetPitch = (float) -(Math.atan2(lookY - (posY + 0.75D), horizontal)
                 * 180.0D / Math.PI);
         }

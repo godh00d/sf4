@@ -7,15 +7,17 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.opengl.GL11;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ModelAngel extends ModelBase {
+
+    private static final int IRIS_SEGMENTS = 16;
 
     private final ModelRenderer body;
     private final ModelRenderer bodyGlow;
     private final ModelRenderer halo;
     private final ModelRenderer haloGlow;
-    private final ModelRenderer irisGlow;
-    private final ModelRenderer iris;
-    private final ModelRenderer pupil;
 
     public ModelAngel() {
         textureWidth = 16;
@@ -27,9 +29,6 @@ public class ModelAngel extends ModelBase {
         halo = squareHalo(11.0F, 2.0F, 2.5F);
         haloGlow = squareHalo(12.0F, 3.0F, 2.5F);
 
-        irisGlow = part(0.0F, 0.0F, 0.0F, -3.0F, -3.0F, 0.0F, 6, 6, 0);
-        iris = part(0.0F, 0.0F, 0.0F, -2.0F, -2.0F, -0.02F, 4, 4, 0);
-        pupil = part(0.0F, 0.0F, 0.0F, -1.0F, -1.0F, -0.05F, 2, 2, 0);
     }
 
     private ModelRenderer part(float x, float y, float z, float boxX, float boxY, float boxZ,
@@ -89,7 +88,9 @@ public class ModelAngel extends ModelBase {
         haloGlow.rotateAngleZ = halo.rotateAngleZ;
         haloGlow.rotationPointY = halo.rotationPointY;
 
-        placeEye(angel.getClientPupilYaw(), angel.getClientPupilPitch());
+        float partialTicks = MathHelper.clamp(ageInTicks - angel.ticksExisted, 0.0F, 1.0F);
+        float eyeYaw = angel.getClientPupilYaw(partialTicks);
+        float eyePitch = angel.getClientPupilPitch(partialTicks);
 
         color(1.0F, 1.0F, 1.0F);
         body.render(scale);
@@ -97,55 +98,11 @@ public class ModelAngel extends ModelBase {
 
         color(1.0F, mood == EntityAngel.MOOD_IRRITATED ? 0.4F : 0.88F, 0.32F);
         halo.render(scale);
-        renderEye(mood, scale);
+        renderEye(mood, eyeYaw, eyePitch, scale);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
-    private void placeEye(float yawDegrees, float pitchDegrees) {
-        double yaw = Math.toRadians(yawDegrees);
-        double pitch = Math.toRadians(pitchDegrees);
-        float horizontal = (float) Math.cos(pitch);
-        float x = (float) Math.sin(yaw) * horizontal;
-        float y = (float) Math.sin(pitch);
-        float z = (float) -Math.cos(yaw) * horizontal;
-        float dominant = Math.max(Math.abs(x), Math.max(Math.abs(y), Math.abs(z)));
-        float distance = 6.08F / Math.max(0.001F, dominant);
-        float surfaceX = x * distance;
-        float surfaceY = y * distance;
-        float surfaceZ = z * distance;
-        float rotationX = 0.0F;
-        float rotationY = 0.0F;
-
-        if (Math.abs(y) >= Math.abs(x) && Math.abs(y) >= Math.abs(z)) {
-            surfaceX = MathHelper.clamp(surfaceX, -4.0F, 4.0F);
-            surfaceZ = MathHelper.clamp(surfaceZ, -4.0F, 4.0F);
-            rotationX = y > 0.0F ? (float) Math.PI * 0.5F : (float) -Math.PI * 0.5F;
-        } else if (Math.abs(x) >= Math.abs(z)) {
-            surfaceY = MathHelper.clamp(surfaceY, -4.0F, 4.0F);
-            surfaceZ = MathHelper.clamp(surfaceZ, -4.0F, 4.0F);
-            rotationY = x > 0.0F ? (float) -Math.PI * 0.5F : (float) Math.PI * 0.5F;
-        } else {
-            surfaceX = MathHelper.clamp(surfaceX, -4.0F, 4.0F);
-            surfaceY = MathHelper.clamp(surfaceY, -4.0F, 4.0F);
-            if (z > 0.0F) rotationY = (float) Math.PI;
-        }
-
-        positionEyePart(irisGlow, surfaceX, surfaceY, surfaceZ, rotationX, rotationY);
-        positionEyePart(iris, surfaceX, surfaceY, surfaceZ, rotationX, rotationY);
-        positionEyePart(pupil, surfaceX, surfaceY, surfaceZ, rotationX, rotationY);
-    }
-
-    private void positionEyePart(ModelRenderer part, float x, float y, float z,
-                                 float rotationX, float rotationY) {
-        part.rotationPointX = x;
-        part.rotationPointY = y;
-        part.rotationPointZ = z;
-        part.rotateAngleX = rotationX;
-        part.rotateAngleY = rotationY;
-        part.rotateAngleZ = 0.0F;
-    }
-
-    private void renderEye(int mood, float scale) {
+    private void renderEye(int mood, float yawDegrees, float pitchDegrees, float scale) {
         GlStateManager.pushMatrix();
         GlStateManager.translate(body.rotationPointX * scale, body.rotationPointY * scale,
             body.rotationPointZ * scale);
@@ -153,27 +110,168 @@ public class ModelAngel extends ModelBase {
         if (body.rotateAngleY != 0.0F) GlStateManager.rotate(body.rotateAngleY * 57.295776F, 0.0F, 1.0F, 0.0F);
         if (body.rotateAngleX != 0.0F) GlStateManager.rotate(body.rotateAngleX * 57.295776F, 1.0F, 0.0F, 0.0F);
 
-        GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+        float[] basis = inverseBodyBasis(createEyeBasis(yawDegrees, pitchDegrees));
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+        GL11.glDisable(GL11.GL_ALPHA_TEST);
         GL11.glDepthMask(false);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        GL11.glColor4f(1.0F, 0.58F, 0.02F, 0.15F);
-        irisGlow.render(scale);
+        GL11.glColor4f(1.0F, 0.58F, 0.02F, 0.08F);
+        drawSurfaceShape(basis, 6.1F, scale, 0.39F, IRIS_SEGMENTS);
 
         GL11.glDepthMask(true);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        float surfaceAlpha = 1.0F;
-        GL11.glColor4f(1.0F, 0.74F, 0.08F, surfaceAlpha);
-        iris.render(scale);
+        GL11.glColor4f(1.0F, 0.7F, 0.05F, 1.0F);
+        drawSurfaceShape(basis, 6.06F, scale, 0.34F, IRIS_SEGMENTS);
         if (mood == EntityAngel.MOOD_IRRITATED) {
-            GL11.glColor4f(0.28F, 0.0F, 0.0F, surfaceAlpha);
+            GL11.glColor4f(0.28F, 0.0F, 0.0F, 1.0F);
         } else {
-            GL11.glColor4f(0.015F, 0.02F, 0.025F, surfaceAlpha);
+            GL11.glColor4f(0.015F, 0.02F, 0.025F, 1.0F);
         }
-        pupil.render(scale);
+        drawSurfaceShape(basis, 6.11F, scale, 0.15F, 12);
         GL11.glPopAttrib();
         GlStateManager.popMatrix();
+    }
+
+    private float[] createEyeBasis(float yawDegrees, float pitchDegrees) {
+        double yaw = Math.toRadians(yawDegrees);
+        double pitch = Math.toRadians(pitchDegrees);
+        float sinYaw = (float) Math.sin(yaw);
+        float cosYaw = (float) Math.cos(yaw);
+        float sinPitch = (float) Math.sin(pitch);
+        float cosPitch = (float) Math.cos(pitch);
+        return new float[] {
+            sinYaw * cosPitch, sinPitch, -cosYaw * cosPitch,
+            cosYaw, 0.0F, sinYaw,
+            -sinYaw * sinPitch, cosPitch, cosYaw * sinPitch
+        };
+    }
+
+    private float[] inverseBodyBasis(float[] basis) {
+        float[] transformed = new float[basis.length];
+        for (int i = 0; i < basis.length; i += 3) {
+            inverseBodyVector(basis[i], basis[i + 1], basis[i + 2], transformed, i);
+        }
+        return transformed;
+    }
+
+    private void inverseBodyVector(float x, float y, float z, float[] output, int offset) {
+        float cosZ = MathHelper.cos(body.rotateAngleZ);
+        float sinZ = MathHelper.sin(body.rotateAngleZ);
+        float transformedX = cosZ * x + sinZ * y;
+        float transformedY = -sinZ * x + cosZ * y;
+        float cosY = MathHelper.cos(body.rotateAngleY);
+        float sinY = MathHelper.sin(body.rotateAngleY);
+        float transformedZ = sinY * transformedX + cosY * z;
+        transformedX = cosY * transformedX - sinY * z;
+        float cosX = MathHelper.cos(body.rotateAngleX);
+        float sinX = MathHelper.sin(body.rotateAngleX);
+        float finalY = cosX * transformedY + sinX * transformedZ;
+        float finalZ = -sinX * transformedY + cosX * transformedZ;
+
+        output[offset] = transformedX;
+        output[offset + 1] = finalY;
+        output[offset + 2] = finalZ;
+    }
+
+    private void drawSurfaceShape(float[] basis, float radius, float scale,
+                                  float shapeRadius, int segments) {
+        List<EyePoint> shape = new ArrayList<>(segments);
+        for (int i = 0; i < segments; i++) {
+            double angle = Math.PI * 2.0D * i / segments;
+            shape.add(new EyePoint((float) Math.cos(angle) * shapeRadius,
+                (float) Math.sin(angle) * shapeRadius));
+        }
+
+        for (int face = 0; face < 6; face++) {
+            List<EyePoint> clipped = shape;
+            for (int constraint = 0; constraint < 5 && !clipped.isEmpty(); constraint++) {
+                clipped = clipToFace(clipped, basis, face, constraint);
+            }
+            if (clipped.size() < 3) continue;
+
+            GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+            for (EyePoint point : clipped) {
+                emitFaceVertex(basis, point, face, radius, scale);
+            }
+            GL11.glEnd();
+        }
+    }
+
+    private List<EyePoint> clipToFace(List<EyePoint> input, float[] basis,
+                                      int face, int constraint) {
+        List<EyePoint> output = new ArrayList<>(input.size() + 2);
+        EyePoint previous = input.get(input.size() - 1);
+        float previousValue = faceConstraint(basis, previous, face, constraint);
+        for (EyePoint current : input) {
+            float currentValue = faceConstraint(basis, current, face, constraint);
+            boolean previousInside = previousValue >= 0.0F;
+            boolean currentInside = currentValue >= 0.0F;
+            if (previousInside != currentInside) {
+                float amount = previousValue / (previousValue - currentValue);
+                output.add(new EyePoint(previous.u + (current.u - previous.u) * amount,
+                    previous.v + (current.v - previous.v) * amount));
+            }
+            if (currentInside) output.add(current);
+            previous = current;
+            previousValue = currentValue;
+        }
+        return output;
+    }
+
+    private float faceConstraint(float[] basis, EyePoint point, int face, int constraint) {
+        float x = basis[0] + basis[3] * point.u + basis[6] * point.v;
+        float y = basis[1] + basis[4] * point.u + basis[7] * point.v;
+        float z = basis[2] + basis[5] * point.u + basis[8] * point.v;
+        float primary;
+        float firstOther;
+        float secondOther;
+        switch (face) {
+            case 0: primary = x; firstOther = y; secondOther = z; break;
+            case 1: primary = -x; firstOther = y; secondOther = z; break;
+            case 2: primary = y; firstOther = x; secondOther = z; break;
+            case 3: primary = -y; firstOther = x; secondOther = z; break;
+            case 4: primary = z; firstOther = x; secondOther = y; break;
+            default: primary = -z; firstOther = x; secondOther = y; break;
+        }
+        switch (constraint) {
+            case 0: return primary;
+            case 1: return primary - firstOther;
+            case 2: return primary + firstOther;
+            case 3: return primary - secondOther;
+            default: return primary + secondOther;
+        }
+    }
+
+    private void emitFaceVertex(float[] basis, EyePoint point, int face,
+                                float radius, float scale) {
+        float x = basis[0] + basis[3] * point.u + basis[6] * point.v;
+        float y = basis[1] + basis[4] * point.u + basis[7] * point.v;
+        float z = basis[2] + basis[5] * point.u + basis[8] * point.v;
+        float primary;
+        switch (face) {
+            case 0: primary = x; break;
+            case 1: primary = -x; break;
+            case 2: primary = y; break;
+            case 3: primary = -y; break;
+            case 4: primary = z; break;
+            default: primary = -z; break;
+        }
+        float distance = radius / Math.max(0.001F, primary);
+        GL11.glVertex3f(x * distance * scale, y * distance * scale, z * distance * scale);
+    }
+
+    private static class EyePoint {
+        final float u;
+        final float v;
+
+        EyePoint(float u, float v) {
+            this.u = u;
+            this.v = v;
+        }
     }
 
     private void renderGlow(int mood, float scale) {
