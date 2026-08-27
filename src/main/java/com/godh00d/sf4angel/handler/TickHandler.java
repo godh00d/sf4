@@ -25,7 +25,6 @@ public class TickHandler {
     private static final Map<UUID, Integer> idleTimers = new HashMap<>();
     private static final Map<String, Integer> healthWarnTimers = new HashMap<>();
     private static final Map<UUID, MovementState> movementStates = new HashMap<>();
-    private static final Map<UUID, Integer> counterCheckTimers = new HashMap<>();
     private static final int MIN_IDLE_TICKS = 6000;
     private static final int MAX_IDLE_TICKS = 12000;
 
@@ -50,13 +49,6 @@ public class TickHandler {
         handleAngelFollow(mp);
 
         handleHealthWarning(mp);
-
-        int counterTimer = counterCheckTimers.getOrDefault(player.getUniqueID(), 0) + 1;
-        if (counterTimer >= 20) {
-            AchievementHandler.checkCustomCounters(mp);
-            counterTimer = 0;
-        }
-        counterCheckTimers.put(player.getUniqueID(), counterTimer);
 
     }
 
@@ -226,7 +218,6 @@ public class TickHandler {
     public static void removePlayer(UUID id) {
         idleTimers.remove(id);
         movementStates.remove(id);
-        counterCheckTimers.remove(id);
         healthWarnTimers.remove(id.toString() + "_healthwarn");
         AchievementHandler.removePlayer(id);
         IntegrationEngine.removePlayer(id);

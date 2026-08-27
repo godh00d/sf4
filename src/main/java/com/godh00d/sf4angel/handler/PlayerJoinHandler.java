@@ -72,7 +72,6 @@ public class PlayerJoinHandler {
         );
         world.spawnEntity(angel);
         AchievementHandler.recordAngelAppearance(player);
-        AchievementHandler.grantCriterion(player, "sf4angel:angel/angel_first");
 
         String[] intro = AngelPersonality.getFirstLoginIntro();
         String nextGoal = AchievementHandler.getNextGoal(player);

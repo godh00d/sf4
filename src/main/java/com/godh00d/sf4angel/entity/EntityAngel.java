@@ -1,7 +1,6 @@
 package com.godh00d.sf4angel.entity;
 
 import com.godh00d.sf4angel.handler.TickHandler;
-import com.godh00d.sf4angel.handler.AchievementHandler;
 import com.godh00d.sf4angel.knowledge.AngelOracle;
 import com.godh00d.sf4angel.knowledge.ChestScanner;
 import com.godh00d.sf4angel.personality.AngelPersonality;
@@ -184,10 +183,6 @@ public class EntityAngel extends EntityCreature {
             }
 
             if (attacker instanceof EntityPlayerMP) {
-                AchievementHandler.grantCriterion((EntityPlayerMP) attacker, "sf4angel:angel/angel_strike");
-                if (attacker.getHealth() <= 4.0F) {
-                    AchievementHandler.grantCriterion((EntityPlayerMP) attacker, "sf4angel:angel/angel_killed_by");
-                }
                 String response = AngelPersonality.getRandomAttackResponse();
                 TypewriterHandler.queueRedMessage((EntityPlayerMP) attacker, response, 0, 0);
             }

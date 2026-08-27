@@ -47,14 +47,14 @@ The first build downloads ForgeGradle, Forge, mappings, and other dependencies, 
 
 ## Runtime Integration
 
-Triumph handles criteria that can be represented declaratively, such as inventory changes and completed prerequisite advancements. `AchievementHandler` grants criteria that need server-side state or Forge events, including:
+Triumph handles declarative inventory, location, and parent-completion criteria. Java handlers cover conditions that require server-side events or verified mod state, including:
 
-- Play-time, kill, death, block-breaking, breeding, and angel-appearance counters
-- High-damage attacks and specific angel interactions
-- Dimension visits, deep-sky/void positions, and visited-dimension totals
-- Repeated crouching near a sapling and placing water in the Nether
+- Breeding, sleeping, food variety, boss kills, dimension entry, and timed crouching near saplings
+- Tinkers tools, Deep Mob Learning models, automated farming, storage networks, and digital crafting
+- Mekanism, NuclearCraft, Matter Overdrive, Industrial Foregoing, and Extended Crafting machine operation
+- Optional challenge and Prestige progress with persistent player or machine attribution
 
-Ambiguous goals are intentionally not granted from broad proxies. For example, network-wide RF/t generation, total storage-network contents, and mod-specific tool state require dedicated integrations before they can be measured truthfully.
+Ambiguous goals are never granted from broad possession proxies. Operation-based achievements require correlated machine state, output, ownership, and progression evidence and fail closed when an installed mod API cannot be verified.
 
 ## Project Layout
 

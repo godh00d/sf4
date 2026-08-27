@@ -19,7 +19,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
-import net.minecraft.stats.StatList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -71,25 +70,6 @@ public class AchievementHandler {
             return;
         }
         player.getAdvancements().grantCriterion(advancement, CUSTOM);
-    }
-
-    public static void checkCustomCounters(EntityPlayerMP player) {
-        int playTicks = player.getStatFile().readStat(StatList.PLAY_ONE_MINUTE);
-        int mobKills = player.getStatFile().readStat(StatList.MOB_KILLS);
-        int deaths = player.getStatFile().readStat(StatList.DEATHS);
-        NBTTagCompound persisted = getPersistedData(player);
-        int blocksMined = persisted.getInteger("sf4angelBlocksMined");
-
-        // Existing angel milestones remain cosmetic side-content and use the same safe criterion contract.
-        if (playTicks >= 20 * 60 * 60 * 10) grantCriterion(player, "sf4angel:angel/play_10_hours");
-        if (playTicks >= 20 * 60 * 60 * 50) grantCriterion(player, "sf4angel:angel/play_50_hours");
-        if (mobKills >= 100) grantCriterion(player, "sf4angel:angel/kill_100_mobs");
-        if (mobKills >= 1000) grantCriterion(player, "sf4angel:angel/kill_1000_mobs");
-        if (deaths >= 1) grantCriterion(player, "sf4angel:angel/first_death");
-        if (deaths >= 50) grantCriterion(player, "sf4angel:angel/death_50");
-        if (blocksMined >= 1000) grantCriterion(player, "sf4angel:angel/mine_1000_blocks");
-        if (blocksMined >= 10000) grantCriterion(player, "sf4angel:angel/mine_10000_blocks");
-
     }
 
     public static void checkTwerk(EntityPlayerMP player) {
@@ -254,7 +234,6 @@ public class AchievementHandler {
         NBTTagCompound persisted = getPersistedData(player);
         int appearances = persisted.getInteger("sf4angelAppearances") + 1;
         persisted.setInteger("sf4angelAppearances", appearances);
-        if (appearances >= 500) grantCriterion(player, "sf4angel:angel/angel_friend");
     }
 
     public static void removePlayer(UUID id) {
