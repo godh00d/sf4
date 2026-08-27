@@ -1,101 +1,83 @@
 # SF4 Angel Guide
 
-SF4 Angel Guide is a client-and-server Forge mod for Minecraft 1.12.2 that gives SkyFactory 4 a visible in-world guide. A glowing cube-shaped angel appears for important moments, presents progression messages through an action-bar typewriter, and reacts to the custom `sf4angel` Triumph advancement tree.
+SF4 Angel Guide is a custom progression overhaul for SkyFactory 4.2.4. It adds a small in-world companion and replaces the usual rapid checklist with 129 achievements built around the pack's actual progression.
 
-The mod is designed for a customized SkyFactory 4 instance. It is not a standalone replacement for the modpack's quests or advancement configuration.
+The angel appears when something matters: joining a world, returning after death, completing an achievement, or running low on health. Messages are shown through the action bar instead of a separate quest window.
 
-## Features
+The current design is a glowing white cube that acts as one large eye. Its pupil follows players and nearby objects across every face of the cube, including around edges and corners. The eye has a neon gold halo, restrained idle particles, and different movement patterns for curiosity, concern, pride, and irritation.
 
-- Owner-specific angel entities for multiplayer-safe spawning and despawning
-- White rotating cube model with an independently rotating gold square halo
-- Emissive rendering, particles, body sway, and several distant movement patterns
-- Typewriter messages with a moving cursor, reverse-untyping, queue priorities, and immediate red warnings
-- Login, respawn, health, attack, and achievement reactions
-- A congratulation for every completed non-root `sf4angel:*` advancement
-- Linear next-goal prompts without forcing unrelated achievements into that sequence
-- Persisted counters for play time, kills, deaths, mined blocks, appearances, breeding, and dimension visits
-- Java-backed conditions for achievements Triumph cannot express reliably
+## Achievement Overhaul
+
+The catalog contains:
+
+- 110 core achievements
+- 13 optional challenges
+- 6 Prestige achievements
+
+The tree follows recipes, dimensions, machine tiers, and GameStages from the installed pack. Parallel systems stay parallel, so completing one machine does not arbitrarily gate an unrelated branch. Prestige content remains hidden until its stage is available.
+
+Simple conditions are handled by Triumph scripts. Machine operation, automation, ownership, multiblocks, and other stateful goals are checked by the Java mod. This is especially important for achievements where merely holding an output would not prove that the player used the system.
+
+See [ACHIEVEMENT_TREE.md](ACHIEVEMENT_TREE.md) for the dependency map and [ACHIEVEMENT_PLAN.md](ACHIEVEMENT_PLAN.md) for the full catalog.
+
+## Other Features
+
+- Per-player angels that work in multiplayer
+- Action-bar dialogue with typed and erased text
+- Reactions to achievements, attacks, health, login, and respawn
+- Natural following movement that slows when watched
+- Persistent counters used by long-term achievements
+- Integrations for Mekanism, NuclearCraft, Deep Mob Learning, AE2, Industrial Foregoing, Matter Overdrive, and other pack systems
 
 ## Requirements
 
 - Minecraft 1.12.2
-- Minecraft Forge 14.23.5.2859
-- Java Development Kit 8 for building
-- SkyFactory 4 and its configured Triumph 3.19.2 advancement scripts at runtime
+- SkyFactory 4.2.4
+- Triumph 3.19.2
+- Minecraft Forge 14.23.5.2859 or the pack's newer 14.23.5.2860 build
+- Java 8 to build from source
+
+The mod and Triumph configuration are a matched set. Installing only the jar will not add the achievement tree.
 
 ## Installation
 
-1. Build the mod or obtain `sf4angel-1.0.0.jar` from a trusted release.
-2. Place the jar in the SkyFactory 4 instance's `mods` directory.
-3. Install the matching custom Triumph scripts under `config/triumph/script/sf4angel/`.
-4. Start the pack and confirm that the log contains `Registered EntityAngelRender during preInit`.
+There is not a packaged release yet. To install the current development version:
 
-The mod jar alone does not contain the planned 129-achievement Triumph tree. Advancement layout, titles, parent relationships, and most item criteria are supplied by the instance configuration.
+1. Build `sf4angel-1.0.0.jar` or use a jar produced from this revision.
+2. Put the jar in the SkyFactory 4 `mods` folder on the client and server.
+3. Copy `instance-config/triumph/` into the instance's `config/triumph/` directory.
+4. Start the pack and check `logs/latest.log` if Triumph reports a script error.
 
-## Build
+Back up an existing Triumph configuration before replacing it.
 
-Use a 64-bit JDK 8. Newer Java versions are not supported by this Minecraft/ForgeGradle toolchain.
+## Building
+
+ForgeGradle for Minecraft 1.12.2 requires a 64-bit JDK 8.
 
 ```powershell
 $env:JAVA_HOME = "C:\path\to\jdk8"
 .\gradlew.bat clean build
 ```
 
-The reobfuscated mod jar is written to `build/libs/sf4angel-1.0.0.jar`.
+The finished jar is written to `build/libs/sf4angel-1.0.0.jar`.
 
-The first build downloads ForgeGradle, Forge, mappings, and other dependencies, so it requires network access and can take several minutes.
+To regenerate and validate the Triumph scripts:
 
-## Runtime Integration
-
-Triumph handles declarative inventory, location, and parent-completion criteria. Java handlers cover conditions that require server-side events or verified mod state, including:
-
-- Breeding, sleeping, food variety, boss kills, dimension entry, and timed crouching near saplings
-- Tinkers tools, Deep Mob Learning models, automated farming, storage networks, and digital crafting
-- Mekanism, NuclearCraft, Matter Overdrive, Industrial Foregoing, and Extended Crafting machine operation
-- Optional challenge and Prestige progress with persistent player or machine attribution
-
-Ambiguous goals are never granted from broad possession proxies. Operation-based achievements require correlated machine state, output, ownership, and progression evidence and fail closed when an installed mod API cannot be verified.
-
-## Project Layout
-
-| Path | Purpose |
-| --- | --- |
-| `src/main/java/com/godh00d/sf4angel/entity/` | Angel entity, renderer, and model |
-| `src/main/java/com/godh00d/sf4angel/handler/` | Player lifecycle, ticks, achievements, and counters |
-| `src/main/java/com/godh00d/sf4angel/typewriter/` | Per-player action-bar message queues |
-| `src/main/java/com/godh00d/sf4angel/personality/` | Angel dialogue selection |
-| `src/main/java/com/godh00d/sf4angel/knowledge/` | Goal and inventory guidance |
-| `src/main/java/com/godh00d/sf4angel/network/` | Forge SimpleNetworkWrapper messages |
-| `src/main/resources/` | Forge metadata, language data, and the angel texture |
-
-## Troubleshooting
-
-- **The build uses the wrong Java version:** set `JAVA_HOME` to a JDK 8 installation in the same terminal before running Gradle.
-- **The angel is invisible:** verify client-side installation and look for the renderer registration line in `logs/latest.log`.
-- **Achievements are absent or malformed:** inspect Triumph parsing errors in `logs/latest.log` and verify the instance's `config/triumph/script/sf4angel/` directory.
-- **A Java-managed achievement does not complete:** both client and server must run the same jar, and the Triumph advancement ID must match the ID used by `AchievementHandler`.
-- **A replaced jar remains locked:** fully close Minecraft and its launcher process before replacing the file.
-
-## Development Status
-
-This repository is an instance-specific work in progress. The Java mod builds successfully, but there is currently no automated test suite. Validation consists of a clean Gradle build, Triumph script checks, and an in-game Forge log/runtime pass.
-
-## Achievement Tree
-
-The reduced catalog contains **110 core**, **13 optional**, and **6 prestige-only** achievements (**129 total**). It rewards distinct gameplay systems rather than recipe trivia: do not split ingredients from outputs unless they prove separate systems, and do not create arbitrary two-minute reward bursts. All modded targets are resolved against the installed pack in `REGISTRY_MANIFEST.md`; operation-based goals remain Java integrations rather than inventory proxies.
-
-```mermaid
-flowchart LR
-    ROOTS["3 display roots"] -. display only .-> CORE["110 core"]
-    ROOTS -. display only .-> OPTIONAL["13 optional"]
-    ROOTS -. display only .-> PRESTIGE["6 prestige-only"]
-    CORE --> FINAL(["core/the_sky_finally_claps"])
-    PRESTIGE --> PARABOX["time_is_a_flat_parabox"]
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\instance-config\generate_triumph.ps1
 ```
 
-Display-root links do not require root completion. Optional achievements never parent core achievements. Prestige Worldwide has no achievement prerequisite; the Parabox achievement follows it, and each installed Prestige unlock branch follows the Parabox while retaining its own game-stage gate.
+## Repository Guide
 
-- [Detailed achievement trees](ACHIEVEMENT_TREE.md)
-- [Implementation-ready catalog of all 129 achievements](ACHIEVEMENT_PLAN.md)
+| Path | Contents |
+| --- | --- |
+| `ACHIEVEMENT_PLAN.md` | Achievement IDs, triggers, stages, and prerequisites |
+| `ACHIEVEMENT_TREE.md` | Dependency diagrams for the complete tree |
+| `REGISTRY_MANIFEST.md` | Registry IDs and integration evidence from the pack |
+| `instance-config/triumph/` | Generated Triumph configuration |
+| `instance-config/generate_triumph.ps1` | Generator and consistency checks |
+| `src/main/java/` | Angel behavior, rendering, dialogue, and achievement integrations |
 
-The authoritative edge-by-edge diagrams are kept in `ACHIEVEMENT_TREE.md`; generated Triumph scripts are deterministic output of `instance-config/generate_triumph.ps1`.
+## Current Status
+
+The project builds and the 129-achievement configuration passes its generator checks. It is still instance-specific and needs broader in-game testing, particularly for mod integrations that inspect machine state through reflection. There is no automated Minecraft test suite.

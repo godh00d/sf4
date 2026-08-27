@@ -19,11 +19,17 @@ public class EntityAngelRender extends RenderLiving<EntityAngel> {
 
     @Override
     protected void renderLivingAt(EntityAngel angel, double x, double y, double z) {
-        float progress = Math.min(1.0F, (float) angel.getStateTimer() / EntityAngel.TRANSITION_TICKS);
+        int transitionTicks = angel.getVisualState() == EntityAngel.STATE_DESPAWNING
+            ? EntityAngel.DESPAWN_TRANSITION_TICKS - 1 : EntityAngel.TRANSITION_TICKS - 1;
+        float progress = Math.min(1.0F, (float) angel.getStateTimer() / transitionTicks);
         double transitionY = 0.0D;
         if (angel.getAnimationType() == EntityAngel.ANIM_SKY) {
-            if (angel.getVisualState() == EntityAngel.STATE_SPAWNING) transitionY = (1.0F - progress) * 10.0D;
-            if (angel.getVisualState() == EntityAngel.STATE_DESPAWNING) transitionY = progress * 10.0D;
+            if (angel.getVisualState() == EntityAngel.STATE_SPAWNING) {
+                transitionY = (1.0F - progress) * EntityAngel.FLY_AWAY_HEIGHT;
+            }
+            if (angel.getVisualState() == EntityAngel.STATE_DESPAWNING) {
+                transitionY = progress * EntityAngel.FLY_AWAY_HEIGHT;
+            }
         }
         super.renderLivingAt(angel, x, y + transitionY, z);
     }

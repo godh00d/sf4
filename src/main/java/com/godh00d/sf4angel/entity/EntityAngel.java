@@ -21,6 +21,7 @@ import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -41,6 +42,10 @@ public class EntityAngel extends EntityCreature {
         EntityDataManager.createKey(EntityAngel.class, DataSerializers.FLOAT);
     public static final DataParameter<Integer> OWNER_ID =
         EntityDataManager.createKey(EntityAngel.class, DataSerializers.VARINT);
+    public static final DataParameter<Integer> MOOD =
+        EntityDataManager.createKey(EntityAngel.class, DataSerializers.VARINT);
+    public static final DataParameter<Integer> LOOK_TARGET_ID =
+        EntityDataManager.createKey(EntityAngel.class, DataSerializers.VARINT);
 
     public static final int STATE_HIDDEN = 0;
     public static final int STATE_SPAWNING = 1;
@@ -51,11 +56,22 @@ public class EntityAngel extends EntityCreature {
     public static final int ANIM_SPIN = 1;
     public static final int ANIM_SKY = 2;
 
+    public static final int MOOD_CALM = 0;
+    public static final int MOOD_CURIOUS = 1;
+    public static final int MOOD_PROUD = 2;
+    public static final int MOOD_CONCERNED = 3;
+    public static final int MOOD_IRRITATED = 4;
+
     public static final int TRANSITION_TICKS = 24;
+    public static final int DESPAWN_TRANSITION_TICKS = 40;
+    public static final double FLY_AWAY_HEIGHT = 24.0D;
 
     private UUID ownerId;
     private boolean despawnQueued = false;
     private int tickCounter = 0;
+    private int moodTimer;
+    private float clientPupilYaw;
+    private float clientPupilPitch;
 
     public EntityAngel(World world) {
         super(world);
@@ -73,6 +89,8 @@ public class EntityAngel extends EntityCreature {
         this.dataManager.register(STATE_TIMER, 0);
         this.dataManager.register(HALO_ANGLE, 0.0F);
         this.dataManager.register(OWNER_ID, -1);
+        this.dataManager.register(MOOD, MOOD_CALM);
+        this.dataManager.register(LOOK_TARGET_ID, -1);
     }
 
     @Override
@@ -128,14 +146,75 @@ public class EntityAngel extends EntityCreature {
         int timer = getStateTimer() + 1;
         setStateTimer(timer);
 
+        updatePersonality();
+        updateFacing();
         checkDespawn();
+    }
+
+    private void updatePersonality() {
+        EntityPlayer owner = getOwnerEntity();
+        if (owner == null) return;
+        if (getLookTarget() == null) setLookTarget(owner);
+
+        int moodTimer = getMoodTimer();
+        if (moodTimer > 0) {
+            setMoodTimer(moodTimer - 1);
+        }
+
+        if (getMood() != MOOD_IRRITATED && owner.getHealth() < owner.getMaxHealth() * 0.3F) {
+            setMood(MOOD_CONCERNED, 30);
+            setLookTarget(owner);
+            return;
+        }
+
+        if (getMoodTimer() > 0) return;
+
+        if (tickCounter % 20 == 0) {
+            AxisAlignedBB search = getEntityBoundingBox().grow(5.0D, 3.0D, 5.0D);
+            List<EntityItem> items = world.getEntitiesWithinAABB(EntityItem.class, search,
+                item -> !item.isDead && item.getItem() != null && !item.getItem().isEmpty());
+            EntityItem nearest = null;
+            double nearestDistance = Double.MAX_VALUE;
+            for (EntityItem item : items) {
+                double distance = getDistanceSq(item);
+                if (distance < nearestDistance) {
+                    nearest = item;
+                    nearestDistance = distance;
+                }
+            }
+            if (nearest != null) {
+                setMood(MOOD_CURIOUS, 45);
+                setLookTarget(nearest);
+                return;
+            }
+        }
+
+        setMood(MOOD_CALM, 0);
+        setLookTarget(owner);
+    }
+
+    private void updateFacing() {
+        net.minecraft.entity.Entity target = getLookTarget();
+        if (target == null) return;
+        double dx = target.posX - posX;
+        double dz = target.posZ - posZ;
+        if (dx * dx + dz * dz < 0.001D) return;
+        float targetYaw = (float) (Math.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
+        rotationYawHead = approachAngle(rotationYawHead, targetYaw, 9.0F);
+        renderYawOffset = approachAngle(renderYawOffset, targetYaw, 2.5F);
+        rotationYaw = renderYawOffset;
+    }
+
+    private float approachAngle(float current, float target, float maximumStep) {
+        float difference = net.minecraft.util.math.MathHelper.wrapDegrees(target - current);
+        return current + net.minecraft.util.math.MathHelper.clamp(difference, -maximumStep, maximumStep);
     }
 
     private void updateDespawning() {
         int timer = getStateTimer() + 1;
         setStateTimer(timer);
 
-        if (timer >= TRANSITION_TICKS) {
+        if (timer >= DESPAWN_TRANSITION_TICKS) {
             setDead();
         }
     }
@@ -157,7 +236,7 @@ public class EntityAngel extends EntityCreature {
         if (getVisualState() == STATE_DESPAWNING || getVisualState() == STATE_HIDDEN) return;
         setVisualState(STATE_DESPAWNING);
         setStateTimer(0);
-        this.dataManager.set(ANIMATION_TYPE, getRandomDespawnAnim());
+        this.dataManager.set(ANIMATION_TYPE, ANIM_SKY);
     }
 
     @Override
@@ -169,6 +248,8 @@ public class EntityAngel extends EntityCreature {
 
         if (source.getTrueSource() instanceof EntityPlayer) {
             EntityPlayer attacker = (EntityPlayer) source.getTrueSource();
+            setMood(MOOD_IRRITATED, 100);
+            setLookTarget(attacker);
             attacker.attackEntityFrom(DamageSource.causeMobDamage(this), 4.0F);
 
             if (attacker.world instanceof WorldServer) {
@@ -275,6 +356,45 @@ public class EntityAngel extends EntityCreature {
         this.dataManager.set(HALO_ANGLE, angle);
     }
 
+    public int getMood() {
+        return this.dataManager.get(MOOD);
+    }
+
+    public int getMoodTimer() {
+        return moodTimer;
+    }
+
+    public void setMood(int mood, int ticks) {
+        this.dataManager.set(MOOD, mood);
+        moodTimer = Math.max(0, ticks);
+    }
+
+    public void setMoodTimer(int ticks) {
+        moodTimer = Math.max(0, ticks);
+    }
+
+    public void setLookTarget(@Nullable EntityLivingBase target) {
+        this.dataManager.set(LOOK_TARGET_ID, target == null ? -1 : target.getEntityId());
+    }
+
+    public void setLookTarget(@Nullable EntityItem target) {
+        this.dataManager.set(LOOK_TARGET_ID, target == null ? -1 : target.getEntityId());
+    }
+
+    @Nullable
+    public net.minecraft.entity.Entity getLookTarget() {
+        int id = this.dataManager.get(LOOK_TARGET_ID);
+        return id < 0 ? null : world.getEntityByID(id);
+    }
+
+    public float getClientPupilYaw() {
+        return clientPupilYaw;
+    }
+
+    public float getClientPupilPitch() {
+        return clientPupilPitch;
+    }
+
     public UUID getOwnerId() {
         if (ownerId != null) return ownerId;
         int id = this.dataManager.get(OWNER_ID);
@@ -292,6 +412,7 @@ public class EntityAngel extends EntityCreature {
             EntityPlayer p = (EntityPlayer) obj;
             if (p.getUniqueID().equals(uuid)) {
                 this.dataManager.set(OWNER_ID, p.getEntityId());
+                setLookTarget(p);
                 this.ownerId = uuid;
                 return;
             }
@@ -315,27 +436,65 @@ public class EntityAngel extends EntityCreature {
         return world.rand.nextInt(3);
     }
 
-    private int getRandomDespawnAnim() {
-        return world.rand.nextInt(3);
-    }
-
     private void updateClientVisuals() {
         float halo = getHaloAngle() + 0.05F;
         if (halo > 6.283F) halo -= 6.283F;
         setHaloAngle(halo);
 
         if (getVisualState() != STATE_HIDDEN) {
+            updateClientGaze();
             spawnClientParticles();
         }
     }
 
+    private void updateClientGaze() {
+        net.minecraft.entity.Entity target = getLookTarget();
+        float targetYawOffset = 0.0F;
+        float targetPitch = 0.0F;
+        if (target != null) {
+            double dx = target.posX - posX;
+            double dz = target.posZ - posZ;
+            double lookY = target.posY + target.height * 0.65D;
+            double horizontal = Math.sqrt(dx * dx + dz * dz);
+            float targetYaw = (float) (Math.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
+            targetYawOffset = MathHelper.wrapDegrees(targetYaw - renderYawOffset);
+            targetPitch = (float) -(Math.atan2(lookY - (posY + 0.75D), horizontal)
+                * 180.0D / Math.PI);
+        }
+
+        int mood = getMood();
+        int dartInterval = mood == MOOD_CURIOUS || mood == MOOD_IRRITATED ? 42
+            : mood == MOOD_PROUD ? 55 : mood == MOOD_CONCERNED ? 68 : 90;
+        int dartTime = (ticksExisted + getEntityId() * 7) % dartInterval;
+        int dartCycle = (ticksExisted + getEntityId() * 7) / dartInterval;
+        float dartYaw = 0.0F;
+        float dartPitch = 0.0F;
+        if (dartTime < 8) {
+            boolean wideDart = dartCycle % 4 == 0;
+            float yawRange = wideDart ? 125.0F : 34.0F;
+            float pitchRange = wideDart ? 68.0F : 18.0F;
+            dartYaw = MathHelper.sin((dartCycle * 19 + getEntityId()) * 1.73F) * yawRange;
+            dartPitch = MathHelper.cos((dartCycle * 13 + getEntityId()) * 1.31F) * pitchRange;
+        }
+        float desiredPupilYaw = MathHelper.wrapDegrees(targetYawOffset + dartYaw);
+        float desiredPupilPitch = MathHelper.clamp(targetPitch + dartPitch, -82.0F, 82.0F);
+        float pupilSpeed = mood == MOOD_CONCERNED ? 0.18F
+            : mood == MOOD_CURIOUS || mood == MOOD_IRRITATED ? 0.38F : 0.29F;
+        clientPupilYaw += MathHelper.wrapDegrees(desiredPupilYaw - clientPupilYaw) * pupilSpeed;
+        clientPupilPitch += (desiredPupilPitch - clientPupilPitch) * pupilSpeed;
+    }
+
     private void spawnClientParticles() {
         boolean transitioning = getVisualState() == STATE_SPAWNING || getVisualState() == STATE_DESPAWNING;
-        int count = transitioning ? 18 : 8;
-        float progress = Math.min(1.0F, (float) getStateTimer() / TRANSITION_TICKS);
+        if (!transitioning && ticksExisted % 6 != 0) return;
+        int count = transitioning ? 16 : 1;
+        int transitionTicks = getVisualState() == STATE_DESPAWNING
+            ? DESPAWN_TRANSITION_TICKS - 1 : TRANSITION_TICKS - 1;
+        float progress = Math.min(1.0F, (float) getStateTimer() / transitionTicks);
         double transitionY = 0.0D;
         if (transitioning && getAnimationType() == ANIM_SKY) {
-            transitionY = (getVisualState() == STATE_SPAWNING ? 1.0F - progress : progress) * 10.0D;
+            transitionY = (getVisualState() == STATE_SPAWNING ? 1.0F - progress : progress)
+                * FLY_AWAY_HEIGHT;
         }
         for (int i = 0; i < count; i++) {
             double direction = getVisualState() == STATE_SPAWNING ? -1.0D : 1.0D;
@@ -355,13 +514,8 @@ public class EntityAngel extends EntityCreature {
             } else if (transitioning && getAnimationType() == ANIM_SKY) {
                 particle = i % 2 == 0 ? EnumParticleTypes.END_ROD : EnumParticleTypes.FIREWORKS_SPARK;
             } else {
-                switch (i % 5) {
-                    case 0: particle = EnumParticleTypes.END_ROD; break;
-                    case 1: particle = EnumParticleTypes.FIREWORKS_SPARK; break;
-                    case 2: particle = EnumParticleTypes.VILLAGER_HAPPY; break;
-                    case 3: particle = EnumParticleTypes.SPELL_INSTANT; break;
-                    default: particle = EnumParticleTypes.ENCHANTMENT_TABLE; break;
-                }
+                particle = ticksExisted % 12 == 0
+                    ? EnumParticleTypes.END_ROD : EnumParticleTypes.ENCHANTMENT_TABLE;
             }
             world.spawnParticle(particle, px, py, pz, mx, my, mz);
         }
@@ -374,12 +528,12 @@ public class EntityAngel extends EntityCreature {
         int timer = getStateTimer();
 
         if (state == STATE_SPAWNING) {
-            float progress = (float) timer / TRANSITION_TICKS;
+            float progress = (float) timer / (TRANSITION_TICKS - 1);
             if (getAnimationType() != ANIM_SPIN) return 1.0F;
             return 0.05F + progress * 0.95F;
         }
         if (state == STATE_DESPAWNING) {
-            float progress = (float) timer / TRANSITION_TICKS;
+            float progress = (float) timer / DESPAWN_TRANSITION_TICKS;
             if (getAnimationType() != ANIM_SPIN) return 1.0F;
             return Math.max(0.05F, 1.0F - progress * 0.95F);
         }
@@ -403,6 +557,8 @@ public class EntityAngel extends EntityCreature {
         compound.setInteger("VisualState", getVisualState());
         compound.setInteger("AnimationType", getAnimationType());
         compound.setInteger("StateTimer", getStateTimer());
+        compound.setInteger("Mood", getMood());
+        compound.setInteger("MoodTimer", getMoodTimer());
         if (ownerId != null) {
             compound.setString("OwnerId", ownerId.toString());
         }
@@ -414,6 +570,7 @@ public class EntityAngel extends EntityCreature {
         setVisualState(compound.getInteger("VisualState"));
         setAnimationType(compound.getInteger("AnimationType"));
         setStateTimer(compound.getInteger("StateTimer"));
+        if (compound.hasKey("Mood")) setMood(compound.getInteger("Mood"), compound.getInteger("MoodTimer"));
         if (compound.hasKey("OwnerId")) {
             try {
                 ownerId = UUID.fromString(compound.getString("OwnerId"));

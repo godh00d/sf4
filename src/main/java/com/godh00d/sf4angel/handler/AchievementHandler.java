@@ -304,6 +304,19 @@ public class AchievementHandler {
         TypewriterHandler.queueMessage(player, AngelPersonality.getRandomDepartureLine(), 160, 0);
         TypewriterHandler.despawnWhenReady(player);
         spawnAngelIfAbsent(player);
+        setAngelMood(player, EntityAngel.MOOD_PROUD, 100);
+    }
+
+    private static void setAngelMood(EntityPlayerMP player, int mood, int ticks) {
+        AxisAlignedBB box = new AxisAlignedBB(player.posX - 15, player.posY - 5, player.posZ - 15,
+            player.posX + 15, player.posY + 15, player.posZ + 15);
+        for (EntityAngel angel : player.world.getEntitiesWithinAABB(EntityAngel.class, box)) {
+            if (player.getUniqueID().equals(angel.getOwnerId())) {
+                angel.setMood(mood, ticks);
+                angel.setLookTarget(player);
+                return;
+            }
+        }
     }
 
     private static void spawnAngelIfAbsent(EntityPlayerMP player) {
