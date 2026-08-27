@@ -1,0 +1,7 @@
+setTitle("Smeltery Authority")
+setDescription("The player completes a valid Tinkers' Construct smeltery multiblock with an active controller, at least one tank, one drain, and an internal capacity of at least 18 ingots.")
+setIcon(<minecraft:lava_bucket>)
+setPos(216,144)
+addParent("sf4angel:core/melting_point")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

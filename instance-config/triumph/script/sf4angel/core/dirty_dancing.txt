@@ -1,0 +1,8 @@
+setTitle("Dirty Dancing")
+setDescription("First inventory acquisition of at least 1 minecraft:dirt metadata 0.")
+setIcon(<minecraft:dirt>)
+setPos(108,0)
+addParent("sf4angel:core/that_is_dir_tree")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<minecraft:dirt>)

@@ -1,0 +1,7 @@
+setTitle("Alloyed Allegiance")
+setDescription("A player-owned NuclearCraft Alloy Furnace (nuclearcraft:alloy_furnace_idle/alloy_furnace_active, metadata 0) completes one alloy recipe; integration-only machine-state trigger.")
+setIcon(<nuclearcraft:alloy_furnace_idle>)
+setPos(0,432)
+addParent("sf4angel:core/manufactory_warranty_void")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

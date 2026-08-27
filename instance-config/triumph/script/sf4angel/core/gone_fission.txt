@@ -1,0 +1,7 @@
+setTitle("Gone Fission")
+setDescription("That player-owned fission reactor consumes fuel and exports at least 1 RF while remaining below its configured failure temperature.")
+setIcon(<minecraft:redstone>)
+setPos(108,432)
+addParent("sf4angel:core/positive_fission")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

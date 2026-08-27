@@ -1,0 +1,7 @@
+setTitle("Fusion Cuisine")
+setDescription("Player completes a valid NuclearCraft fusion reactor identified through nuclearcraft:fusion_core metadata 0; integration-only multiblock trigger.")
+setIcon(<nuclearcraft:fusion_core>)
+setPos(270,432)
+addParent("sf4angel:core/tritium_triumph")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

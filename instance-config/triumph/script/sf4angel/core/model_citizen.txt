@@ -1,0 +1,7 @@
+setTitle("Model Citizen")
+setDescription("First inventory acquisition of at least 1 metadata 0 item whose registry path starts deepmoblearning:data_model_ and is not data_model_blank.")
+setIcon(<deepmoblearning:data_model_>)
+setPos(54,288)
+addParent("sf4angel:core/learn_deeply")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

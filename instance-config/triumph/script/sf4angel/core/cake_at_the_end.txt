@@ -1,0 +1,8 @@
+setTitle("Cake at the End")
+setDescription("First inventory acquisition of at least 1 telepastries:end_cake metadata 0.")
+setIcon(<telepastries:end_cake>)
+setPos(54,336)
+addParent("sf4angel:core/blaze_of_glory")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<telepastries:end_cake>)

@@ -1,0 +1,7 @@
+setTitle("Autocraft Authority")
+setDescription("A player requests a craft from an ME terminal and that ME network completes the requested item through a crafting CPU and molecular assembler.")
+setIcon(<minecraft:redstone>)
+setPos(432,384)
+addParent("sf4angel:core/sixty_four_k_and_counting")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

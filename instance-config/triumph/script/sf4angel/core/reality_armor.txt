@@ -1,0 +1,7 @@
+setTitle("Reality Armor")
+setDescription("The player simultaneously equips metadata 0 deepmoblearning:glitch_infused_helmet, glitch_infused_chestplate, glitch_infused_leggings, and glitch_infused_boots (each under the deepmoblearning namespace).")
+setIcon(<deepmoblearning:glitch_infused_helmet>)
+setPos(216,288)
+addParent("sf4angel:core/simulation_theory")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

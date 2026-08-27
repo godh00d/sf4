@@ -1,0 +1,8 @@
+setTitle("Manufactory Warranty Void")
+setDescription("A player-owned NuclearCraft Manufactory (nuclearcraft:manufactory_idle/manufactory_active, metadata 0) completes one recipe; integration-only machine-state trigger.")
+setIcon(<nuclearcraft:manufactory_idle>)
+setPos(486,384)
+addParent("sf4angel:core/steel_yourself")
+addParent("sf4angel:core/first_spark")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

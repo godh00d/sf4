@@ -1,0 +1,8 @@
+setTitle("Borrowed Wings")
+setDescription("First inventory acquisition of at least 1 minecraft:elytra.")
+setIcon(<minecraft:elytra>)
+setPos(216,336)
+addParent("sf4angel:core/dragon_eviction_notice")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<minecraft:elytra>)

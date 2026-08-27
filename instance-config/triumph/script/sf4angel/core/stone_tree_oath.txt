@@ -1,0 +1,8 @@
+setTitle("Stone Tree Oath")
+setDescription("First inventory acquisition of at least 1 sky_orchards:sapling_petrified metadata 0.")
+setIcon(<sky_orchards:sapling_petrified>)
+setPos(216,0)
+addParent("sf4angel:core/captain_hook")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<sky_orchards:sapling_petrified>)

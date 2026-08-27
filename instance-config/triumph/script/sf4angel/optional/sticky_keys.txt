@@ -1,0 +1,7 @@
+setTitle("Sticky Keys")
+setDescription("While within 5 blocks of a sapling, player completes 20 standing-to-sneaking transitions within one rolling 10-second window.")
+setIcon(<sky_orchards:sapling_dirt>)
+setPos(0,0)
+addParent("sf4angel:core/that_is_dir_tree")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

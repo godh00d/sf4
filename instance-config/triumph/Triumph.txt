@@ -1,0 +1,8 @@
+printDefaultConfigs(false)
+printDocumentation(false)
+removeVanillaAdvancements(true)
+removeModAdvancements(false)
+keepAdvancements(["twilightforest"])
+removeAdvancements(["twilightforest:progress_castle", "twilightforest:progress_thorns"])
+useNewParentCompletionCriteriaNames()
+pageOrder(["sf4angel:core/root", "sf4angel:optional/root", "sf4angel:prestige/root"])

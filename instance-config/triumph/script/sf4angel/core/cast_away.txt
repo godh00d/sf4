@@ -1,0 +1,7 @@
+setTitle("Cast Away")
+setDescription("First inventory acquisition of at least 1 reusable metal tconstruct:cast metadata 0 or tconstruct:cast_custom metadata 0-4; integration must reject clay casts and blank casts and inspect the Tinkers material/cast state.")
+setIcon(<tconstruct:cast>)
+setPos(270,144)
+addParent("sf4angel:core/smeltery_authority")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

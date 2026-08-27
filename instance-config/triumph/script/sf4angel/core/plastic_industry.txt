@@ -1,0 +1,8 @@
+setTitle("Plastic Industry")
+setDescription("First inventory acquisition of at least 1 industrialforegoing:plastic metadata 0.")
+setIcon(<industrialforegoing:plastic>)
+setPos(270,240)
+addParent("sf4angel:core/latex_intentions")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<industrialforegoing:plastic>)

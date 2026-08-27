@@ -1,0 +1,7 @@
+setTitle("Ice Queen Cometh")
+setDescription("Player receives killing credit for one twilightforest:snow_queen.")
+setIcon(<minecraft:skull>)
+setPos(486,336)
+addParent("sf4angel:core/hydra_expectations")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

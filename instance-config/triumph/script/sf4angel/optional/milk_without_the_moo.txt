@@ -1,0 +1,7 @@
+setTitle("Milk Without the Moo")
+setDescription("A player-owned cookingforblockheads:cow_jar metadata 0 produces at least 1 mB milk.")
+setIcon(<cookingforblockheads:cow_jar>)
+setPos(108,0)
+addParent("sf4angel:core/barnyard_beginnings")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

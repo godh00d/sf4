@@ -1,0 +1,8 @@
+setTitle("Tooling Up")
+setDescription("First inventory acquisition of at least 1 tconstruct:tooltables metadata 3.")
+setIcon(<tconstruct:tooltables>)
+setPos(54,144)
+addParent("sf4angel:core/stone_from_trees")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<tconstruct:tooltables:3>)

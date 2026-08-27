@@ -1,0 +1,8 @@
+setTitle("Maximum Minimum Space")
+setDescription("Player enters Compact Machines dimension ID 144 through a matching compactmachines3:machine metadata 5 (Maximum Compact Machine); integration-only link validation.")
+setIcon(<compactmachines3:machine>)
+setPos(270,48)
+addParent("sf4angel:core/lost_and_found")
+addParent("sf4angel:core/ultimate_capacity")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

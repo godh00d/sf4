@@ -1,0 +1,8 @@
+setTitle("Blaze of Glory")
+setDescription("First inventory acquisition of at least 1 minecraft:blaze_rod.")
+setIcon(<minecraft:blaze_rod>)
+setPos(378,288)
+addParent("sf4angel:core/nether_say_never")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<minecraft:blaze_rod>)

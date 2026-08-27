@@ -1,0 +1,7 @@
+setTitle("Android Dreams of Electric Sheep")
+setDescription("Player's Matter Overdrive capability changes from organic to Android and remains Android after one server tick.")
+setIcon(<matteroverdrive:matter_analyzer>)
+setPos(162,48)
+addParent("sf4angel:core/matter_of_analysis")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

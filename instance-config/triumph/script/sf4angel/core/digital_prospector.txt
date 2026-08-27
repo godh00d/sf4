@@ -1,0 +1,8 @@
+setTitle("Digital Prospector")
+setDescription("A player-owned mekanism:machineblock metadata 4 successfully mines and exports at least 1 block matching its configured filter.")
+setIcon(<mekanism:machineblock>)
+setPos(162,240)
+addParent("sf4angel:core/factory_settings")
+addParent("sf4angel:core/ultimate_capacity")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

@@ -41,6 +41,8 @@ public class TickHandler {
 
         AchievementHandler.checkTwerk(mp);
 
+        IntegrationEngine.tick(mp);
+
         handleDespawn(mp);
 
         handleIdleChatter(mp);
@@ -227,6 +229,7 @@ public class TickHandler {
         counterCheckTimers.remove(id);
         healthWarnTimers.remove(id.toString() + "_healthwarn");
         AchievementHandler.removePlayer(id);
+        IntegrationEngine.removePlayer(id);
     }
 
     private static class MovementState {

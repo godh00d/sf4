@@ -1,0 +1,7 @@
+setTitle("Hydrogen Economy")
+setDescription("A player-owned mekanism:machineblock2 metadata 4 processes water and outputs at least 1 mB each of hydrogen and oxygen.")
+setIcon(<mekanism:machineblock2>)
+setPos(432,192)
+addParent("sf4angel:core/enriched_expectations")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

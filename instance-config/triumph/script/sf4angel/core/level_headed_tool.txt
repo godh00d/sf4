@@ -1,0 +1,7 @@
+setTitle("Level-Headed Tool")
+setDescription("A Tinkers' tool held by the player increases its Tinker Tool Leveling level at least once.")
+setIcon(<tconstruct:toolforge>)
+setPos(432,144)
+addParent("sf4angel:core/modifier_motive")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

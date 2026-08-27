@@ -1,0 +1,8 @@
+setTitle("Beachfront Property")
+setDescription("First inventory acquisition of at least 1 sky_orchards:sapling_sand metadata 0.")
+setIcon(<sky_orchards:sapling_sand>)
+setPos(378,0)
+addParent("sf4angel:core/gravel_travel")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<sky_orchards:sapling_sand>)

@@ -1,7 +1,6 @@
 package com.godh00d.sf4angel.handler;
 
 import com.godh00d.sf4angel.entity.EntityAngel;
-import com.godh00d.sf4angel.knowledge.AngelOracle;
 import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.entity.player.EntityPlayer;
@@ -73,15 +72,15 @@ public class PlayerJoinHandler {
         );
         world.spawnEntity(angel);
         AchievementHandler.recordAngelAppearance(player);
-        AchievementHandler.grantAdvancement(player, "sf4angel:angel/angel_first");
+        AchievementHandler.grantCriterion(player, "sf4angel:angel/angel_first");
 
         String[] intro = AngelPersonality.getFirstLoginIntro();
-        String nextGoal = AngelOracle.getNextGoal(player);
+        String nextGoal = AchievementHandler.getNextGoal(player);
 
         for (int i = 0; i < intro.length; i++) {
             String line = intro[i];
             if (line.contains("{NEXT_GOAL}")) {
-                line = nextGoal != null ? "Your first task: " + nextGoal : "Your first task: The Descent of Dirt.";
+                line = nextGoal != null ? "Your first task: " + nextGoal : "The sky awaits your first move.";
             }
             int delay = (i == 0) ? 0 : 80;
             TypewriterHandler.queueMessage(player, line, delay, 0);
@@ -103,7 +102,7 @@ public class PlayerJoinHandler {
         world.spawnEntity(angel);
         AchievementHandler.recordAngelAppearance(player);
 
-        String nextGoal = AngelOracle.getNextGoal(player);
+        String nextGoal = AchievementHandler.getNextGoal(player);
         String welcomeBack = "Welcome back. The sky missed you.";
         if (nextGoal != null && !nextGoal.isEmpty()) {
             welcomeBack += " Next goal: " + nextGoal;
@@ -127,7 +126,7 @@ public class PlayerJoinHandler {
         AchievementHandler.recordAngelAppearance(player);
 
         String deathLine = AngelPersonality.getRandomDeathLine();
-        String nextGoal = AngelOracle.getNextGoal(player);
+        String nextGoal = AchievementHandler.getNextGoal(player);
         if (nextGoal != null && !nextGoal.isEmpty()) {
             deathLine += " Next goal: " + nextGoal;
         }

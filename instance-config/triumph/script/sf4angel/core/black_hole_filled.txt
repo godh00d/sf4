@@ -1,0 +1,8 @@
+setTitle("Black Hole Filled")
+setDescription("One player-owned industrialforegoing:black_hole_unit metadata 0 reaches its exact runtime maximum item capacity; integration-only tile-state trigger.")
+setIcon(<industrialforegoing:black_hole_unit>)
+setPos(378,480)
+addParent("sf4angel:core/black_hole_inventory")
+addParent("sf4angel:core/autocraft_authority")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

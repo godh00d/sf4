@@ -1,0 +1,7 @@
+setTitle("Hydra Expectations")
+setDescription("Player receives killing credit for one twilightforest:hydra.")
+setIcon(<minecraft:skull>)
+setPos(432,336)
+addParent("sf4angel:core/lich_please")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

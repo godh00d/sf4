@@ -1,0 +1,8 @@
+setTitle("Red Tree Redemption")
+setDescription("First inventory acquisition of at least 1 sky_orchards:sapling_redstone metadata 0.")
+setIcon(<sky_orchards:sapling_redstone>)
+setPos(216,48)
+addParent("sf4angel:core/ironwood")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<sky_orchards:sapling_redstone>)

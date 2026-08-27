@@ -1,0 +1,8 @@
+setTitle("Gravel Travel")
+setDescription("First inventory acquisition of at least 1 sky_orchards:sapling_gravel metadata 0.")
+setIcon(<sky_orchards:sapling_gravel>)
+setPos(324,0)
+addParent("sf4angel:core/stone_tree_oath")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<sky_orchards:sapling_gravel>)

@@ -1,0 +1,7 @@
+setTitle("Pixel Perfect Masonry")
+setDescription("Player places at least 1,024 Chisels & Bits bits in aggregate and completes one block space containing exactly 4,096 bits.")
+setIcon(<minecraft:stone>)
+setPos(54,48)
+addParent("sf4angel:core/forge_ahead")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

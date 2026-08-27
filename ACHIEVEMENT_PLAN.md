@@ -1,327 +1,205 @@
 # SF4 Angel Achievement Plan
 
-## Main Path
+This is the implementation contract for the reduced 129-achievement catalog: **110 core**, **13 optional**, and **6 prestige-only**. IDs are stable and must be used unchanged by Triumph, Java grants, localization, and the angel progression map.
 
-1. Starting from the Bottom [Sky Orchards]
-2. That's Dir-tree [Sky Orchards]
-3. Dirty Dancing [Sky Orchards]
-4. Captain Hook [Pickle Tweaks]
-5. Air Fryer [Tinkers' Construct]
-6. A Hard Nut to Crack [Sky Orchards]
-7. Hardwood [Sky Orchards]
-8. Stone from Trees [Sky Orchards]
-9. Stomp the Yard [Rustic]
-10. Gravel Travel [Sky Orchards]
-11. Beachfront Property [Sky Orchards]
-12. Break a Leg [Sky Orchards]
-13. Clay Aiken [Sky Orchards]
-14. Bubble, Bubble [Minecraft]
-15. Water You Waiting For? [Inspirations]
-16. Slop in the Bucket [Ceramics]
-17. You Cotton Be Kidding Me [Sky Orchards]
-18. You Cotton Something? [Sky Orchards]
-19. Nap Time [Minecraft]
-20. Sixteen Tons [Sky Orchards]
-21. Coal in Bloom [Sky Orchards]
-22. Hotbois [Inspirations]
-23. Study in the Dark Arts [Minecraft]
-24. Cobble Cobble [Tiny Progressions]
-25. Porcelain Promise [Ceramics]
-26. Melting Point [Tinkers' Complement]
-27. Turn Up the Heat [Tinkers' Complement]
-28. Table for Molten One [Tinkers' Construct]
-29. Basin Expectations [Tinkers' Construct]
-30. Amber is the Color [Sky Orchards]
-31. Ironwood [Sky Orchards]
-32. Oh, the Irony [Minecraft]
-33. Not a Helmet [Minecraft]
-34. Red Tree Redemption [Sky Orchards]
-35. Blue Man Group [Sky Orchards]
-36. Copper Top [Sky Orchards]
-37. Copper Canopy [Sky Orchards]
-38. Tin Man [Sky Orchards]
-39. Tin This Pack [Sky Orchards]
-40. Lead It Go [Sky Orchards]
-41. Lead Zeppelin [Sky Orchards]
-42. Silver Surfer [Sky Orchards]
-43. Silver Spoon [Sky Orchards]
-44. Nickel and Dime [Sky Orchards]
-45. Nickelback to Nature [Sky Orchards]
-46. One Shiny Boi [Sky Orchards]
-47. Money Grows on Trees [Sky Orchards]
-48. This Tree Is Forever [Sky Orchards]
-49. Carbon Copy [Sky Orchards]
-50. Trees to Diamonds [Sky Orchards]
-51. Tiny Tree, Big Plans [Bonsai Trees]
-52. Drop It Like It's Hopping [Bonsai Trees]
-53. Paperwork Begins [Real Filing Cabinet]
-54. Bulk by Barrel [Barrels, Drums, Storage & More]
-55. It Fits, We Ship [Barrels, Drums, Storage & More]
-56. Network Attached Chest [Simple Storage Network]
-57. Request Granted [Simple Storage Network]
-58. Link in the Chain [Simple Storage Network]
-59. Remote Possibilities [Simple Storage Network]
-60. Pack It Up [Cyclic]
-61. Amber on Demand [Cyclic]
-62. Market Forces [Farming for Blockheads]
-63. Seeds of Life [Animal Crops]
-64. The Cow Grows Here [Animal Crops]
-65. Milk Without the Moo [Cooking for Blockheads]
-66. Hog Tied [Resource Hogs]
-67. Truffle Shuffle [Resource Hogs]
-68. Snad Together [Snad]
-69. Cane and Able [Minecraft]
-70. Ender Agriculture [Ender Crop]
-71. Brownfield Development [Inspirations]
-72. Yellow Growth Journalism [Inspirations]
-73. Amber Waves of Mulch [Inspirations]
-74. Ruby Roots [Inspirations]
-75. Blue-Chip Bonsai [Inspirations]
-76. Tooling Up [Tinkers' Construct]
-77. Parts Department [Tinkers' Construct]
-78. Pattern Recognition [Tinkers' Construct]
-79. Cast Away [Tinkers' Construct]
-80. Forge Ahead [Tinkers' Construct]
-81. Modifier Motive [Tinkers' Construct]
-82. Level-Headed Tool [Tinker Tool Leveling]
-83. Smeltery Authority [Tinkers' Construct]
-84. Purple Reign [Tinkers' Construct]
-85. Armor by Committee [Construct's Armory]
-86. First Spark [Simple Generators]
-87. Combustion Discussion [Simple Generators]
-88. Geothermal Ambition [Simple Generators]
-89. Battery Included [Cyclic]
-90. Wireless Current Events [Cyclic]
-91. Clicks While Away [Click Machine]
-92. Horsepower, Literally [Horse Power]
-93. Crushing Responsibility [Horse Power]
-94. Redstone in a Box [Mekanism]
-95. Infused with Purpose [Mekanism]
-96. Steel Yourself [Mekanism]
-97. Circuit Training [Mekanism]
-98. Enriched Expectations [Mekanism]
-99. Electric Dreams [Mekanism]
-100. Crush Depth [Mekanism]
-101. Separate Ways [Mekanism]
-102. Hydrogen Economy [Mekanism Generators]
-103. Gas, Grass, or RF [Mekanism Generators]
-104. Purity of Purpose [Mekanism]
-105. Triple Threat [Mekanism]
-106. Chemical Romance [Mekanism]
-107. Four of a Kind [Mekanism]
-108. Dissolution Solution [Mekanism]
-109. Wash Cycle [Mekanism]
-110. Crystal Clear [Mekanism]
-111. Five Times the Charm [Mekanism]
-112. Plastic Fantastic [Mekanism]
-113. HDPEasy [Mekanism]
-114. Cube Route [Mekanism]
-115. Ultimate Capacity [Mekanism]
-116. Factory Settings [Mekanism]
-117. Ultimate Tier Installer [Mekanism]
-118. Digital Prospector [Mekanism]
-119. Latex Intentions [Industrial Foregoing]
-120. Rubber Meets the Void [Industrial Foregoing]
-121. Plastic Industry [Industrial Foregoing]
-122. Machine Frame of Mind [Industrial Foregoing]
-123. Sow Automatic [Industrial Foregoing]
-124. Reap Automatic [Industrial Foregoing]
-125. The Farm Farms Back [Industrial Foregoing]
-126. Mob Rules [Industrial Foregoing]
-127. Liquid Meat Market [Industrial Foregoing]
-128. Pink Slime Time [Industrial Foregoing]
-129. Bore from Nothing [Industrial Foregoing]
-130. Laser-Focused Resources [Industrial Foregoing]
-131. Black Hole Inventory [Industrial Foregoing]
-132. Learn Deeply [Deep Mob Learning]
-133. Model Citizen [Deep Mob Learning]
-134. Zombie by Numbers [Deep Mob Learning]
-135. Data with Experience [Deep Mob Learning]
-136. Simulation Theory [Deep Mob Learning]
-137. Polymer Clay Day [Deep Mob Learning]
-138. Matter of Record [Deep Mob Learning]
-139. Pristine Condition [Deep Mob Learning]
-140. Fabricated Loot [Deep Mob Learning]
-141. Skeleton Crew Data [Deep Mob Learning]
-142. Enderman Analytics [Deep Mob Learning]
-143. Withering Research [Deep Mob Learning]
-144. Dragon Dataset [Deep Mob Learning]
-145. Glitch in the System [Deep Mob Learning]
-146. Reality Armor [Deep Mob Learning]
-147. Cake to Hell [TelePastries]
-148. Nether Say Never [Minecraft]
-149. Blaze of Glory [Minecraft]
-150. Wither or Not [Minecraft]
-151. Cake for Hunters [TelePastries]
-152. The Hunting Trip [Hunting Dimension]
-153. Urban Decay Dessert [TelePastries]
-154. Lost and Found [Lost Cities]
-155. Cake at the End [TelePastries]
-156. The Void Blinks Back [Minecraft]
-157. Dragon Eviction Notice [Minecraft]
-158. Borrowed Wings [Minecraft]
-159. Compact Ambition [Compact Machines 3]
-160. Bigger on the Inside [Compact Machines 3]
-161. Maximum Minimum Space [Compact Machines 3]
-162. Twilight Just Desserts [TelePastries]
-163. Into the Twilight [Twilight Forest]
-164. Ardite Arboretum [Sky Orchards]
-165. Cobalt Canopy [Sky Orchards]
-166. Manyullyn Falcon [Tinkers' Construct]
-167. Prosperity in Bloom [Sky Orchards]
-168. Naga Have I Ever [Twilight Forest]
-169. Lich, Please [Twilight Forest]
-170. Minoshroom Service [Twilight Forest]
-171. Hydra Expectations [Twilight Forest]
-172. Phantom of the Knight [Twilight Forest]
-173. Tears of the Ur-Ghast [Twilight Forest]
-174. Yeti or Not [Twilight Forest]
-175. Ice Queen Cometh [Twilight Forest]
-176. Forest Management [Twilight Forest]
-177. Inferium Beginnings [Mystical Agriculture]
-178. Reprocess and Prosper [Mystical Agriculture]
-179. Prudent Growth [Mystical Agriculture]
-180. Intermedium Rare [Mystical Agriculture]
-181. Superium Complex [Mystical Agriculture]
-182. Supremium Authority [Mystical Agriculture]
-183. Accelerated Agriculture [Mystical Agriculture]
-184. Flight by Farming [Mystical Agriculture]
-185. Seeds Reprocessed [Mystical Agriculture]
-186. Menril State of Mind [Integrated Dynamics]
-187. Logic in the Void [Integrated Dynamics]
-188. Variable Interest [Integrated Dynamics]
-189. Read Between the Blocks [Integrated Dynamics]
-190. Tunnel Vision [Integrated Tunnels]
-191. Items in Transit [Integrated Tunnels]
-192. Fluid Argument [Integrated Tunnels]
-193. Energy in Transit [Integrated Tunnels]
-194. ME, Myself, and I [Applied Energistics 2]
-195. Fluix of the Matter [Applied Energistics 2]
-196. Pressing Engagement [Applied Energistics 2]
-197. Logical Conclusion [Applied Energistics 2]
-198. Engineering Approval [Applied Energistics 2]
-199. Calculated Risk [Applied Energistics 2]
-200. Acceptable Energy [Applied Energistics 2]
-201. Drive Me Crazy [Applied Energistics 2]
-202. Power Cell Network [RFTools Power]
-203. Terminal Velocity [Applied Energistics 2]
-204. Sixty-Four K and Counting [Applied Energistics 2]
-205. Molecular Assembly Required [Applied Energistics 2]
-206. Crafting CPU Online [Applied Energistics 2]
-207. Autocraft Authority [Applied Energistics 2]
-208. Pure Fluix on Demand [AE2 Stuff]
-209. Advanced Inscription [AE2 Stuff]
-210. Fluid on File [Extra Cells 2]
-211. Gas Goes Digital [Extra Cells 2]
-212. Manufactory Warranty Void [NuclearCraft]
-213. Alloyed Allegiance [NuclearCraft]
-214. Nuclear Processor Power [NuclearCraft]
-215. Isotope of the Art [NuclearCraft]
-216. Uranium Enrichment Program [NuclearCraft]
-217. Casing the Joint [NuclearCraft]
-218. Split Decision [NuclearCraft]
-219. Positive Fission [NuclearCraft]
-220. Cool Under Pressure [NuclearCraft]
-221. Fuel for Thought [NuclearCraft]
-222. Gone Fission [NuclearCraft]
-223. Size Does Matter [NuclearCraft]
-224. Deuterium Duty [NuclearCraft]
-225. Tritium Triumph [NuclearCraft]
-226. Fusion Cuisine [NuclearCraft]
-227. Pocket Star [NuclearCraft]
-228. Turbine Turnaround [NuclearCraft]
-229. Tritanium Standard [Matter Overdrive]
-230. Dilithium Dreams [Matter Overdrive]
-231. Matter of Analysis [Matter Overdrive]
-232. Decompose Yourself [Matter Overdrive]
-233. Replication Nation [Matter Overdrive]
-234. Fusion from the Future [Matter Overdrive]
-235. Induction Introduction [Mekanism]
-236. Matrix Reloaded [Mekanism]
-237. Turbine Service [Mekanism Generators]
-238. Mekanism Fusion [Mekanism Generators]
-239. Crafting Core Values [Extended Crafting]
-240. Ultimate Workspace [Extended Crafting]
-241. Quantum Compression [Extended Crafting]
-242. Million-Item Paperwork [Real Filing Cabinet]
-243. Black Hole Filled [Industrial Foregoing]
-244. Ocean in a Cell [Extra Cells 2]
-245. Gas Giant in a Cell [Extra Cells 2]
-246. Metals into Points [Extended Crafting]
-247. Alloys into Points [Extended Crafting]
-248. Cookie, Bacon, Donut, Collapse [Extended Crafting]
-249. Ultimate Singularity [Extended Crafting]
-250. The Sky Finally Claps [SkyFactory 4]
+## Design and evidence rules
 
-## Optional Branches
+- Pace rewards around gameplay systems, not recipe steps. Do not add ingredient/output pairs unless acquiring the ingredient and producing the output prove separate gameplay systems.
+- Do not create arbitrary two-minute reward bursts. A player should normally configure, operate, travel, fight, or automate between adjacent grants.
+- A parent controls visibility/progression only. The measurable trigger must also be satisfied.
+- Registry names, metadata, NBT discriminators, and integration anchors were validated against the installed pack and are recorded in `REGISTRY_MANIFEST.md`.
+- Confirmed bonsai evidence: `bonsaitrees:bonsaipot` metadata `0` is the Bonsai Pot and metadata `1` is the Hopping Bonsai Pot.
+- Canonical Minecraft 1.12.2 targets shown as `minecraft:*` may be used directly. No other mod item ID in this document is claimed as confirmed.
 
-1. Sticky Keys [Tree Growing Simulator]
-2. Roast of the Town [Sky Orchards]
-3. Slime Time Live [Tinkers' Construct]
-4. Green with Envy [Tinkers' Construct]
-5. Barnyard Botanist [Animal Crops]
-6. Seeds of Unusual Consequence [Animal Crops]
-7. Hostile Agriculture [Animal Crops]
-8. This Little Pig Mined Ore [Resource Hogs]
-9. Mud, Sweat, and Ingots [Resource Hogs]
-10. Fifty Shades of Truffle [Resource Hogs]
-11. Kitchen in the Clouds [Cooking for Blockheads]
-12. Bread Between Worlds [Culinary Construct]
-13. The Dagwood Singularity [Culinary Construct]
-14. A Balanced Sky Diet [XL Food Mod]
-15. Vintage from the Void [Rustic]
-16. Bee Rustic, Bee Happy [Rustic]
-17. Ironberries and Ambition [Rustic]
-18. Green Thumb Drive [HydroGel]
-19. Feed the Multitude [Farming for Blockheads]
-20. Mob Factory Floor [Mob Grinding Utils]
-21. Experience Plumbing [Mob Grinding Utils]
-22. Plate Expectations [Construct's Armory]
-23. Armored to the Teeth [Construct's Armory]
-24. Cleaver Endeavor [Tinkers' Construct]
-25. Unbreakable Resolve [Tinkers' Construct]
-26. Spin Doctor [Yo-yos]
-27. Around the Void in Eighty Throws [Yo-yos]
-28. Hammer Space [Chisel]
-29. Carved from Nothing [Chisel]
-30. A Bit Off the Block [Chisels & Bits]
-31. Pixel Perfect Masonry [Chisels & Bits]
-32. Measure Twice, Gadget Once [Building Gadgets]
-33. Exchange Rate: One Wall [Building Gadgets]
-34. Undo the Apocalypse [Building Gadgets]
-35. Stone-Faced Collector [Statues]
-36. Shelf Esteem [BiblioCraft]
-37. Typeset in the Sky [BiblioCraft]
-38. Airship Shape [ViesCraft]
-39. Cloud Nine, Propeller One [ViesCraft]
-40. Practical Data, Impractical Altitude [Practical Logistics 2]
-41. Read It and Reap [Practical Logistics 2]
-42. Connect the X-Dots [XNet]
-43. Channel Surfer [XNet]
-44. Omnidirectional Thinking [Integrated Dynamics]
-45. Ender Chest Matchmaker [Ender Storage]
-46. Tank You Very Much [Ender Storage]
-47. Handy Bag of Holding [Ender Utilities]
-48. The Elevator at World's End [Uppers]
-49. Translocation, Translocation [Translocators]
-50. Charge of the Light Brigade [Chargers]
-51. Starlight, Star Bright [Astral Sorcery]
-52. Rock Crystal Method [Astral Sorcery]
-53. Table for One Constellation [Astral Sorcery]
-54. Attuned to the Void [Astral Sorcery]
-55. Mantled in Starlight [Astral Sorcery]
-56. Gateway to the Heavens [Astral Sorcery]
-57. Shell Game Supreme [Sync]
-58. Android Dreams of Electric Sheep [Matter Overdrive]
-59. Flux Capacitated [Flux Networks]
-60. Hello, Open World [OpenComputers]
-61. Robot Did It [OpenComputers]
-62. Aperture Unlocked [Portal Gun / Prestige]
-63. Written in Another Age [Mystcraft]
-64. Equivalent Ambition Unlocked [ProjectE / Prestige]
-65. Tablet of Excess [ProjectE / Prestige]
-66. Prestige Worldwide [Prestige Mode]
-67. Time Is a Flat Parabox [Parabox]
-68. Empowered Recursion [Parabox]
-69. Jetpack Joyride [Iron Jetpacks]
-70. Weird Flex, but Loaded [Weirding Gadget]
+## Implementation types
+
+| Type | Implementation contract |
+| --- | --- |
+| `T-ITEM` | Triumph inventory criterion for the named item and metadata; grant on the first inventory state satisfying the trigger. |
+| `T-ANY` | Multiple exact Triumph inventory criteria with `setRequirements("any")`; grant when any listed alternative is present. |
+| `T-ADV` | Triumph criterion requiring all named parent advancements; used only when parent completion is itself the trigger. |
+| `T-LOCATION` | Triumph location/dimension criterion, after validating the dimension identifier in the runtime pack. |
+| `J-EVENT` | Forge event or persisted player counter; grant once the exact event/count condition is true. |
+| `J-INTEGRATION` | Dedicated mod/tile/capability/NBT integration. It must observe the stated operation or state, not an inventory proxy. |
+| `J-COMPOSITE` | Java grant after all stated advancement parents and any additional stated condition are true. |
+
+`[]` in the Parent IDs column means no achievement parent. Multiple parents are an AND requirement.
+
+## Core catalog (110)
+
+### 1. Bootstrap and resource trees (20)
+
+| ID | Title | Exact measurable trigger | Parent IDs | Type |
+| --- | --- | --- | --- | --- |
+| `sf4angel:core/starting_from_the_bottom` | Starting from the Bottom | First inventory acquisition of at least 1 `minecraft:log` (any metadata). | `[]` | `T-ITEM` |
+| `sf4angel:core/that_is_dir_tree` | That's Dir-tree | First inventory acquisition of at least 1 `sky_orchards:sapling_dirt` metadata `0`. | `sf4angel:core/starting_from_the_bottom` | `T-ITEM` |
+| `sf4angel:core/dirty_dancing` | Dirty Dancing | First inventory acquisition of at least 1 `minecraft:dirt` metadata `0`. | `sf4angel:core/that_is_dir_tree` | `T-ITEM` |
+| `sf4angel:core/captain_hook` | Captain Hook | First inventory acquisition of at least 1 `inspirations:wooden_crook` metadata `0`. | `sf4angel:core/that_is_dir_tree` | `T-ITEM` |
+| `sf4angel:core/stone_tree_oath` | Stone Tree Oath | First inventory acquisition of at least 1 `sky_orchards:sapling_petrified` metadata `0`. | `sf4angel:core/captain_hook` | `T-ITEM` |
+| `sf4angel:core/stone_from_trees` | Stone from Trees | First inventory acquisition of at least 1 `minecraft:cobblestone`. | `sf4angel:core/stone_tree_oath` | `T-ITEM` |
+| `sf4angel:core/gravel_travel` | Gravel Travel | First inventory acquisition of at least 1 `sky_orchards:sapling_gravel` metadata `0`. | `sf4angel:core/stone_tree_oath` | `T-ITEM` |
+| `sf4angel:core/beachfront_property` | Beachfront Property | First inventory acquisition of at least 1 `sky_orchards:sapling_sand` metadata `0`. | `sf4angel:core/gravel_travel` | `T-ITEM` |
+| `sf4angel:core/clay_aiken` | Clay Aiken | First inventory acquisition of at least 1 `sky_orchards:sapling_clay` metadata `0`. | `sf4angel:core/dirty_dancing`, `sf4angel:core/beachfront_property` | `T-ITEM` |
+| `sf4angel:core/water_you_waiting_for` | Water You Waiting For? | First inventory acquisition of at least 1 `minecraft:water_bucket`. | `sf4angel:core/clay_aiken` | `T-ITEM` |
+| `sf4angel:core/clay_bucket_gamble` | Clay Bucket Gamble | First inventory acquisition of at least 1 fired `ceramics:clay_bucket` metadata `0`; an empty bucket needs no NBT and a lava-filled bucket has `{fluids:{FluidName:"lava",Amount:1000}}`. | `sf4angel:core/clay_aiken` | `T-ITEM` |
+| `sf4angel:core/coal_in_bloom` | Coal in Bloom | First inventory acquisition of at least 1 `sky_orchards:sapling_coal` metadata `0`. | `sf4angel:core/beachfront_property` | `T-ITEM` |
+| `sf4angel:core/ironwood` | Ironwood | First inventory acquisition of at least 1 `sky_orchards:sapling_iron` metadata `0`. | `sf4angel:core/coal_in_bloom`, `sf4angel:core/clay_bucket_gamble` | `T-ITEM` |
+| `sf4angel:core/oh_the_irony` | Oh, the Irony | First inventory acquisition of at least 1 `minecraft:iron_ingot`. | `sf4angel:core/ironwood` | `T-ITEM` |
+| `sf4angel:core/red_tree_redemption` | Red Tree Redemption | First inventory acquisition of at least 1 `sky_orchards:sapling_redstone` metadata `0`. | `sf4angel:core/ironwood` | `T-ITEM` |
+| `sf4angel:core/trees_to_diamonds` | Trees to Diamonds | First inventory acquisition of at least 1 `sky_orchards:sapling_diamond` metadata `0`. | `sf4angel:core/red_tree_redemption`, `sf4angel:core/ironwood` | `T-ITEM` |
+| `sf4angel:core/diamond_clarity` | Diamond Clarity | First inventory acquisition of at least 1 `minecraft:diamond`. | `sf4angel:core/trees_to_diamonds` | `T-ITEM` |
+| `sf4angel:core/tiny_tree_big_plans` | Tiny Tree, Big Plans | First inventory acquisition of `bonsaitrees:bonsaipot` metadata `0`. | `sf4angel:core/oh_the_irony`, `sf4angel:core/diamond_clarity` | `T-ITEM` |
+| `sf4angel:core/drop_it_like_its_hopping` | Drop It Like It's Hopping | First inventory acquisition of `bonsaitrees:bonsaipot` metadata `1`. | `sf4angel:core/tiny_tree_big_plans` | `T-ITEM` |
+| `sf4angel:core/orchard_on_autopilot` | Orchard on Autopilot | A player-owned Hopping Bonsai Pot completes one growth cycle and inserts at least 1 harvested output into an adjacent inventory. | `sf4angel:core/drop_it_like_its_hopping` | `J-INTEGRATION` |
+
+### 2. Storage, farming, and tools (20)
+
+| ID | Title | Exact measurable trigger | Parent IDs | Type |
+| --- | --- | --- | --- | --- |
+| `sf4angel:core/paperwork_begins` | Paperwork Begins | First inventory acquisition of at least 1 `realfilingcabinet:modelcabinet` metadata `0`. | `sf4angel:core/orchard_on_autopilot` | `T-ITEM` |
+| `sf4angel:core/bulk_by_barrel` | Bulk by Barrel | First inventory acquisition of at least 1 `bdsandm:wood_barrel` metadata `0`. | `sf4angel:core/orchard_on_autopilot` | `T-ITEM` |
+| `sf4angel:core/network_attached_chest` | Network Attached Chest | A `storagenetwork:master` metadata `0` is connected to at least one inventory by `storagenetwork:storage_kabel` and reports that inventory to the owning player. | `sf4angel:core/paperwork_begins`, `sf4angel:core/bulk_by_barrel` | `J-INTEGRATION` |
+| `sf4angel:core/remote_possibilities` | Remote Possibilities | The player successfully opens that Simple Storage Network through `storagenetwork:remote` metadata `0`, `1`, `2`, or `3` while at least 16 blocks from its controller. | `sf4angel:core/network_attached_chest` | `J-INTEGRATION` |
+| `sf4angel:core/market_forces` | Market Forces | First inventory acquisition of at least 1 `farmingforblockheads:market` metadata `0`. | `sf4angel:core/oh_the_irony` | `T-ITEM` |
+| `sf4angel:core/seeds_of_life` | Seeds of Life | First inventory acquisition of at least 1 `animalcrops:seeds` metadata `0` with a nonempty string NBT key `entity`. | `sf4angel:core/market_forces` | `J-INTEGRATION` |
+| `sf4angel:core/barnyard_beginnings` | Barnyard Beginnings | The player causes one successful `BabyEntitySpawnEvent` for two non-hostile adult animals. | `sf4angel:core/seeds_of_life` | `J-EVENT` |
+| `sf4angel:core/hog_tied` | Hog Tied | First inventory acquisition of at least 1 `resourcehogs:mud_bucket` metadata `0` with a nonempty string NBT key `ResourceType`. | `sf4angel:core/seeds_of_life` | `J-INTEGRATION` |
+| `sf4angel:core/truffle_shuffle` | Truffle Shuffle | A Resource Hog owned or bred by the player produces one truffle through its normal digging/production mechanic. | `sf4angel:core/hog_tied` | `J-INTEGRATION` |
+| `sf4angel:core/snad_together` | Snad Together | First inventory acquisition of at least 1 `snad:snad` metadata `0`. | `sf4angel:core/beachfront_property`, `sf4angel:core/oh_the_irony` | `T-ITEM` |
+| `sf4angel:core/cane_and_able` | Cane and Able | The player places `minecraft:reeds` on top of `snad:snad` metadata `0`; both blocks remain in that arrangement after the placement event. | `sf4angel:core/snad_together` | `J-EVENT` |
+| `sf4angel:core/tooling_up` | Tooling Up | First inventory acquisition of at least 1 `tconstruct:tooltables` metadata `3`. | `sf4angel:core/stone_from_trees` | `T-ITEM` |
+| `sf4angel:core/parts_department` | Parts Department | First inventory acquisition of at least 1 `tconstruct:tooltables` metadata `2`. | `sf4angel:core/tooling_up` | `T-ITEM` |
+| `sf4angel:core/melting_point` | Melting Point | First inventory acquisition of at least 1 `tcomplement:melter` metadata `0`. | `sf4angel:core/oh_the_irony`, `sf4angel:core/clay_bucket_gamble` | `T-ITEM` |
+| `sf4angel:core/smeltery_authority` | Smeltery Authority | The player completes a valid Tinkers' Construct smeltery multiblock with an active controller, at least one tank, one drain, and an internal capacity of at least 18 ingots. | `sf4angel:core/melting_point` | `J-INTEGRATION` |
+| `sf4angel:core/cast_away` | Cast Away | First inventory acquisition of at least 1 reusable metal `tconstruct:cast` metadata `0` or `tconstruct:cast_custom` metadata `0`-`4`; integration must reject clay casts and blank casts and inspect the Tinkers material/cast state. | `sf4angel:core/smeltery_authority` | `J-INTEGRATION` |
+| `sf4angel:core/forge_ahead` | Forge Ahead | First inventory acquisition of at least 1 `tconstruct:toolforge` metadata `0`. | `sf4angel:core/parts_department`, `sf4angel:core/cast_away` | `T-ITEM` |
+| `sf4angel:core/modifier_motive` | Modifier Motive | The player removes a Tinkers' tool from a tool-modification inventory after its modifier list has gained at least one modifier during that interaction. | `sf4angel:core/forge_ahead` | `J-INTEGRATION` |
+| `sf4angel:core/level_headed_tool` | Level-Headed Tool | A Tinkers' tool held by the player increases its Tinker Tool Leveling level at least once. | `sf4angel:core/modifier_motive` | `J-INTEGRATION` |
+| `sf4angel:core/armor_by_committee` | Armor by Committee | First inventory acquisition of at least 1 `conarm:armorforge` metadata `0`. | `sf4angel:core/smeltery_authority`, `sf4angel:core/forge_ahead` | `T-ITEM` |
+
+### 3. Power and processing (25)
+
+| ID | Title | Exact measurable trigger | Parent IDs | Type |
+| --- | --- | --- | --- | --- |
+| `sf4angel:core/first_spark` | First Spark | First inventory acquisition of at least 1 metadata `0` block from the confirmed Simple Generators set: `simplegenerators:combustion_simple`, `culinary_simple`, `ender_simple`, `nether_simple`, `soul_simple`, `geothermal_simple`, `fluid_combustion_simple`, or `turbine_simple` (each under the `simplegenerators` namespace). | `sf4angel:core/oh_the_irony`, `sf4angel:core/red_tree_redemption` | `T-ANY` |
+| `sf4angel:core/battery_included` | Battery Included | First inventory acquisition of at least 1 `cyclicmagic:battery` metadata `0`. | `sf4angel:core/first_spark` | `T-ITEM` |
+| `sf4angel:core/redstone_in_a_box` | Redstone in a Box | First inventory acquisition of at least 1 `mekanism:machineblock` metadata `8`. | `sf4angel:core/first_spark` | `T-ITEM` |
+| `sf4angel:core/steel_yourself` | Steel Yourself | First inventory acquisition of at least 1 `mekanism:ingot` metadata `4`. | `sf4angel:core/redstone_in_a_box` | `T-ITEM` |
+| `sf4angel:core/enriched_expectations` | Enriched Expectations | First inventory acquisition of at least 1 `mekanism:machineblock` metadata `0`. | `sf4angel:core/redstone_in_a_box`, `sf4angel:core/steel_yourself` | `T-ITEM` |
+| `sf4angel:core/crush_depth` | Crush Depth | First inventory acquisition of at least 1 `mekanism:machineblock` metadata `3`. | `sf4angel:core/enriched_expectations` | `T-ITEM` |
+| `sf4angel:core/triple_threat` | Triple Threat | A player-owned complete required Mekanism purification machine chain remains active and correlated source input decreases while corresponding final output increases by at least 3 within a bounded observation window. | `sf4angel:core/enriched_expectations`, `sf4angel:core/crush_depth` | `J-INTEGRATION` |
+| `sf4angel:core/five_times_the_charm` | Five Times the Charm | A player-owned complete required Mekanism dissolution machine chain remains active and correlated source input decreases while corresponding final output increases by at least 5 within a bounded observation window. | `sf4angel:core/triple_threat` | `J-INTEGRATION` |
+| `sf4angel:core/hydrogen_economy` | Hydrogen Economy | A player-owned `mekanism:machineblock2` metadata `4` processes water and outputs at least 1 mB each of hydrogen and oxygen. | `sf4angel:core/enriched_expectations` | `J-INTEGRATION` |
+| `sf4angel:core/gas_grass_or_rf` | Gas, Grass, or RF | A player-owned `mekanismgenerators:generator` metadata `3` consumes ethylene and produces at least 1 RF. | `sf4angel:core/hydrogen_economy`, `sf4angel:core/crush_depth` | `J-INTEGRATION` |
+| `sf4angel:core/hdpeasy` | HDPEasy | First inventory acquisition of at least 1 `mekanism:polyethene` metadata `0`. | `sf4angel:core/gas_grass_or_rf` | `T-ITEM` |
+| `sf4angel:core/ultimate_capacity` | Ultimate Capacity | First inventory acquisition of at least 1 `mekanism:energycube` metadata `0` with NBT `{tier:3}`. | `sf4angel:core/steel_yourself`, `sf4angel:core/battery_included` | `T-ITEM` |
+| `sf4angel:core/factory_settings` | Factory Settings | First inventory acquisition of at least 1 `mekanism:machineblock` metadata `5`, `6`, or `7` (factory recipe type is carried in Mekanism item data). | `sf4angel:core/triple_threat` | `T-ITEM` |
+| `sf4angel:core/digital_prospector` | Digital Prospector | A player-owned `mekanism:machineblock` metadata `4` successfully mines and exports at least 1 block matching its configured filter. | `sf4angel:core/factory_settings`, `sf4angel:core/ultimate_capacity` | `J-INTEGRATION` |
+| `sf4angel:core/latex_intentions` | Latex Intentions | A player-owned `industrialforegoing:tree_fluid_extractor` metadata `0` outputs at least 100 mB latex from a log. | `sf4angel:core/orchard_on_autopilot`, `sf4angel:core/first_spark` | `J-INTEGRATION` |
+| `sf4angel:core/plastic_industry` | Plastic Industry | First inventory acquisition of at least 1 `industrialforegoing:plastic` metadata `0`. | `sf4angel:core/latex_intentions` | `T-ITEM` |
+| `sf4angel:core/sow_automatic` | Sow Automatic | A player-owned `industrialforegoing:crop_sower` metadata `0` plants one crop or sapling in the world. | `sf4angel:core/plastic_industry` | `J-INTEGRATION` |
+| `sf4angel:core/reap_automatic` | Reap Automatic | A player-owned `industrialforegoing:crop_recolector` metadata `0` harvests one mature crop or tree and exports at least one drop. | `sf4angel:core/sow_automatic` | `J-INTEGRATION` |
+| `sf4angel:core/mob_rules` | Mob Rules | A player-owned `industrialforegoing:mob_relocator` metadata `0` kills one hostile mob and outputs its drops or essence. | `sf4angel:core/plastic_industry` | `J-INTEGRATION` |
+| `sf4angel:core/black_hole_inventory` | Black Hole Inventory | First inventory acquisition of at least 1 `industrialforegoing:black_hole_unit` metadata `0`. | `sf4angel:core/mob_rules`, `sf4angel:core/reap_automatic` | `T-ITEM` |
+| `sf4angel:core/learn_deeply` | Learn Deeply | First inventory acquisition of at least 1 `deepmoblearning:deep_learner` metadata `0`. | `sf4angel:core/first_spark` | `T-ITEM` |
+| `sf4angel:core/model_citizen` | Model Citizen | First inventory acquisition of at least 1 metadata `0` item whose registry path starts `deepmoblearning:data_model_` and is not `data_model_blank`. | `sf4angel:core/learn_deeply` | `J-INTEGRATION` |
+| `sf4angel:core/data_with_experience` | Data with Experience | A Data Model carried in a Deep Learner increases from its initial/untrained tier to the next tier through player kills. | `sf4angel:core/model_citizen` | `J-INTEGRATION` |
+| `sf4angel:core/simulation_theory` | Simulation Theory | A player-owned `deepmoblearning:simulation_chamber` metadata `0` completes one simulation using a trained Data Model. | `sf4angel:core/data_with_experience`, `sf4angel:core/first_spark` | `J-INTEGRATION` |
+| `sf4angel:core/reality_armor` | Reality Armor | The player simultaneously equips metadata `0` `deepmoblearning:glitch_infused_helmet`, `glitch_infused_chestplate`, `glitch_infused_leggings`, and `glitch_infused_boots` (each under the `deepmoblearning` namespace). | `sf4angel:core/simulation_theory` | `J-INTEGRATION` |
+
+### 4. Dimensions and bosses (15)
+
+| ID | Title | Exact measurable trigger | Parent IDs | Type |
+| --- | --- | --- | --- | --- |
+| `sf4angel:core/cake_to_hell` | Cake to Hell | First inventory acquisition of at least 1 `telepastries:nether_cake` metadata `0`. | `sf4angel:core/diamond_clarity`, `sf4angel:core/steel_yourself` | `T-ITEM` |
+| `sf4angel:core/nether_say_never` | Nether Say Never | Player enters the Nether dimension (`minecraft:the_nether`) for the first time. | `sf4angel:core/cake_to_hell` | `T-LOCATION` |
+| `sf4angel:core/blaze_of_glory` | Blaze of Glory | First inventory acquisition of at least 1 `minecraft:blaze_rod`. | `sf4angel:core/nether_say_never` | `T-ITEM` |
+| `sf4angel:core/wither_or_not` | Wither or Not | Player receives the killing-credit event for one `minecraft:wither`. | `sf4angel:core/blaze_of_glory`, `sf4angel:core/reality_armor` | `J-EVENT` |
+| `sf4angel:core/the_hunting_trip` | The Hunting Trip | Player enters dimension ID `28885` (Hunting Dimension) for the first time. | `sf4angel:core/mob_rules` | `T-LOCATION` |
+| `sf4angel:core/lost_and_found` | Lost and Found | Player enters dimension ID `111` (Lost Cities) for the first time. | `sf4angel:core/digital_prospector` | `T-LOCATION` |
+| `sf4angel:core/cake_at_the_end` | Cake at the End | First inventory acquisition of at least 1 `telepastries:end_cake` metadata `0`. | `sf4angel:core/blaze_of_glory` | `T-ITEM` |
+| `sf4angel:core/the_void_blinks_back` | The Void Blinks Back | Player enters the End dimension (`minecraft:the_end`) for the first time. | `sf4angel:core/cake_at_the_end` | `T-LOCATION` |
+| `sf4angel:core/dragon_eviction_notice` | Dragon Eviction Notice | Player receives the killing-credit event for one `minecraft:ender_dragon`. | `sf4angel:core/the_void_blinks_back`, `sf4angel:core/reality_armor` | `J-EVENT` |
+| `sf4angel:core/borrowed_wings` | Borrowed Wings | First inventory acquisition of at least 1 `minecraft:elytra`. | `sf4angel:core/dragon_eviction_notice` | `T-ITEM` |
+| `sf4angel:core/into_the_twilight` | Into the Twilight | Player enters dimension ID `7` (Twilight Forest) for the first time. | `sf4angel:core/diamond_clarity`, `sf4angel:core/reality_armor` | `T-LOCATION` |
+| `sf4angel:core/naga_have_i_ever` | Naga Have I Ever | Player receives killing credit for one `twilightforest:naga`. | `sf4angel:core/into_the_twilight` | `J-EVENT` |
+| `sf4angel:core/lich_please` | Lich, Please | Player receives killing credit for one `twilightforest:lich`. | `sf4angel:core/naga_have_i_ever` | `J-EVENT` |
+| `sf4angel:core/hydra_expectations` | Hydra Expectations | Player receives killing credit for one `twilightforest:hydra`. | `sf4angel:core/lich_please` | `J-EVENT` |
+| `sf4angel:core/ice_queen_cometh` | Ice Queen Cometh | Player receives killing credit for one `twilightforest:snow_queen`. | `sf4angel:core/hydra_expectations` | `J-EVENT` |
+
+### 5. Logic, storage, and advanced industry (20)
+
+| ID | Title | Exact measurable trigger | Parent IDs | Type |
+| --- | --- | --- | --- | --- |
+| `sf4angel:core/menril_state_of_mind` | Menril State of Mind | First inventory acquisition of at least 1 `integrateddynamics:crystalized_menril_chunk` metadata `0`. | `sf4angel:core/diamond_clarity` | `T-ITEM` |
+| `sf4angel:core/logic_in_the_void` | Logic in the Void | A player-owned Integrated Dynamics network has at least one reader, one display/writer, and one variable card connected and active at the same time. | `sf4angel:core/menril_state_of_mind`, `sf4angel:core/first_spark` | `J-INTEGRATION` |
+| `sf4angel:core/items_in_transit` | Items in Transit | A player-owned Integrated Tunnels item interface exports at least 1 item through the network into a different inventory. | `sf4angel:core/logic_in_the_void` | `J-INTEGRATION` |
+| `sf4angel:core/fluix_of_the_matter` | Fluix of the Matter | First inventory acquisition of at least 1 `appliedenergistics2:material` metadata `7`. | `sf4angel:core/menril_state_of_mind`, `sf4angel:core/nether_say_never` | `T-ITEM` |
+| `sf4angel:core/pressing_engagement` | Pressing Engagement | Player inventory simultaneously contains `appliedenergistics2:material` metadata `13` (calculation press), `14` (engineering), `15` (logic), and `19` (silicon). | `sf4angel:core/fluix_of_the_matter`, `sf4angel:core/lost_and_found` | `T-ITEM` |
+| `sf4angel:core/acceptable_energy` | Acceptable Energy | A player-owned AE2 Energy Acceptor receives power and the connected ME network stores at least 1 AE. | `sf4angel:core/pressing_engagement`, `sf4angel:core/ultimate_capacity` | `J-INTEGRATION` |
+| `sf4angel:core/me_myself_and_i` | ME, Myself, and I | Player opens an ME Terminal on a powered network containing an ME Drive with at least one formatted storage cell and inserts or extracts one item. | `sf4angel:core/acceptable_energy`, `sf4angel:core/items_in_transit` | `J-INTEGRATION` |
+| `sf4angel:core/sixty_four_k_and_counting` | Sixty-Four K and Counting | First inventory acquisition of at least 1 `appliedenergistics2:storage_cell_64k` metadata `0`. | `sf4angel:core/me_myself_and_i` | `T-ITEM` |
+| `sf4angel:core/autocraft_authority` | Autocraft Authority | A player requests a craft from an ME terminal and that ME network completes the requested item through a crafting CPU and molecular assembler. | `sf4angel:core/sixty_four_k_and_counting` | `J-INTEGRATION` |
+| `sf4angel:core/manufactory_warranty_void` | Manufactory Warranty Void | A player-owned NuclearCraft Manufactory (`nuclearcraft:manufactory_idle`/`manufactory_active`, metadata `0`) completes one recipe; integration-only machine-state trigger. | `sf4angel:core/steel_yourself`, `sf4angel:core/first_spark` | `J-INTEGRATION` |
+| `sf4angel:core/alloyed_allegiance` | Alloyed Allegiance | A player-owned NuclearCraft Alloy Furnace (`nuclearcraft:alloy_furnace_idle`/`alloy_furnace_active`, metadata `0`) completes one alloy recipe; integration-only machine-state trigger. | `sf4angel:core/manufactory_warranty_void` | `J-INTEGRATION` |
+| `sf4angel:core/positive_fission` | Positive Fission | Player completes a valid NuclearCraft fission reactor identified through an assembled controller tile from the installed `nuclearcraft:fission_controller_*` registry set documented in `REGISTRY_MANIFEST.md`; integration-only multiblock trigger. | `sf4angel:core/alloyed_allegiance`, `sf4angel:core/lost_and_found` | `J-INTEGRATION` |
+| `sf4angel:core/gone_fission` | Gone Fission | That player-owned fission reactor consumes fuel and exports at least 1 RF while remaining below its configured failure temperature. | `sf4angel:core/positive_fission` | `J-INTEGRATION` |
+| `sf4angel:core/deuterium_duty` | Deuterium Duty | Player-owned NuclearCraft processing stores at least 1,000 mB fluid `deuterium` (block registry `nuclearcraft:fluid_deuterium`) in one tank. | `sf4angel:core/gone_fission`, `sf4angel:core/hydrogen_economy` | `J-INTEGRATION` |
+| `sf4angel:core/tritium_triumph` | Tritium Triumph | Player-owned NuclearCraft processing stores at least 1,000 mB fluid `tritium` (block registry `nuclearcraft:fluid_tritium`) in one tank. | `sf4angel:core/deuterium_duty` | `J-INTEGRATION` |
+| `sf4angel:core/fusion_cuisine` | Fusion Cuisine | Player completes a valid NuclearCraft fusion reactor identified through `nuclearcraft:fusion_core` metadata `0`; integration-only multiblock trigger. | `sf4angel:core/tritium_triumph` | `J-INTEGRATION` |
+| `sf4angel:core/pocket_star` | Pocket Star | That player-owned fusion reactor consumes fusion fuel and exports at least 1 RF. | `sf4angel:core/fusion_cuisine` | `J-INTEGRATION` |
+| `sf4angel:core/matter_of_analysis` | Matter of Analysis | A player-owned `matteroverdrive:matter_analyzer` metadata `0` completes one analysis and records a matter pattern. | `sf4angel:core/lost_and_found`, `sf4angel:core/first_spark` | `J-INTEGRATION` |
+| `sf4angel:core/decompose_yourself` | Decompose Yourself | A player-owned `matteroverdrive:decomposer` metadata `0` consumes one item and increases stored matter. | `sf4angel:core/matter_of_analysis` | `J-INTEGRATION` |
+| `sf4angel:core/replication_nation` | Replication Nation | A player-owned `matteroverdrive:replicator` metadata `0` consumes stored matter and outputs one selected item from a recorded pattern. | `sf4angel:core/decompose_yourself`, `sf4angel:core/ultimate_capacity` | `J-INTEGRATION` |
+
+### 6. Endgame (10)
+
+| ID | Title | Exact measurable trigger | Parent IDs | Type |
+| --- | --- | --- | --- | --- |
+| `sf4angel:core/matrix_reloaded` | Matrix Reloaded | Player completes a valid Mekanism Induction Matrix containing at least one induction provider and one induction cell. | `sf4angel:core/ultimate_capacity`, `sf4angel:core/autocraft_authority` | `J-INTEGRATION` |
+| `sf4angel:core/turbine_service` | Turbine Service | A valid player-owned Mekanism Industrial Turbine converts steam and exports at least 1 RF. | `sf4angel:core/matrix_reloaded`, `sf4angel:core/pocket_star` | `J-INTEGRATION` |
+| `sf4angel:core/crafting_core_values` | Crafting Core Values | First inventory acquisition of at least 1 `extendedcrafting:crafting_core` metadata `0`. | `sf4angel:core/autocraft_authority`, `sf4angel:core/replication_nation` | `T-ITEM` |
+| `sf4angel:core/quantum_compression` | Quantum Compression | A player-owned `extendedcrafting:compressor` metadata `0` completes one compression recipe. | `sf4angel:core/crafting_core_values`, `sf4angel:core/turbine_service` | `J-INTEGRATION` |
+| `sf4angel:core/metals_into_points` | Metals into Points | First inventory acquisition of at least 1 `extendedcrafting:singularity` whose metadata is one of the installed metal variants listed in `REGISTRY_MANIFEST.md`. | `sf4angel:core/quantum_compression` | `T-ANY` |
+| `sf4angel:core/cookie_bacon_donut_collapse` | Cookie, Bacon, Donut, Collapse | Player inventory simultaneously contains `extendedcrafting:singularity_custom` metadata `1` (Cookie), `2` (Bacon), and `3` (Donut). | `sf4angel:core/metals_into_points` | `T-ITEM` |
+| `sf4angel:core/ultimate_singularity` | Ultimate Singularity | First inventory acquisition of at least 1 `extendedcrafting:singularity_ultimate` metadata `0`. | `sf4angel:core/cookie_bacon_donut_collapse` | `T-ITEM` |
+| `sf4angel:core/black_hole_filled` | Black Hole Filled | One player-owned `industrialforegoing:black_hole_unit` metadata `0` reaches its exact runtime maximum item capacity; integration-only tile-state trigger. | `sf4angel:core/black_hole_inventory`, `sf4angel:core/autocraft_authority` | `J-INTEGRATION` |
+| `sf4angel:core/million_item_paperwork` | Million-Item Paperwork | One player-owned `realfilingcabinet:modelcabinet` metadata `0` cabinet/folder system reports at least 1,000,000 stored items in aggregate; integration-only capability/NBT trigger. | `sf4angel:core/paperwork_begins`, `sf4angel:core/autocraft_authority` | `J-INTEGRATION` |
+| `sf4angel:core/the_sky_finally_claps` | The Sky Finally Claps | All nine parent advancements are complete; no inventory proxy or additional timer is used. | `sf4angel:core/ice_queen_cometh`, `sf4angel:core/ultimate_singularity`, `sf4angel:core/black_hole_filled`, `sf4angel:core/million_item_paperwork`, `sf4angel:core/turbine_service`, `sf4angel:core/pocket_star`, `sf4angel:core/replication_nation`, `sf4angel:core/borrowed_wings`, `sf4angel:core/reality_armor` | `T-ADV` |
+
+## Optional catalog (13)
+
+Optional achievements never parent a core achievement.
+
+| ID | Title | Exact measurable trigger | Parent IDs | Type |
+| --- | --- | --- | --- | --- |
+| `sf4angel:optional/sticky_keys` | Sticky Keys | While within 5 blocks of a sapling, player completes 20 standing-to-sneaking transitions within one rolling 10-second window. | `sf4angel:core/that_is_dir_tree` | `J-EVENT` |
+| `sf4angel:optional/nap_time` | Nap Time | Player completes a sleep cycle that advances world time to morning. | `sf4angel:core/dirty_dancing` | `J-EVENT` |
+| `sf4angel:optional/milk_without_the_moo` | Milk Without the Moo | A player-owned `cookingforblockheads:cow_jar` metadata `0` produces at least 1 mB milk. | `sf4angel:core/barnyard_beginnings` | `J-INTEGRATION` |
+| `sf4angel:optional/a_balanced_sky_diet` | A Balanced Sky Diet | Persisted counter reaches 20 distinct edible registry-name-plus-metadata values fully consumed by the player; repeated foods do not count. | `sf4angel:core/market_forces` | `J-EVENT` |
+| `sf4angel:optional/mob_factory_floor` | Mob Factory Floor | Player-owned automated mob-killing blocks receive killing attribution for 100 hostile mobs in aggregate. | `sf4angel:core/mob_rules` | `J-INTEGRATION` |
+| `sf4angel:optional/armored_to_the_teeth` | Armored to the Teeth | Player simultaneously equips four Construct's Armory pieces, each with at least one non-default modifier. | `sf4angel:core/armor_by_committee`, `sf4angel:core/modifier_motive` | `J-INTEGRATION` |
+| `sf4angel:optional/unbreakable_resolve` | Unbreakable Resolve | Player holds a Tinkers' tool whose runtime modifier data reports the Unbreakable trait/modifier. | `sf4angel:core/level_headed_tool` | `J-INTEGRATION` |
+| `sf4angel:optional/undo_the_apocalypse` | Undo the Apocalypse | Across confirmed Building Gadgets placement operations, player places at least 10,000 blocks and then successfully undoes one operation of at least 64 blocks. | `sf4angel:core/ultimate_capacity` | `J-INTEGRATION` |
+| `sf4angel:optional/pixel_perfect_masonry` | Pixel Perfect Masonry | Player places at least 1,024 Chisels & Bits bits in aggregate and completes one block space containing exactly 4,096 bits. | `sf4angel:core/forge_ahead` | `J-INTEGRATION` |
+| `sf4angel:optional/around_the_void_in_eighty_throws` | Around the Void in Eighty Throws | A Tinkers' Construct yo-yo thrown by the player deals the killing blow to any hostile mob after traveling at least 40 blocks on that throw. | `sf4angel:core/modifier_motive` | `J-INTEGRATION` |
+| `sf4angel:optional/android_dreams` | Android Dreams of Electric Sheep | Player's Matter Overdrive capability changes from organic to Android and remains Android after one server tick. | `sf4angel:core/matter_of_analysis` | `J-INTEGRATION` |
+| `sf4angel:optional/robot_did_it` | Robot Did It | A player-owned OpenComputers robot successfully breaks one block and places one block through robot component calls. | `sf4angel:core/logic_in_the_void`, `sf4angel:core/ultimate_capacity` | `J-INTEGRATION` |
+| `sf4angel:optional/maximum_minimum_space` | Maximum Minimum Space | Player enters Compact Machines dimension ID `144` through a matching `compactmachines3:machine` metadata `5` (Maximum Compact Machine); integration-only link validation. | `sf4angel:core/lost_and_found`, `sf4angel:core/ultimate_capacity` | `J-INTEGRATION` |
+
+## Prestige-only catalog (6)
+
+Prestige-only achievements are hidden and ineligible unless the runtime pack reports Prestige mode enabled for the world/player. They never parent core or optional achievements.
+
+| ID | Title | Exact measurable trigger | Parent IDs | Type |
+| --- | --- | --- | --- | --- |
+| `sf4angel:prestige/prestige_worldwide` | Prestige Worldwide | Runtime Prestige integration reports Prestige mode enabled and the player has earned at least 1 spendable Prestige point. | `sf4angel:core/the_sky_finally_claps` | `J-INTEGRATION` |
+| `sf4angel:prestige/equivalent_ambition_unlocked` | Equivalent Ambition Unlocked | Prestige integration reports the ProjectE unlock purchased, and player first acquires `projecte:transmutation_table` metadata `0`. | `sf4angel:prestige/prestige_worldwide` | `J-INTEGRATION` |
+| `sf4angel:prestige/aperture_unlocked` | Aperture Unlocked | Prestige integration reports the Portal Gun unlock purchased, and player successfully creates one linked portal pair with `portalgun:item_portalgun` metadata `0`. | `sf4angel:prestige/prestige_worldwide` | `J-INTEGRATION` |
+| `sf4angel:prestige/written_in_another_age` | Written in Another Age | Prestige integration reports Mystcraft unlocked, and player writes, links to, and enters one player-created Mystcraft Age. | `sf4angel:prestige/prestige_worldwide` | `J-INTEGRATION` |
+| `sf4angel:prestige/time_is_a_flat_parabox` | Time Is a Flat Parabox | A player-owned `parabox:parabox` metadata `0` completes one full active cycle and the player accepts the rollback for at least 1 Prestige point. | `sf4angel:prestige/prestige_worldwide` | `J-INTEGRATION` |
+| `sf4angel:prestige/empowered_recursion` | Empowered Recursion | In one continuous Parabox activation, the displayed pending reward reaches at least 10 Prestige points and the player accepts that rollback. | `sf4angel:prestige/time_is_a_flat_parabox`, `sf4angel:prestige/equivalent_ambition_unlocked`, `sf4angel:prestige/aperture_unlocked`, `sf4angel:prestige/written_in_another_age` | `J-INTEGRATION` |
+
+## Implementation gate
+
+`REGISTRY_MANIFEST.md` is the instance-derived registry authority. Integration-only targets must use the stated Java integration and fail closed if their runtime API or state cannot be verified; they must never fall back to a broad inventory proxy.

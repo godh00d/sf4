@@ -1,0 +1,8 @@
+setTitle("Robot Did It")
+setDescription("A player-owned OpenComputers robot successfully breaks one block and places one block through robot component calls.")
+setIcon(<minecraft:redstone>)
+setPos(216,48)
+addParent("sf4angel:core/logic_in_the_void")
+addParent("sf4angel:core/ultimate_capacity")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

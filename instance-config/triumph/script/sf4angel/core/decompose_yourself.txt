@@ -1,0 +1,7 @@
+setTitle("Decompose Yourself")
+setDescription("A player-owned matteroverdrive:decomposer metadata 0 consumes one item and increases stored matter.")
+setIcon(<matteroverdrive:decomposer>)
+setPos(432,432)
+addParent("sf4angel:core/matter_of_analysis")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

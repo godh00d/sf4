@@ -1,0 +1,8 @@
+setTitle("Coal in Bloom")
+setDescription("First inventory acquisition of at least 1 sky_orchards:sapling_coal metadata 0.")
+setIcon(<sky_orchards:sapling_coal>)
+setPos(54,48)
+addParent("sf4angel:core/beachfront_property")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<sky_orchards:sapling_coal>)

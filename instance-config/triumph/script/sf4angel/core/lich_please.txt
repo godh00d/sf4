@@ -1,0 +1,7 @@
+setTitle("Lich, Please")
+setDescription("Player receives killing credit for one twilightforest:lich.")
+setIcon(<minecraft:skull>)
+setPos(378,336)
+addParent("sf4angel:core/naga_have_i_ever")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

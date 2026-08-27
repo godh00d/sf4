@@ -1,0 +1,8 @@
+setTitle("Quantum Compression")
+setDescription("A player-owned extendedcrafting:compressor metadata 0 completes one compression recipe.")
+setIcon(<extendedcrafting:compressor>)
+setPos(162,480)
+addParent("sf4angel:core/crafting_core_values")
+addParent("sf4angel:core/turbine_service")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

@@ -1,0 +1,8 @@
+setTitle("Deuterium Duty")
+setDescription("Player-owned NuclearCraft processing stores at least 1,000 mB fluid deuterium (block registry nuclearcraft:fluid_deuterium) in one tank.")
+setIcon(<nuclearcraft:fluid_deuterium>)
+setPos(162,432)
+addParent("sf4angel:core/gone_fission")
+addParent("sf4angel:core/hydrogen_economy")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

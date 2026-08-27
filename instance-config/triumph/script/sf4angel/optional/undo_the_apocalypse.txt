@@ -1,0 +1,7 @@
+setTitle("Undo the Apocalypse")
+setDescription("Across confirmed Building Gadgets placement operations, player places at least 10,000 blocks and then successfully undoes one operation of at least 64 blocks.")
+setIcon(<minecraft:brick_block>)
+setPos(0,48)
+addParent("sf4angel:core/ultimate_capacity")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

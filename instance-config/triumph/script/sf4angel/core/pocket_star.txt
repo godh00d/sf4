@@ -1,0 +1,7 @@
+setTitle("Pocket Star")
+setDescription("That player-owned fusion reactor consumes fusion fuel and exports at least 1 RF.")
+setIcon(<minecraft:redstone>)
+setPos(324,432)
+addParent("sf4angel:core/fusion_cuisine")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

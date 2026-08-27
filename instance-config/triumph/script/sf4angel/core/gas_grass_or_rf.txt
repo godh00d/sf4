@@ -1,0 +1,8 @@
+setTitle("Gas, Grass, or RF")
+setDescription("A player-owned mekanismgenerators:generator metadata 3 consumes ethylene and produces at least 1 RF.")
+setIcon(<mekanismgenerators:generator>)
+setPos(486,192)
+addParent("sf4angel:core/hydrogen_economy")
+addParent("sf4angel:core/crush_depth")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

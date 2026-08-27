@@ -1,0 +1,8 @@
+setTitle("Menril State of Mind")
+setDescription("First inventory acquisition of at least 1 integrateddynamics:crystalized_menril_chunk metadata 0.")
+setIcon(<integrateddynamics:crystalized_menril_chunk>)
+setPos(0,384)
+addParent("sf4angel:core/diamond_clarity")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<integrateddynamics:crystalized_menril_chunk>)

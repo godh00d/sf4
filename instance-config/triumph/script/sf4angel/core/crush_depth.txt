@@ -1,0 +1,8 @@
+setTitle("Crush Depth")
+setDescription("First inventory acquisition of at least 1 mekanism:machineblock metadata 3.")
+setIcon(<mekanism:machineblock>)
+setPos(270,192)
+addParent("sf4angel:core/enriched_expectations")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<mekanism:machineblock:3>)

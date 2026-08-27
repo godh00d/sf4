@@ -1,0 +1,8 @@
+setTitle("Simulation Theory")
+setDescription("A player-owned deepmoblearning:simulation_chamber metadata 0 completes one simulation using a trained Data Model.")
+setIcon(<deepmoblearning:simulation_chamber>)
+setPos(162,288)
+addParent("sf4angel:core/data_with_experience")
+addParent("sf4angel:core/first_spark")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

@@ -1,0 +1,8 @@
+setTitle("Parts Department")
+setDescription("First inventory acquisition of at least 1 tconstruct:tooltables metadata 2.")
+setIcon(<tconstruct:tooltables>)
+setPos(108,144)
+addParent("sf4angel:core/tooling_up")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<tconstruct:tooltables:2>)

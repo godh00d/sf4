@@ -1,0 +1,8 @@
+setTitle("Positive Fission")
+setDescription("Player completes a valid NuclearCraft fission reactor identified through an assembled controller tile from the installed nuclearcraft:fission_controller_* registry set documented in REGISTRY_MANIFEST.md; integration-only multiblock trigger.")
+setIcon(<minecraft:nether_star>)
+setPos(54,432)
+addParent("sf4angel:core/alloyed_allegiance")
+addParent("sf4angel:core/lost_and_found")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

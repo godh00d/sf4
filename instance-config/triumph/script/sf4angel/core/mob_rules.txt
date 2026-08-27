@@ -1,0 +1,7 @@
+setTitle("Mob Rules")
+setDescription("A player-owned industrialforegoing:mob_relocator metadata 0 kills one hostile mob and outputs its drops or essence.")
+setIcon(<industrialforegoing:mob_relocator>)
+setPos(432,240)
+addParent("sf4angel:core/plastic_industry")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

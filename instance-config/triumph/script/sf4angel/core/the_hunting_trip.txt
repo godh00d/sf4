@@ -1,0 +1,8 @@
+setTitle("The Hunting Trip")
+setDescription("Player enters dimension ID 28885 (Hunting Dimension) for the first time.")
+setIcon(<minecraft:compass>)
+setPos(486,288)
+addParent("sf4angel:core/mob_rules")
+setRequiresParents()
+criteria = addCriteria("location", "minecraft:location")
+criteria.setDimID(28885)

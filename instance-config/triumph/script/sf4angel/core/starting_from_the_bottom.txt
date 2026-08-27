@@ -1,0 +1,6 @@
+setTitle("Starting from the Bottom")
+setDescription("First inventory acquisition of at least 1 minecraft:log (any metadata).")
+setIcon(<minecraft:log>)
+setPos(0,0)
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<minecraft:log, meta:0~15>)

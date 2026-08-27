@@ -1,0 +1,8 @@
+setTitle("Dragon Eviction Notice")
+setDescription("Player receives the killing-credit event for one minecraft:ender_dragon.")
+setIcon(<minecraft:dragon_egg>)
+setPos(162,336)
+addParent("sf4angel:core/the_void_blinks_back")
+addParent("sf4angel:core/reality_armor")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

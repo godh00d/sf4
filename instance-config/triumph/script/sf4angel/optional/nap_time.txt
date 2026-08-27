@@ -1,0 +1,7 @@
+setTitle("Nap Time")
+setDescription("Player completes a sleep cycle that advances world time to morning.")
+setIcon(<minecraft:bed>)
+setPos(54,0)
+addParent("sf4angel:core/dirty_dancing")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

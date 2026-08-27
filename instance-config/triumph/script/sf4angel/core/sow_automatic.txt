@@ -1,0 +1,7 @@
+setTitle("Sow Automatic")
+setDescription("A player-owned industrialforegoing:crop_sower metadata 0 plants one crop or sapling in the world.")
+setIcon(<industrialforegoing:crop_sower>)
+setPos(324,240)
+addParent("sf4angel:core/plastic_industry")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

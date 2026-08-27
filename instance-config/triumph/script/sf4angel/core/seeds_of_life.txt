@@ -1,0 +1,7 @@
+setTitle("Seeds of Life")
+setDescription("First inventory acquisition of at least 1 animalcrops:seeds metadata 0 with a nonempty string NBT key entity.")
+setIcon(<animalcrops:seeds>)
+setPos(270,96)
+addParent("sf4angel:core/market_forces")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

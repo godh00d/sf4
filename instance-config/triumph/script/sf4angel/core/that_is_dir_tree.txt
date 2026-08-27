@@ -1,0 +1,8 @@
+setTitle("That's Dir-tree")
+setDescription("First inventory acquisition of at least 1 sky_orchards:sapling_dirt metadata 0.")
+setIcon(<sky_orchards:sapling_dirt>)
+setPos(54,0)
+addParent("sf4angel:core/starting_from_the_bottom")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<sky_orchards:sapling_dirt>)

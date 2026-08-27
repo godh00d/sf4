@@ -1,0 +1,8 @@
+setTitle("Matrix Reloaded")
+setDescription("Player completes a valid Mekanism Induction Matrix containing at least one induction provider and one induction cell.")
+setIcon(<minecraft:redstone>)
+setPos(0,480)
+addParent("sf4angel:core/ultimate_capacity")
+addParent("sf4angel:core/autocraft_authority")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

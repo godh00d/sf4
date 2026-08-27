@@ -1,0 +1,7 @@
+setTitle("Orchard on Autopilot")
+setDescription("A player-owned Hopping Bonsai Pot completes one growth cycle and inserts at least 1 harvested output into an adjacent inventory.")
+setIcon(<minecraft:redstone>)
+setPos(486,48)
+addParent("sf4angel:core/drop_it_like_its_hopping")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

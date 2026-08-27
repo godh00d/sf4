@@ -1,0 +1,8 @@
+setTitle("Replication Nation")
+setDescription("A player-owned matteroverdrive:replicator metadata 0 consumes stored matter and outputs one selected item from a recorded pattern.")
+setIcon(<matteroverdrive:replicator>)
+setPos(486,432)
+addParent("sf4angel:core/decompose_yourself")
+addParent("sf4angel:core/ultimate_capacity")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

@@ -1,0 +1,8 @@
+setTitle("Million-Item Paperwork")
+setDescription("One player-owned realfilingcabinet:modelcabinet metadata 0 cabinet/folder system reports at least 1,000,000 stored items in aggregate; integration-only capability/NBT trigger.")
+setIcon(<realfilingcabinet:modelcabinet>)
+setPos(432,480)
+addParent("sf4angel:core/paperwork_begins")
+addParent("sf4angel:core/autocraft_authority")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

@@ -184,9 +184,9 @@ public class EntityAngel extends EntityCreature {
             }
 
             if (attacker instanceof EntityPlayerMP) {
-                AchievementHandler.grantAdvancement((EntityPlayerMP) attacker, "sf4angel:angel/angel_strike");
+                AchievementHandler.grantCriterion((EntityPlayerMP) attacker, "sf4angel:angel/angel_strike");
                 if (attacker.getHealth() <= 4.0F) {
-                    AchievementHandler.grantAdvancement((EntityPlayerMP) attacker, "sf4angel:angel/angel_killed_by");
+                    AchievementHandler.grantCriterion((EntityPlayerMP) attacker, "sf4angel:angel/angel_killed_by");
                 }
                 String response = AngelPersonality.getRandomAttackResponse();
                 TypewriterHandler.queueRedMessage((EntityPlayerMP) attacker, response, 0, 0);

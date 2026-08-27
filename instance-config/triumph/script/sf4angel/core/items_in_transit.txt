@@ -1,0 +1,7 @@
+setTitle("Items in Transit")
+setDescription("A player-owned Integrated Tunnels item interface exports at least 1 item through the network into a different inventory.")
+setIcon(<minecraft:redstone>)
+setPos(108,384)
+addParent("sf4angel:core/logic_in_the_void")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

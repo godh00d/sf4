@@ -1,0 +1,7 @@
+setTitle("Data with Experience")
+setDescription("A Data Model carried in a Deep Learner increases from its initial/untrained tier to the next tier through player kills.")
+setIcon(<minecraft:redstone>)
+setPos(108,288)
+addParent("sf4angel:core/model_citizen")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

@@ -1,0 +1,8 @@
+setTitle("Lost and Found")
+setDescription("Player enters dimension ID 111 (Lost Cities) for the first time.")
+setIcon(<minecraft:compass>)
+setPos(0,336)
+addParent("sf4angel:core/digital_prospector")
+setRequiresParents()
+criteria = addCriteria("location", "minecraft:location")
+criteria.setDimID(111)

@@ -1,0 +1,7 @@
+setTitle("Mob Factory Floor")
+setDescription("Player-owned automated mob-killing blocks receive killing attribution for 100 hostile mobs in aggregate.")
+setIcon(<minecraft:rotten_flesh>)
+setPos(216,0)
+addParent("sf4angel:core/mob_rules")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

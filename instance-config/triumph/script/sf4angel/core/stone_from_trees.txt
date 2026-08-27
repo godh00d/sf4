@@ -1,0 +1,8 @@
+setTitle("Stone from Trees")
+setDescription("First inventory acquisition of at least 1 minecraft:cobblestone.")
+setIcon(<minecraft:cobblestone>)
+setPos(270,0)
+addParent("sf4angel:core/stone_tree_oath")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<minecraft:cobblestone>)

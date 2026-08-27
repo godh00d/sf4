@@ -1,0 +1,8 @@
+setTitle("Oh, the Irony")
+setDescription("First inventory acquisition of at least 1 minecraft:iron_ingot.")
+setIcon(<minecraft:iron_ingot>)
+setPos(162,48)
+addParent("sf4angel:core/ironwood")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<minecraft:iron_ingot>)

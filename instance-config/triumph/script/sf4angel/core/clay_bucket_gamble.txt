@@ -1,0 +1,8 @@
+setTitle("Clay Bucket Gamble")
+setDescription("First inventory acquisition of at least 1 fired ceramics:clay_bucket metadata 0; an empty bucket needs no NBT and a lava-filled bucket has {fluids:{FluidName:\"lava\",Amount:1000}}.")
+setIcon(<ceramics:clay_bucket>)
+setPos(0,48)
+addParent("sf4angel:core/clay_aiken")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<ceramics:clay_bucket>)

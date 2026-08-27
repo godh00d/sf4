@@ -1,0 +1,8 @@
+setTitle("Paperwork Begins")
+setDescription("First inventory acquisition of at least 1 realfilingcabinet:modelcabinet metadata 0.")
+setIcon(<realfilingcabinet:modelcabinet>)
+setPos(0,96)
+addParent("sf4angel:core/orchard_on_autopilot")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<realfilingcabinet:modelcabinet>)

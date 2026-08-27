@@ -1,0 +1,7 @@
+setTitle("Naga Have I Ever")
+setDescription("Player receives killing credit for one twilightforest:naga.")
+setIcon(<minecraft:skull>)
+setPos(324,336)
+addParent("sf4angel:core/into_the_twilight")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

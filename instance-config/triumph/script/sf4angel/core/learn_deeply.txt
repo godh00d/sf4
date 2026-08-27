@@ -1,0 +1,8 @@
+setTitle("Learn Deeply")
+setDescription("First inventory acquisition of at least 1 deepmoblearning:deep_learner metadata 0.")
+setIcon(<deepmoblearning:deep_learner>)
+setPos(0,288)
+addParent("sf4angel:core/first_spark")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<deepmoblearning:deep_learner>)

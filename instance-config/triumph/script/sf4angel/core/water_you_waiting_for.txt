@@ -1,0 +1,8 @@
+setTitle("Water You Waiting For?")
+setDescription("First inventory acquisition of at least 1 minecraft:water_bucket.")
+setIcon(<minecraft:water_bucket>)
+setPos(486,0)
+addParent("sf4angel:core/clay_aiken")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<minecraft:water_bucket>)

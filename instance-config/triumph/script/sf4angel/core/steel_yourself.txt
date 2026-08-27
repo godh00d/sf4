@@ -1,0 +1,8 @@
+setTitle("Steel Yourself")
+setDescription("First inventory acquisition of at least 1 mekanism:ingot metadata 4.")
+setIcon(<mekanism:ingot>)
+setPos(162,192)
+addParent("sf4angel:core/redstone_in_a_box")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<mekanism:ingot:4>)

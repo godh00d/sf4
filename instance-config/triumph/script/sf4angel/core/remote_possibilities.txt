@@ -1,0 +1,7 @@
+setTitle("Remote Possibilities")
+setDescription("The player successfully opens that Simple Storage Network through storagenetwork:remote metadata 0, 1, 2, or 3 while at least 16 blocks from its controller.")
+setIcon(<storagenetwork:remote>)
+setPos(162,96)
+addParent("sf4angel:core/network_attached_chest")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

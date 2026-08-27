@@ -1,0 +1,8 @@
+setTitle("Bulk by Barrel")
+setDescription("First inventory acquisition of at least 1 bdsandm:wood_barrel metadata 0.")
+setIcon(<bdsandm:wood_barrel>)
+setPos(54,96)
+addParent("sf4angel:core/orchard_on_autopilot")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<bdsandm:wood_barrel>)

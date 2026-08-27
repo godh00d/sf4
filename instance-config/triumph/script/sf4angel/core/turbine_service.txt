@@ -1,0 +1,8 @@
+setTitle("Turbine Service")
+setDescription("A valid player-owned Mekanism Industrial Turbine converts steam and exports at least 1 RF.")
+setIcon(<minecraft:redstone>)
+setPos(54,480)
+addParent("sf4angel:core/matrix_reloaded")
+addParent("sf4angel:core/pocket_star")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

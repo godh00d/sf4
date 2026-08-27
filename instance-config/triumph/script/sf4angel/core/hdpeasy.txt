@@ -1,0 +1,8 @@
+setTitle("HDPEasy")
+setDescription("First inventory acquisition of at least 1 mekanism:polyethene metadata 0.")
+setIcon(<mekanism:polyethene>)
+setPos(0,240)
+addParent("sf4angel:core/gas_grass_or_rf")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<mekanism:polyethene>)

@@ -1,0 +1,8 @@
+setTitle("Drop It Like It's Hopping")
+setDescription("First inventory acquisition of bonsaitrees:bonsaipot metadata 1.")
+setIcon(<bonsaitrees:bonsaipot>)
+setPos(432,48)
+addParent("sf4angel:core/tiny_tree_big_plans")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<bonsaitrees:bonsaipot:1>)

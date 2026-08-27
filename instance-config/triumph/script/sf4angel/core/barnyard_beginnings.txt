@@ -1,0 +1,7 @@
+setTitle("Barnyard Beginnings")
+setDescription("The player causes one successful BabyEntitySpawnEvent for two non-hostile adult animals.")
+setIcon(<minecraft:wheat>)
+setPos(324,96)
+addParent("sf4angel:core/seeds_of_life")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

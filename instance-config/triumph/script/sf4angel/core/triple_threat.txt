@@ -1,0 +1,8 @@
+setTitle("Triple Threat")
+setDescription("A player-owned complete required Mekanism purification machine chain remains active and correlated source input decreases while corresponding final output increases by at least 3 within a bounded observation window.")
+setIcon(<minecraft:redstone>)
+setPos(324,192)
+addParent("sf4angel:core/enriched_expectations")
+addParent("sf4angel:core/crush_depth")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

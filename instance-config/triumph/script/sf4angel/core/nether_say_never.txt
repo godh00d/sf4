@@ -1,0 +1,8 @@
+setTitle("Nether Say Never")
+setDescription("Player enters the Nether dimension (minecraft:the_nether) for the first time.")
+setIcon(<minecraft:compass>)
+setPos(324,288)
+addParent("sf4angel:core/cake_to_hell")
+setRequiresParents()
+criteria = addCriteria("location", "minecraft:location")
+criteria.setDimID(-1)

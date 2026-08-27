@@ -1,0 +1,7 @@
+setTitle("A Balanced Sky Diet")
+setDescription("Persisted counter reaches 20 distinct edible registry-name-plus-metadata values fully consumed by the player; repeated foods do not count.")
+setIcon(<minecraft:apple>)
+setPos(162,0)
+addParent("sf4angel:core/market_forces")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

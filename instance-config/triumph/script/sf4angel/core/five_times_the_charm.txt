@@ -1,0 +1,7 @@
+setTitle("Five Times the Charm")
+setDescription("A player-owned complete required Mekanism dissolution machine chain remains active and correlated source input decreases while corresponding final output increases by at least 5 within a bounded observation window.")
+setIcon(<minecraft:redstone>)
+setPos(378,192)
+addParent("sf4angel:core/triple_threat")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

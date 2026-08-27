@@ -1,0 +1,7 @@
+setTitle("Unbreakable Resolve")
+setDescription("Player holds a Tinkers' tool whose runtime modifier data reports the Unbreakable trait/modifier.")
+setIcon(<tconstruct:toolforge>)
+setPos(324,0)
+addParent("sf4angel:core/level_headed_tool")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

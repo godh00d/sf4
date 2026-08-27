@@ -1,0 +1,8 @@
+setTitle("Market Forces")
+setDescription("First inventory acquisition of at least 1 farmingforblockheads:market metadata 0.")
+setIcon(<farmingforblockheads:market>)
+setPos(216,96)
+addParent("sf4angel:core/oh_the_irony")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<farmingforblockheads:market>)

@@ -1,0 +1,8 @@
+setTitle("The Void Blinks Back")
+setDescription("Player enters the End dimension (minecraft:the_end) for the first time.")
+setIcon(<minecraft:compass>)
+setPos(108,336)
+addParent("sf4angel:core/cake_at_the_end")
+setRequiresParents()
+criteria = addCriteria("location", "minecraft:location")
+criteria.setDimID(1)

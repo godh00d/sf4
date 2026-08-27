@@ -1,0 +1,8 @@
+setTitle("Logic in the Void")
+setDescription("A player-owned Integrated Dynamics network has at least one reader, one display/writer, and one variable card connected and active at the same time.")
+setIcon(<minecraft:redstone>)
+setPos(54,384)
+addParent("sf4angel:core/menril_state_of_mind")
+addParent("sf4angel:core/first_spark")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

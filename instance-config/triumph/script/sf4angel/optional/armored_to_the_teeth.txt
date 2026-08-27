@@ -1,0 +1,8 @@
+setTitle("Armored to the Teeth")
+setDescription("Player simultaneously equips four Construct's Armory pieces, each with at least one non-default modifier.")
+setIcon(<conarm:armorforge>)
+setPos(270,0)
+addParent("sf4angel:core/armor_by_committee")
+addParent("sf4angel:core/modifier_motive")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

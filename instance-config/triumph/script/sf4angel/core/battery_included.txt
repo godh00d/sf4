@@ -1,0 +1,8 @@
+setTitle("Battery Included")
+setDescription("First inventory acquisition of at least 1 cyclicmagic:battery metadata 0.")
+setIcon(<cyclicmagic:battery>)
+setPos(54,192)
+addParent("sf4angel:core/first_spark")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<cyclicmagic:battery>)

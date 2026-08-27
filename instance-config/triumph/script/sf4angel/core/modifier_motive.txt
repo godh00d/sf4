@@ -1,0 +1,7 @@
+setTitle("Modifier Motive")
+setDescription("The player removes a Tinkers' tool from a tool-modification inventory after its modifier list has gained at least one modifier during that interaction.")
+setIcon(<tconstruct:toolforge>)
+setPos(378,144)
+addParent("sf4angel:core/forge_ahead")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

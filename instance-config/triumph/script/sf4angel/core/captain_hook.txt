@@ -1,0 +1,8 @@
+setTitle("Captain Hook")
+setDescription("First inventory acquisition of at least 1 inspirations:wooden_crook metadata 0.")
+setIcon(<inspirations:wooden_crook>)
+setPos(162,0)
+addParent("sf4angel:core/that_is_dir_tree")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<inspirations:wooden_crook>)

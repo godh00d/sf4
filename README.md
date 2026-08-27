@@ -30,7 +30,7 @@ The mod is designed for a customized SkyFactory 4 instance. It is not a standalo
 3. Install the matching custom Triumph scripts under `config/triumph/script/sf4angel/`.
 4. Start the pack and confirm that the log contains `Registered EntityAngelRender during preInit`.
 
-The mod jar alone does not contain the live 348-script Triumph tree. Advancement layout, titles, parent relationships, and most item criteria are supplied by the instance configuration.
+The mod jar alone does not contain the planned 129-achievement Triumph tree. Advancement layout, titles, parent relationships, and most item criteria are supplied by the instance configuration.
 
 ## Build
 
@@ -82,152 +82,81 @@ This repository is an instance-specific work in progress. The Java mod builds su
 
 ## Achievement Tree
 
+The reduced catalog contains **110 core**, **13 optional**, and **6 prestige-only** achievements (**129 total**). It rewards distinct gameplay systems rather than recipe trivia: do not split ingredients from outputs unless they prove separate systems, and do not create arbitrary two-minute reward bursts. All modded targets are resolved against the installed pack in `REGISTRY_MANIFEST.md`; operation-based goals remain Java integrations rather than inventory proxies.
+
 ```mermaid
-flowchart TD
-    START([SkyFactory Start])
-    BOOT["1-29: Dirt Tree Bootstrap"]
-    TREES["30-50: Resource Tree Network"]
-    FARM["51-75: Farming, Storage, and Bonsai"]
-    TOOLS["76-85: Tinkers Tools and Smeltery"]
-    POWER["86-93: First Power and Mechanical Automation"]
-
-    MEK["94-118: Mekanism Processing"]
-    IF["119-131: Industrial Foregoing"]
-    DML["132-146: Deep Mob Learning"]
-
-    DIM["147-163: Dimension Access"]
-    METALS["164-167: Ardite, Cobalt, Manyullyn, Prosperity"]
-    TWILIGHT["168-176: Twilight Boss Progression"]
-
-    MYST["177-185: Mystical Agriculture"]
-    LOGIC["186-193: Integrated Logistics"]
-    AE2["194-211: Channel-Free AE2 and Extra Cells"]
-
-    NC["212-228: NuclearCraft Fission and Fusion"]
-    MO["229-234: Matter Overdrive"]
-    MEKEND["235-238: Mekanism Multiblocks"]
-    EXT["239-249: Storage Capstones and Singularities"]
-    FINAL(["250: The Sky Finally Claps"])
-
-    START --> BOOT --> TREES
-    TREES --> FARM
-    TREES --> TOOLS
+flowchart LR
+    BOOT["Bootstrap and resource trees<br/>20 core"] --> FARM["Storage, farming, and tools<br/>20 core"]
+    BOOT --> POWER["Power and processing<br/>25 core"]
     FARM --> POWER
-    TOOLS --> POWER
-
-    POWER --> MEK
-    POWER --> IF
-    POWER --> DML
-    MEK --> DIM
-    IF --> DIM
-    DML --> DIM
-
-    DIM --> METALS
-    DIM --> TWILIGHT
-    METALS --> MYST
-    METALS --> TOOLS
-
-    MYST --> LOGIC
-    MEK --> LOGIC
-    LOGIC --> AE2
-
-    DIM --> NC
-    MEK --> NC
-    DIM --> MO
-    MEK --> MEKEND
-
-    AE2 --> EXT
-    NC --> EXT
-    MO --> EXT
-    MEKEND --> EXT
-    IF --> EXT
-    MYST --> EXT
-    TWILIGHT --> FINAL
-    EXT --> FINAL
+    POWER --> DIM["Dimensions and bosses<br/>15 core"]
+    POWER --> LOGIC["Logic, storage, and industry<br/>20 core"]
+    DIM --> LOGIC
+    LOGIC --> END["Endgame<br/>10 core"]
+    DIM --> END
+    END --> FINAL(["core/the_sky_finally_claps"])
+    FARM -.-> OPTIONAL["13 optional"]
+    POWER -.-> OPTIONAL
+    DIM -.-> OPTIONAL
+    LOGIC -.-> OPTIONAL
+    FINAL --> PRESTIGE["6 prestige-only"]
 ```
 
 - [Detailed achievement trees](ACHIEVEMENT_TREE.md)
-- [All 250 main and 70 optional achievement names](ACHIEVEMENT_PLAN.md)
+- [Implementation-ready catalog of all 129 achievements](ACHIEVEMENT_PLAN.md)
 
 ### Early-Game Branches
 
 ```mermaid
 flowchart TD
-    A1["1 Starting from the Bottom"] --> A2["2 That's Dir-tree"]
-    A2 --> A3["3 Dirty Dancing"]
-    A2 --> A4["4 Captain Hook"] --> A5["5 Air Fryer"] --> A6["6 A Hard Nut to Crack"] --> A7["7 Hardwood"]
-
-    A7 --> A8["8 Stone from Trees"]
-    A7 --> A10["10 Gravel Travel"]
-    A7 --> A11["11 Beachfront Property"]
-    A7 --> A12["12 Break a Leg"]
-    A3 --> A13["13 Clay Aiken"]
-
-    A3 --> A9["9 Stomp the Yard"] --> A15["15 Water You Waiting For?"]
-    A8 --> A14["14 Bubble, Bubble"]
-    A13 --> A16["16 Slop in the Bucket"]
-    A12 --> A17["17 You Cotton Be Kidding Me"] --> A18["18 You Cotton Something?"] --> A19["19 Nap Time"]
-
-    A11 --> A20["20 Sixteen Tons"] --> A21["21 Coal in Bloom"]
-    A8 --> A22["22 Hotbois"]
-    A14 --> A22
-    A15 --> A23["23 Study in the Dark Arts"]
-    A22 --> A23
-    A15 --> A24["24 Cobble Cobble"]
-    A22 --> A24
-
-    A12 --> A25["25 Porcelain Promise"]
-    A13 --> A25
-    A25 --> A26["26 Melting Point"] --> A27["27 Turn Up the Heat"]
-    A25 --> A28["28 Table for Molten One"]
-    A25 --> A29["29 Basin Expectations"]
-
-    A10 --> A30["30 Amber is the Color"]
-    A11 --> A30
-    A13 --> A30
-    A21 --> A30
-    A26 --> A31["31 Ironwood"] --> A32["32 Oh, the Irony"]
-    A30 --> A31
-
-    A32 --> REDSTONE["34 Red Tree Redemption"]
-    A32 --> COPPER["36-37 Copper Branch"]
-    A32 --> TIN["38-39 Tin Branch"]
-    A32 --> LEAD["40-43 Lead and Silver Branch"]
-    A32 --> NICKEL["44-45 Nickel Branch"]
-    A32 --> GOLD["46-47 Gold Branch"]
-
-    REDSTONE --> DIAMOND["48-50 Diamond Branch"]
-    LEAD --> DIAMOND
-    GOLD --> DIAMOND
+    A1["core/starting_from_the_bottom"] --> A2["core/that_is_dir_tree"]
+    A2 --> A3["core/dirty_dancing"]
+    A2 --> A4["core/captain_hook"] --> A5["core/stone_tree_oath"]
+    A5 --> A6["core/stone_from_trees"]
+    A5 --> A7["core/gravel_travel"] --> A8["core/beachfront_property"]
+    A3 --> A9["core/clay_aiken"]
+    A8 --> A9
+    A9 --> A10["core/water_you_waiting_for"]
+    A9 --> A11["core/clay_bucket_gamble"]
+    A8 --> A12["core/coal_in_bloom"]
+    A12 --> A13["core/ironwood"]
+    A11 --> A13
+    A13 --> A14["core/oh_the_irony"]
+    A13 --> A15["core/red_tree_redemption"]
+    A15 --> A16["core/trees_to_diamonds"]
+    A13 --> A16
+    A16 --> A17["core/diamond_clarity"]
+    A14 --> A18["core/tiny_tree_big_plans"]
+    A17 --> A18
+    A18 --> A19["core/drop_it_like_its_hopping"]
+    A19 --> A20["core/orchard_on_autopilot"]
 ```
 
 ### Optional Branches
 
 ```mermaid
-flowchart TD
-    MAIN([Main Progression])
-    MAIN --> FARMING["Farming Challenges"]
-    MAIN --> BUILDING["Tools and Building"]
-    MAIN --> LOGISTICS["Advanced Logistics"]
-    MAIN --> MAGIC["Magic and Exploration"]
-    MAIN --> PRESTIGE["Prestige-Mode Unlocks"]
+flowchart LR
+    EARLY["Early core"] --> O1["optional/sticky_keys"]
+    EARLY --> O2["optional/nap_time"]
+    FARM["Farming core"] --> O3["optional/milk_without_the_moo"]
+    FARM --> O4["optional/a_balanced_sky_diet"]
+    FARM --> O5["optional/mob_factory_floor"]
+    TOOLS["Tools core"] --> O6["optional/armored_to_the_teeth"]
+    TOOLS --> O7["optional/unbreakable_resolve"]
+    TOOLS --> O8["optional/undo_the_apocalypse"]
+    TOOLS --> O9["optional/pixel_perfect_masonry"]
+    TOOLS --> O10["optional/around_the_void_in_eighty_throws"]
+    INDUSTRY["Industry core"] --> O11["optional/android_dreams"]
+    INDUSTRY --> O12["optional/robot_did_it"]
+    EXPLORE["Exploration core"] --> O13["optional/maximum_minimum_space"]
 
-    FARMING --> B5["Barnyard Botanist"] --> B7["Hostile Agriculture"]
-    FARMING --> B8["This Little Pig Mined Ore"] --> B10["Fifty Shades of Truffle"]
-    FARMING --> B11["Kitchen in the Clouds"] --> B13["The Dagwood Singularity"]
-
-    BUILDING --> B22["Plate Expectations"] --> B23["Armored to the Teeth"]
-    BUILDING --> B26["Spin Doctor"] --> B27["Around the Void in Eighty Throws"]
-    BUILDING --> B32["Measure Twice, Gadget Once"] --> B34["Undo the Apocalypse"]
-
-    LOGISTICS --> B40["Practical Data"] --> B41["Read It and Reap"]
-    LOGISTICS --> B42["Connect the X-Dots"] --> B43["Channel Surfer"]
-    LOGISTICS --> B45["Ender Chest Matchmaker"] --> B46["Tank You Very Much"]
-
-    MAGIC --> B51["Starlight, Star Bright"] --> B56["Gateway to the Heavens"]
-    MAGIC --> B57["Shell Game Supreme"]
-
-    PRESTIGE --> B62["Aperture Unlocked"]
-    PRESTIGE --> B64["Equivalent Ambition Unlocked"] --> B65["Tablet of Excess"]
-    PRESTIGE --> B67["Time Is a Flat Parabox"] --> B68["Empowered Recursion"]
+    FINAL["core/the_sky_finally_claps"] --> P1["prestige/prestige_worldwide"]
+    P1 --> P2["prestige/equivalent_ambition_unlocked"]
+    P1 --> P3["prestige/aperture_unlocked"]
+    P1 --> P4["prestige/written_in_another_age"]
+    P1 --> P5["prestige/time_is_a_flat_parabox"]
+    P2 --> P6["prestige/empowered_recursion"]
+    P3 --> P6
+    P4 --> P6
+    P5 --> P6
 ```

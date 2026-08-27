@@ -1,0 +1,7 @@
+setTitle("Tritium Triumph")
+setDescription("Player-owned NuclearCraft processing stores at least 1,000 mB fluid tritium (block registry nuclearcraft:fluid_tritium) in one tank.")
+setIcon(<nuclearcraft:fluid_tritium>)
+setPos(216,432)
+addParent("sf4angel:core/deuterium_duty")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

@@ -1,0 +1,8 @@
+setTitle("Factory Settings")
+setDescription("First inventory acquisition of at least 1 mekanism:machineblock metadata 5, 6, or 7 (factory recipe type is carried in Mekanism item data).")
+setIcon(<mekanism:machineblock>)
+setPos(108,240)
+addParent("sf4angel:core/triple_threat")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<mekanism:machineblock, meta:5~7>)

@@ -1,0 +1,8 @@
+setTitle("ME, Myself, and I")
+setDescription("Player opens an ME Terminal on a powered network containing an ME Drive with at least one formatted storage cell and inserts or extracts one item.")
+setIcon(<minecraft:redstone>)
+setPos(324,384)
+addParent("sf4angel:core/acceptable_energy")
+addParent("sf4angel:core/items_in_transit")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")

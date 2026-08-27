@@ -1,0 +1,8 @@
+setTitle("Sixty-Four K and Counting")
+setDescription("First inventory acquisition of at least 1 appliedenergistics2:storage_cell_64k metadata 0.")
+setIcon(<appliedenergistics2:storage_cell_64k>)
+setPos(378,384)
+addParent("sf4angel:core/me_myself_and_i")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<appliedenergistics2:storage_cell_64k>)

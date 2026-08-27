@@ -1,0 +1,8 @@
+setTitle("Diamond Clarity")
+setDescription("First inventory acquisition of at least 1 minecraft:diamond.")
+setIcon(<minecraft:diamond>)
+setPos(324,48)
+addParent("sf4angel:core/trees_to_diamonds")
+setRequiresParents()
+criteria = addCriteria("item", "minecraft:inventory_changed")
+criteria.addItem(<minecraft:diamond>)

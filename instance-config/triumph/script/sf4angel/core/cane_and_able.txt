@@ -1,0 +1,7 @@
+setTitle("Cane and Able")
+setDescription("The player places minecraft:reeds on top of snad:snad metadata 0; both blocks remain in that arrangement after the placement event.")
+setIcon(<minecraft:reeds>)
+setPos(0,144)
+addParent("sf4angel:core/snad_together")
+setRequiresParents()
+criteria = addCriteria("custom", "minecraft:impossible")
