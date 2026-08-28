@@ -30,6 +30,19 @@ Triumph handles inventory, location, and parent-completion criteria. The Forge m
 
 The complete catalog is documented in [ACHIEVEMENT_PLAN.md](ACHIEVEMENT_PLAN.md). Dependency diagrams are available in [ACHIEVEMENT_TREE.md](ACHIEVEMENT_TREE.md).
 
+### Reading the Progression
+
+All achievement sections describe one connected dependency graph, split into smaller diagrams only for readability. The early core, technology, midgame, and endgame sections reconnect through repeated achievement IDs at their boundaries; a repeated node is the same achievement, not a duplicate.
+
+- An arrow points from a prerequisite to the achievement it unlocks.
+- Multiple incoming arrows are an AND requirement: every listed parent must be complete.
+- Achievements without parents attach to their Triumph page root for display, but the page root is not a completion requirement.
+- Core branches may progress in parallel and reconnect where a recipe or machine genuinely requires several systems.
+- Optional achievements may depend on core progress, but never block or unlock core progression.
+- Prestige achievements form a separate gated branch and never block core or optional progression.
+
+Use [ACHIEVEMENT_TREE.md](ACHIEVEMENT_TREE.md) to follow the arrows visually, then use the matching ID in [ACHIEVEMENT_PLAN.md](ACHIEVEMENT_PLAN.md) for the exact criterion, parent list, stage, and implementation type.
+
 ## Requirements
 
 - Minecraft 1.12.2

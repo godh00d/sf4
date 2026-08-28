@@ -2,6 +2,8 @@
 
 These diagrams cover all **110 core**, **13 optional**, and **6 prestige-only** achievements. Every arrow is an achievement prerequisite from `ACHIEVEMENT_PLAN.md`. Page-root display attachment for achievements with no prerequisites is intentionally omitted because it is not a completion dependency.
 
+The sections below are readable slices of one dependency graph rather than separate progression trees. Boundary achievements are repeated with the same `core/...` ID to show where one slice feeds another; repeated IDs refer to the same achievement. Arrows run from prerequisite to unlocked achievement, and multiple arrows entering one achievement mean that every parent is required. Optional branches may start from core nodes but never feed back into core progression. Prestige is an independent gated branch.
+
 ## Early core
 
 ```mermaid
