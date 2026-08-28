@@ -1,6 +1,7 @@
 package com.godh00d.sf4angel.handler;
 
 import com.godh00d.sf4angel.entity.EntityAngel;
+import com.godh00d.sf4angel.constellation.ConstellationManager;
 import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.entity.player.EntityPlayer;
@@ -24,6 +25,7 @@ public class PlayerJoinHandler {
         EntityPlayer player = event.player;
         if (player.world.isRemote) return;
         EntityPlayerMP mp = (EntityPlayerMP) player;
+        if (ConstellationManager.hasActiveSession(mp)) return;
 
         removeExistingAngels(mp);
 
@@ -41,6 +43,7 @@ public class PlayerJoinHandler {
         if (player.world.isRemote) return;
 
         EntityPlayerMP mp = (EntityPlayerMP) player;
+        if (ConstellationManager.hasActiveSession(mp)) return;
         removeExistingAngels(mp);
         respawnAngel(mp);
     }
@@ -66,9 +69,9 @@ public class PlayerJoinHandler {
         angel.setOwnerId(player.getUniqueID());
         double yaw = Math.toRadians(player.rotationYaw);
         angel.setPosition(
-            player.posX - Math.sin(yaw) * 6.0D,
+            player.posX - Math.sin(yaw) * 2.5D,
             player.posY + player.getEyeHeight() - 0.5,
-            player.posZ + Math.cos(yaw) * 6.0D
+            player.posZ + Math.cos(yaw) * 2.5D
         );
         world.spawnEntity(angel);
         AchievementHandler.recordAngelAppearance(player);
@@ -94,9 +97,9 @@ public class PlayerJoinHandler {
         angel.setOwnerId(player.getUniqueID());
         double yaw = Math.toRadians(player.rotationYaw);
         angel.setPosition(
-            player.posX - Math.sin(yaw) * 6.0D,
+            player.posX - Math.sin(yaw) * 2.5D,
             player.posY + player.getEyeHeight() - 0.5,
-            player.posZ + Math.cos(yaw) * 6.0D
+            player.posZ + Math.cos(yaw) * 2.5D
         );
         world.spawnEntity(angel);
         AchievementHandler.recordAngelAppearance(player);
@@ -117,9 +120,9 @@ public class PlayerJoinHandler {
         angel.setOwnerId(player.getUniqueID());
         double yaw = Math.toRadians(player.rotationYaw);
         angel.setPosition(
-            player.posX - Math.sin(yaw) * 6.0D,
+            player.posX - Math.sin(yaw) * 2.5D,
             player.posY + player.getEyeHeight() - 0.5,
-            player.posZ + Math.cos(yaw) * 6.0D
+            player.posZ + Math.cos(yaw) * 2.5D
         );
         world.spawnEntity(angel);
         AchievementHandler.recordAngelAppearance(player);

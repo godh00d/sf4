@@ -1,6 +1,7 @@
 package com.godh00d.sf4angel.entity;
 
 import com.godh00d.sf4angel.handler.TickHandler;
+import com.godh00d.sf4angel.constellation.ConstellationManager;
 import com.godh00d.sf4angel.knowledge.AngelOracle;
 import com.godh00d.sf4angel.knowledge.ChestScanner;
 import com.godh00d.sf4angel.personality.AngelPersonality;
@@ -17,6 +18,7 @@ import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -43,6 +45,8 @@ public class EntityAngel extends EntityCreature {
         EntityDataManager.createKey(EntityAngel.class, DataSerializers.VARINT);
     public static final DataParameter<Integer> LOOK_TARGET_ID =
         EntityDataManager.createKey(EntityAngel.class, DataSerializers.VARINT);
+    public static final DataParameter<Boolean> CONSTELLATION_ANCHOR =
+        EntityDataManager.createKey(EntityAngel.class, DataSerializers.BOOLEAN);
 
     public static final int STATE_HIDDEN = 0;
     public static final int STATE_SPAWNING = 1;
@@ -100,6 +104,7 @@ public class EntityAngel extends EntityCreature {
         this.dataManager.register(OWNER_ID, -1);
         this.dataManager.register(MOOD, MOOD_CALM);
         this.dataManager.register(LOOK_TARGET_ID, -1);
+        this.dataManager.register(CONSTELLATION_ANCHOR, false);
     }
 
     @Override
@@ -123,6 +128,19 @@ public class EntityAngel extends EntityCreature {
         }
 
         tickCounter++;
+
+        if (isConstellationAnchor()) {
+            motionX = motionY = motionZ = 0.0D;
+            setVisualState(STATE_VISIBLE);
+            setStateTimer(0);
+            EntityPlayer owner = getOwnerEntity();
+            if (owner != null) {
+                setOwnerId(owner.getUniqueID());
+                setLookTarget(owner);
+            }
+            else if (tickCounter > 200) setDead();
+            return;
+        }
 
         switch (getVisualState()) {
             case STATE_SPAWNING:
@@ -212,6 +230,7 @@ public class EntityAngel extends EntityCreature {
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount) {
         if (world.isRemote) return false;
+        if (isConstellationAnchor()) return false;
         if (source == DamageSource.OUT_OF_WORLD) return false;
         if (source == DamageSource.IN_WALL) return false;
         if (source.isProjectile()) return false;
@@ -253,12 +272,26 @@ public class EntityAngel extends EntityCreature {
     }
 
     @Override
+    public boolean isInvisibleToPlayer(EntityPlayer player) {
+        return isConstellationAnchor() && !player.getUniqueID().equals(getOwnerId())
+            || super.isInvisibleToPlayer(player);
+    }
+
+    @Override
     public void onStruckByLightning(net.minecraft.entity.effect.EntityLightningBolt bolt) {
     }
 
     @Override
     protected boolean canDespawn() {
         return false;
+    }
+
+    @Override
+    protected boolean processInteract(EntityPlayer player, EnumHand hand) {
+        if (hand != EnumHand.MAIN_HAND || world.isRemote || !(player instanceof EntityPlayerMP)
+            || getVisualState() != STATE_VISIBLE || !player.getUniqueID().equals(getOwnerId())) return false;
+        ConstellationManager.interact(this, (EntityPlayerMP) player);
+        return true;
     }
 
     @Override
@@ -345,6 +378,14 @@ public class EntityAngel extends EntityCreature {
 
     public void setLookTarget(@Nullable EntityLivingBase target) {
         this.dataManager.set(LOOK_TARGET_ID, target == null ? -1 : target.getEntityId());
+    }
+
+    public boolean isConstellationAnchor() {
+        return this.dataManager.get(CONSTELLATION_ANCHOR);
+    }
+
+    public void setConstellationAnchor(boolean anchor) {
+        this.dataManager.set(CONSTELLATION_ANCHOR, anchor);
     }
 
     @Nullable
@@ -589,6 +630,7 @@ public class EntityAngel extends EntityCreature {
         compound.setInteger("StateTimer", getStateTimer());
         compound.setInteger("Mood", getMood());
         compound.setInteger("MoodTimer", getMoodTimer());
+        compound.setBoolean("ConstellationAnchor", isConstellationAnchor());
         if (ownerId != null) {
             compound.setString("OwnerId", ownerId.toString());
         }
@@ -601,6 +643,7 @@ public class EntityAngel extends EntityCreature {
         setAnimationType(compound.getInteger("AnimationType"));
         setStateTimer(compound.getInteger("StateTimer"));
         if (compound.hasKey("Mood")) setMood(compound.getInteger("Mood"), compound.getInteger("MoodTimer"));
+        setConstellationAnchor(compound.getBoolean("ConstellationAnchor"));
         if (compound.hasKey("OwnerId")) {
             try {
                 ownerId = UUID.fromString(compound.getString("OwnerId"));

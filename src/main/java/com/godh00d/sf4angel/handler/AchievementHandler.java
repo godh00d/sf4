@@ -1,6 +1,7 @@
 package com.godh00d.sf4angel.handler;
 
 import com.godh00d.sf4angel.entity.EntityAngel;
+import com.godh00d.sf4angel.constellation.ConstellationManager;
 import com.godh00d.sf4angel.personality.AchievementReactions;
 import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
@@ -292,6 +293,7 @@ public class AchievementHandler {
     public static void onAdvancementCompleted(EntityPlayerMP player, String advancementId) {
         angelAppearanceCount.merge(player.getUniqueID(), 1, Integer::sum);
         LOGGER.info("Advancement completed for {}: {}", player.getName(), advancementId);
+        ConstellationManager.refresh(player);
 
         TypewriterHandler.queueMessage(player, AchievementReactions.get(advancementId), 0, 0);
         if (advancementId.startsWith("sf4angel:core/")) {
@@ -314,6 +316,7 @@ public class AchievementHandler {
             player.posX + 15, player.posY + 15, player.posZ + 15);
         for (EntityAngel angel : player.world.getEntitiesWithinAABB(EntityAngel.class, box)) {
             if (player.getUniqueID().equals(angel.getOwnerId())) {
+                if (angel.isConstellationAnchor()) continue;
                 angel.setMood(mood, ticks);
                 angel.setLookTarget(player);
                 return;
@@ -331,8 +334,8 @@ public class AchievementHandler {
         EntityAngel angel = new EntityAngel(world);
         angel.setOwnerId(player.getUniqueID());
         double yaw = Math.toRadians(player.rotationYaw);
-        angel.setPosition(player.posX - Math.sin(yaw) * 6.0D,
-            player.posY + player.getEyeHeight() - 0.5D, player.posZ + Math.cos(yaw) * 6.0D);
+        angel.setPosition(player.posX - Math.sin(yaw) * 2.5D,
+            player.posY + player.getEyeHeight() - 0.5D, player.posZ + Math.cos(yaw) * 2.5D);
         world.spawnEntity(angel);
         recordAngelAppearance(player);
     }

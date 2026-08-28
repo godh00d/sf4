@@ -16,6 +16,25 @@ Additional behavior includes:
 - Following movement that slows while the player is observing the entity
 - Persistent counters for long-term achievement conditions
 
+## Achievement Constellation
+
+Right-click your visible angel with the main hand to enter the constellation. The angel remains within ordinary Survival interaction reach in every movement mode. Right-click the stationary angel anchor beside the arrival point to return to the exact dimension, position, and view direction from which you entered. Left-clicking a normal angel retains its existing irritated lightning response.
+
+Players cannot take normal damage in the constellation, including void damage and `/kill` damage routed through Forge. If another mod forces death without a damage event, respawn recovery returns the player and transfers any generated drops to the saved return location so they are not stranded in the void.
+
+The mod records and restores the entry-time Survival flight flags. Creative and Spectator flight entitlement is never disabled on exit. A flight-providing mod that changes ownership while the player is already inside cannot be identified generically; in that bounded case the entry-time flags are restored and the provider should reassert its current entitlement on its next update.
+
+The constellation is a client-rendered graph; it does not create an entity for each achievement and has no clickable nodes. Aim at a cube to see its title. The visual states are:
+
+- Gold with a white outline: completed
+- Cyan with a white outline: currently available because every parent is complete and all stage requirements are eligible
+- Dim translucent cube marked `?`: mystery achievement within two dependency edges of the current frontier
+- Absent: farther progress or stage-gated content that is not yet eligible
+
+Every visible parent relationship is drawn, including multi-parent requirements and parallel technical branches. Progress is player-specific and refreshes while the player is inside the constellation.
+
+The constellation uses an empty, mob-free white-void dimension. Its stable IDs are configured in `config/sf4angel.cfg` under `constellation.dimensionId` and `constellation.dimensionTypeId`; defaults are `42420` and `42421`. Change these values before world startup if another mod owns either ID. Registration fails with a clear startup error rather than silently selecting another ID.
+
 ## Achievement Catalog
 
 The catalog contains:

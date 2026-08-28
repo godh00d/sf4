@@ -15,5 +15,7 @@ public class PacketHandler {
     public static void init() {
         INSTANCE.registerMessage(MessageAngelState.Handler.class, MessageAngelState.class, packetId++, Side.CLIENT);
         INSTANCE.registerMessage(MessageTypewriter.Handler.class, MessageTypewriter.class, packetId++, Side.CLIENT);
+        INSTANCE.registerMessage(MessageConstellationProgress.Handler.class,
+            MessageConstellationProgress.class, packetId++, Side.CLIENT);
     }
 }

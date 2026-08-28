@@ -62,6 +62,7 @@ public class TickHandler {
             List<EntityAngel> angels = world.getEntitiesWithinAABB(EntityAngel.class, searchBox);
             for (EntityAngel angel : angels) {
                 if (player.getUniqueID().equals(angel.getOwnerId())) {
+                    if (angel.isConstellationAnchor()) continue;
                     angel.startDespawn(0);
                 }
             }
@@ -100,18 +101,24 @@ public class TickHandler {
 
     private static void handleAngelFollow(EntityPlayerMP player) {
         World world = player.world;
-        AxisAlignedBB searchBox = new AxisAlignedBB(
-            player.posX - 15, player.posY - 5, player.posZ - 15,
-            player.posX + 15, player.posY + 15, player.posZ + 15
-        );
-        List<EntityAngel> angels = world.getEntitiesWithinAABB(EntityAngel.class, searchBox);
+        List<EntityAngel> angels = world.getEntities(EntityAngel.class,
+            angel -> player.getUniqueID().equals(angel.getOwnerId()));
 
         for (EntityAngel angel : angels) {
             if (angel.getOwnerId() != null && angel.getOwnerId().equals(player.getUniqueID())) {
+                if (angel.isConstellationAnchor()) continue;
                 if (angel.getVisualState() != EntityAngel.STATE_VISIBLE) {
                     angel.motionX = 0.0D;
                     angel.motionY = 0.0D;
                     angel.motionZ = 0.0D;
+                    double dx = angel.posX - player.posX;
+                    double dz = angel.posZ - player.posZ;
+                    double distance = Math.sqrt(dx * dx + dz * dz);
+                    if (angel.getVisualState() == EntityAngel.STATE_SPAWNING && distance > 5.0D) {
+                        double scale = 2.5D / Math.max(distance, 0.01D);
+                        angel.setPosition(player.posX + dx * scale,
+                            player.posY + player.getEyeHeight() - 0.5D, player.posZ + dz * scale);
+                    }
                     continue;
                 }
                 UUID id = player.getUniqueID();
@@ -154,15 +161,21 @@ public class TickHandler {
                 double playerDx = angel.posX - player.posX;
                 double playerDz = angel.posZ - player.posZ;
                 double horizontalDistance = Math.sqrt(playerDx * playerDx + playerDz * playerDz);
-                if (horizontalDistance < 4.75D) {
+                double verticalDistance = Math.abs(angel.posY - player.posY);
+                if (horizontalDistance > 5.0D || verticalDistance > 5.0D) {
+                    angel.setPosition(targetX, targetY, targetZ);
+                    angel.motionX = angel.motionY = angel.motionZ = 0.0D;
+                    continue;
+                }
+                if (horizontalDistance < 1.5D) {
                     double safeDistance = Math.max(horizontalDistance, 0.01D);
-                    double push = (4.75D - horizontalDistance) * 0.055D + 0.035D;
+                    double push = (1.5D - horizontalDistance) * 0.055D + 0.02D;
                     angel.motionX += playerDx / safeDistance * push;
                     angel.motionZ += playerDz / safeDistance * push;
                 }
                 if (dist > 0.25D) {
                     double speed = isPlayerLookingAt(player, angel) ? 0.025D : 0.045D;
-                    if (dist > 8.0D) speed = 0.09D;
+                    if (dist > 2.5D) speed = 0.12D;
                     angel.motionX += (dx / dist) * speed;
                     angel.motionY += (dy / dist) * speed;
                     angel.motionZ += (dz / dist) * speed;
@@ -171,6 +184,14 @@ public class TickHandler {
                 angel.motionX *= 0.89D;
                 angel.motionY *= 0.89D;
                 angel.motionZ *= 0.89D;
+                double motion = Math.sqrt(angel.motionX * angel.motionX + angel.motionY * angel.motionY
+                    + angel.motionZ * angel.motionZ);
+                if (motion > 0.2D) {
+                    double scale = 0.2D / motion;
+                    angel.motionX *= scale;
+                    angel.motionY *= scale;
+                    angel.motionZ *= scale;
+                }
             }
         }
     }
@@ -182,29 +203,29 @@ public class TickHandler {
         switch (mode) {
             case 0: // Hold position in front and acknowledge the player.
                 return new double[] {
-                    player.posX + forwardX * 6.5D + rightX * wave * 0.55D,
-                    player.posZ + forwardZ * 6.5D + rightZ * wave * 0.55D
+                    player.posX + forwardX * 2.25D + rightX * wave * 0.25D,
+                    player.posZ + forwardZ * 2.25D + rightZ * wave * 0.25D
                 };
             case 1: // Make one unhurried world-space orbit.
                 double orbit = movement.phase + elapsed * 0.009D;
                 return new double[] {
-                    player.posX + Math.cos(orbit) * 6.2D,
-                    player.posZ + Math.sin(orbit) * 6.2D
+                    player.posX + Math.cos(orbit) * 2.4D,
+                    player.posZ + Math.sin(orbit) * 2.4D
                 };
             case 2: // Deliberately cross to the other side of the player's view.
                 return new double[] {
-                    player.posX + forwardX * 5.8D + rightX * movement.side * (1.7D + wave * 0.8D),
-                    player.posZ + forwardZ * 5.8D + rightZ * movement.side * (1.7D + wave * 0.8D)
+                    player.posX + forwardX * 1.9D + rightX * movement.side * (0.45D + wave * 0.25D),
+                    player.posZ + forwardZ * 1.9D + rightZ * movement.side * (0.45D + wave * 0.25D)
                 };
             case 3: // Move closer briefly, as if inspecting the player.
-                double closeDistance = 5.0D + wave * 0.3D;
+                double closeDistance = 1.75D + wave * 0.15D;
                 return new double[] {
-                    player.posX + forwardX * closeDistance + rightX * movement.side * 0.65D,
-                    player.posZ + forwardZ * closeDistance + rightZ * movement.side * 0.65D
+                    player.posX + forwardX * closeDistance + rightX * movement.side * 0.3D,
+                    player.posZ + forwardZ * closeDistance + rightZ * movement.side * 0.3D
                 };
             default: // Trace a loose arc, then return to the front.
                 double wanderAngle = yaw + movement.phase + Math.sin(elapsed * 0.012D) * 0.75D;
-                double wanderDistance = 5.5D + Math.sin(elapsed * 0.019D) * 0.8D;
+                double wanderDistance = 2.1D + Math.sin(elapsed * 0.019D) * 0.3D;
                 return new double[] {
                     player.posX - Math.sin(wanderAngle) * wanderDistance,
                     player.posZ + Math.cos(wanderAngle) * wanderDistance

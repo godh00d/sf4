@@ -8,6 +8,7 @@ $PlanPath = Join-Path $ProjectRoot "ACHIEVEMENT_PLAN.md"
 $TreePath = Join-Path $ProjectRoot "ACHIEVEMENT_TREE.md"
 $CoreCatalogPath = Join-Path $ProjectRoot "src\main\java\com\godh00d\sf4angel\handler\CoreAdvancementCatalog.java"
 $ReactionCatalogPath = Join-Path $ProjectRoot "src\main\java\com\godh00d\sf4angel\personality\AchievementReactions.java"
+$ConstellationCatalogPath = Join-Path $ProjectRoot "src\main\java\com\godh00d\sf4angel\constellation\AchievementConstellationCatalog.java"
 $OutputRoot = Join-Path $PSScriptRoot "triumph"
 $ScriptRoot = Join-Path $OutputRoot "script\sf4angel"
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
@@ -299,6 +300,128 @@ function Get-RequiredStages($Row) {
     return @($Stages | ForEach-Object { $_ })
 }
 
+function Get-ConstellationCatalogLines($Rows) {
+    $ById = @{}
+    foreach ($Row in $Rows) { $ById[$Row.Id] = $Row }
+    $Depths = @{}
+    function Get-Depth([string]$Id) {
+        if ($Depths.ContainsKey($Id)) { return [int]$Depths[$Id] }
+        $Depth = 0
+        foreach ($Parent in $ById[$Id].Parents) { $Depth = [math]::Max($Depth, (Get-Depth $Parent) + 1) }
+        $Depths[$Id] = $Depth
+        return $Depth
+    }
+
+    $Children = @{}
+    foreach ($Row in $Rows) { $Children[$Row.Id] = New-Object System.Collections.Generic.List[int] }
+    for ($Index = 0; $Index -lt $Rows.Count; $Index++) {
+        foreach ($Parent in $Rows[$Index].Parents) { $Children[$Parent].Add($Index) }
+    }
+
+    $Slots = @{}
+    $Records = New-Object System.Collections.Generic.List[object]
+    foreach ($Row in $Rows) {
+        $Depth = Get-Depth $Row.Id
+        $Page = $Row.Id.Split(':')[1].Split('/')[0]
+        $SlotKey = "$Page/$Depth"
+        $Slot = if ($Slots.ContainsKey($SlotKey)) { [int]$Slots[$SlotKey] } else { 0 }
+        $Slots[$SlotKey] = $Slot + 1
+        $Layer = @{ core = 0; optional = -1; prestige = 1 }[$Page]
+        $X = 8 + $Depth * 4
+        $Y = 96 + (($Slot % 7) - 3) * 3
+        $Z = $Layer * 24 + [math]::Floor($Slot / 7) * 5
+        $Records.Add([pscustomobject]@{
+            Row = $Row; X = [int]$X; Y = [int]$Y; Z = [int]$Z
+            Stages = @(Get-RequiredStages $Row); Children = @($Children[$Row.Id])
+        })
+    }
+
+    $Canonical = New-Object System.Text.StringBuilder
+    foreach ($Record in $Records) {
+        [void]$Canonical.Append($Record.Row.Id).Append('|').Append($Record.Row.Title).Append('|').Append(($Record.Row.Parents -join ',')).Append('|').Append(($Record.Stages -join ',')).Append('|').Append($Record.X).Append('|').Append($Record.Y).Append('|').Append($Record.Z).Append("`n")
+    }
+    $Sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $Hash = -join ($Sha.ComputeHash($Utf8NoBom.GetBytes($Canonical.ToString())) | ForEach-Object { $_.ToString('x2') })
+    } finally { $Sha.Dispose() }
+
+    $Lines = New-Object System.Collections.Generic.List[string]
+    foreach ($Line in @(
+        'package com.godh00d.sf4angel.constellation;', '',
+        'import java.util.ArrayList;', 'import java.util.Collections;', 'import java.util.LinkedHashMap;',
+        'import java.util.List;', 'import java.util.Map;', '',
+        '/** Generated from ACHIEVEMENT_PLAN.md by instance-config/generate_triumph.ps1. */',
+        'public final class AchievementConstellationCatalog {', '',
+        "    public static final int COUNT = $($Rows.Count);", "    public static final String HASH = `"$Hash`";",
+        '    private static final Node[] NODES = new Node[] {'
+    )) { $Lines.Add($Line) }
+    for ($Index = 0; $Index -lt $Records.Count; $Index++) {
+        $Record = $Records[$Index]
+        $Title = $Record.Row.Title.Replace('\', '\\').Replace('"', '\"')
+        $Parents = @($Record.Row.Parents | ForEach-Object { "`"$($_)`"" }) -join ', '
+        $Stages = @($Record.Stages | ForEach-Object { "`"$($_)`"" }) -join ', '
+        $ChildIndexes = @($Record.Children | ForEach-Object { $_.ToString() }) -join ', '
+        $Comma = if ($Index -lt $Records.Count - 1) { ',' } else { '' }
+        $Lines.Add("        new Node(`"$($Record.Row.Id)`", `"$Title`", strings($Parents), strings($Stages),")
+        $Lines.Add("            ints($ChildIndexes), $($Record.X), $($Record.Y), $($Record.Z))$Comma")
+    }
+    foreach ($Line in @(
+        '    };', '    private static final Map<String, Integer> INDEXES;', '', '    static {',
+        '        if (NODES.length != COUNT) throw new IllegalStateException("Catalog count mismatch");',
+        '        Map<String, Integer> indexes = new LinkedHashMap<>();',
+        '        for (int i = 0; i < NODES.length; i++) {',
+        '            if (indexes.put(NODES[i].id, i) != null) throw new IllegalStateException("Duplicate catalog ID");',
+        '        }',
+        '        for (int i = 0; i < NODES.length; i++) {',
+        '            for (int child : NODES[i].children) {',
+        '                if (child < 0 || child >= NODES.length || !NODES[child].parents.contains(NODES[i].id)) {',
+        '                    throw new IllegalStateException("Invalid catalog child edge for " + NODES[i].id);',
+        '                }',
+        '            }',
+        '            for (String parent : NODES[i].parents) {',
+        '                Integer parentIndex = indexes.get(parent);',
+        '                if (parentIndex == null || !contains(NODES[parentIndex].children, i)) {',
+        '                    throw new IllegalStateException("Invalid catalog parent edge for " + NODES[i].id);',
+        '                }',
+        '            }',
+        '        }',
+        '        INDEXES = Collections.unmodifiableMap(indexes);', '    }', '',
+        '    private AchievementConstellationCatalog() {', '    }', '',
+        '    public static Node[] nodes() {', '        return NODES.clone();', '    }', '',
+        '    public static Map<String, Integer> indexes() {', '        return INDEXES;', '    }', '',
+        '    private static List<String> strings(String... values) {',
+        '        List<String> result = new ArrayList<>();', '        Collections.addAll(result, values);',
+        '        return Collections.unmodifiableList(result);', '    }', '',
+        '    private static int[] ints(int... values) {', '        return values;', '    }', '',
+        '    private static boolean contains(int[] values, int expected) {',
+        '        for (int value : values) if (value == expected) return true;',
+        '        return false;', '    }', '',
+        '    public static final class Node {', '        public final String id;', '        public final String title;',
+        '        public final List<String> parents;', '        public final List<String> stages;',
+        '        public final int x;', '        public final int y;', '        public final int z;',
+        '        private final int[] children;', '',
+        '        private Node(String id, String title, List<String> parents, List<String> stages,',
+        '                     int[] children, int x, int y, int z) {',
+        '            this.id = id;', '            this.title = title;', '            this.parents = parents;',
+        '            this.stages = stages;', '            this.children = children;',
+        '            this.x = x;', '            this.y = y;', '            this.z = z;', '        }', '',
+        '        public int[] children() {', '            return children.clone();', '        }', '    }', '}'
+    )) { $Lines.Add($Line) }
+    return @($Lines)
+}
+
+function Test-ConstellationCatalog($Rows, [string[]]$ExpectedLines) {
+    if (-not [System.IO.File]::Exists($ConstellationCatalogPath)) { throw 'Missing generated constellation Java catalog' }
+    $Expected = ($ExpectedLines -join "`n") + "`n"
+    $Actual = [System.IO.File]::ReadAllText($ConstellationCatalogPath)
+    if ($Actual -ne $Expected) {
+        throw 'Constellation Java catalog differs from ACHIEVEMENT_PLAN.md (IDs, titles, parents, stages, hash, or 3D positions)'
+    }
+    if ([regex]::Matches($Actual, '(?m)^        new Node\(').Count -ne 129) {
+        throw 'Constellation Java catalog must contain exactly 129 nodes'
+    }
+}
+
 function Get-AchievementLines($Row, [int]$Index) {
     $Page = $Row.Id.Split(':')[1].Split('/')[0]
     $Columns = @{ core = 10; optional = 7; prestige = 3 }[$Page]
@@ -486,5 +609,8 @@ function Test-Configuration($Rows) {
 }
 
 $Catalog = Get-Catalog
+$ConstellationLines = Get-ConstellationCatalogLines $Catalog
+if (-not $Check) { Write-AsciiFile $ConstellationCatalogPath $ConstellationLines }
+Test-ConstellationCatalog $Catalog $ConstellationLines
 if (-not $Check) { Write-Configuration $Catalog }
 Test-Configuration $Catalog

@@ -1,10 +1,8 @@
 package com.godh00d.sf4angel.network;
 
-import com.godh00d.sf4angel.entity.EntityAngel;
+import com.godh00d.sf4angel.SF4Angel;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -25,6 +23,11 @@ public class MessageAngelState implements IMessage {
         this.stateTimer = stateTimer;
     }
 
+    public int getEntityId() { return entityId; }
+    public int getVisualState() { return visualState; }
+    public int getAnimationType() { return animationType; }
+    public int getStateTimer() { return stateTimer; }
+
     @Override
     public void fromBytes(ByteBuf buf) {
         entityId = buf.readInt();
@@ -44,17 +47,8 @@ public class MessageAngelState implements IMessage {
     public static class Handler implements IMessageHandler<MessageAngelState, IMessage> {
         @Override
         public IMessage onMessage(MessageAngelState message, MessageContext ctx) {
-            Minecraft.getMinecraft().addScheduledTask(() -> {
-                World world = Minecraft.getMinecraft().world;
-                if (world == null) return;
-                Entity entity = world.getEntityByID(message.entityId);
-                if (entity instanceof EntityAngel) {
-                    EntityAngel angel = (EntityAngel) entity;
-                    angel.setVisualState(message.visualState);
-                    angel.setAnimationType(message.animationType);
-                    angel.setStateTimer(message.stateTimer);
-                }
-            });
+            FMLCommonHandler.instance().getWorldThread(ctx.netHandler)
+                .addScheduledTask(() -> SF4Angel.proxy.handleAngelState(message));
             return null;
         }
     }
