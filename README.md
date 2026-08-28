@@ -18,6 +18,8 @@ Additional behavior includes:
 
 ## Achievement Constellation
 
+[Explore the public interactive 3D Achievement Constellation](https://godh00d.github.io/sf4/). The visualization shows the complete fixed catalog of all 129 achievements and their dependency routes; visibility and state colors inside the game remain specific to each player's progress and eligible stages.
+
 Right-click your visible angel with the main hand to enter the constellation. The angel remains within ordinary Survival interaction reach in every movement mode. Right-click the stationary angel anchor beside the arrival point to return to the exact dimension, position, and view direction from which you entered. Left-clicking a normal angel retains its existing irritated lightning response.
 
 Players cannot take normal damage in the constellation, including void damage and `/kill` damage routed through Forge. If another mod forces death without a damage event, respawn recovery returns the player and transfers any generated drops to the saved return location so they are not stranded in the void.

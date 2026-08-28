@@ -9,6 +9,7 @@ $TreePath = Join-Path $ProjectRoot "ACHIEVEMENT_TREE.md"
 $CoreCatalogPath = Join-Path $ProjectRoot "src\main\java\com\godh00d\sf4angel\handler\CoreAdvancementCatalog.java"
 $ReactionCatalogPath = Join-Path $ProjectRoot "src\main\java\com\godh00d\sf4angel\personality\AchievementReactions.java"
 $ConstellationCatalogPath = Join-Path $ProjectRoot "src\main\java\com\godh00d\sf4angel\constellation\AchievementConstellationCatalog.java"
+$ConstellationDataPath = Join-Path $ProjectRoot "docs\constellation-data.js"
 $OutputRoot = Join-Path $PSScriptRoot "triumph"
 $ScriptRoot = Join-Path $OutputRoot "script\sf4angel"
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
@@ -97,6 +98,23 @@ function Write-AsciiFile([string]$Path, [string[]]$Lines) {
     $Parent = Split-Path -Parent $Path
     [System.IO.Directory]::CreateDirectory($Parent) | Out-Null
     [System.IO.File]::WriteAllText($Path, (($Lines -join "`n") + "`n"), $Utf8NoBom)
+}
+
+function ConvertTo-JavaScriptString([string]$Value) {
+    $Builder = New-Object System.Text.StringBuilder
+    foreach ($Character in $Value.ToCharArray()) {
+        $Code = [int]$Character
+        if ($Code -eq 34) { [void]$Builder.Append('\"') }
+        elseif ($Code -eq 92) { [void]$Builder.Append('\\') }
+        elseif ($Code -eq 8) { [void]$Builder.Append('\b') }
+        elseif ($Code -eq 9) { [void]$Builder.Append('\t') }
+        elseif ($Code -eq 10) { [void]$Builder.Append('\n') }
+        elseif ($Code -eq 12) { [void]$Builder.Append('\f') }
+        elseif ($Code -eq 13) { [void]$Builder.Append('\r') }
+        elseif ($Code -lt 32 -or $Code -gt 126) { [void]$Builder.Append(('\u{0:x4}' -f $Code)) }
+        else { [void]$Builder.Append($Character) }
+    }
+    return '"' + $Builder.ToString() + '"'
 }
 
 function Get-Catalog {
@@ -407,7 +425,34 @@ function Get-ConstellationCatalogLines($Rows) {
         '            this.x = x;', '            this.y = y;', '            this.z = z;', '        }', '',
         '        public int[] children() {', '            return children.clone();', '        }', '    }', '}'
     )) { $Lines.Add($Line) }
-    return @($Lines)
+    $DataLines = New-Object System.Collections.Generic.List[string]
+    $DataLines.Add('// Generated from ACHIEVEMENT_PLAN.md by instance-config/generate_triumph.ps1.')
+    $DataLines.Add('window.SF4_CONSTELLATION = {')
+    $DataLines.Add('  version: 1,')
+    $DataLines.Add("  catalogHash: $(ConvertTo-JavaScriptString $Hash),")
+    $DataLines.Add("  count: $($Rows.Count),")
+    $DataLines.Add('  nodes: [')
+    for ($Index = 0; $Index -lt $Records.Count; $Index++) {
+        $Record = $Records[$Index]
+        $Category = $Record.Row.Id.Split(':')[1].Split('/')[0]
+        $Parents = '[' + (@($Record.Row.Parents | ForEach-Object { ConvertTo-JavaScriptString $_ }) -join ', ') + ']'
+        $ChildIds = @($Record.Children | ForEach-Object { $Records[$_].Row.Id })
+        $ChildValues = '[' + (@($ChildIds | ForEach-Object { ConvertTo-JavaScriptString $_ }) -join ', ') + ']'
+        $Stages = '[' + (@($Record.Stages | ForEach-Object { ConvertTo-JavaScriptString $_ }) -join ', ') + ']'
+        $Comma = if ($Index -lt $Records.Count - 1) { ',' } else { '' }
+        $DataLines.Add('    {')
+        $DataLines.Add("      id: $(ConvertTo-JavaScriptString $Record.Row.Id),")
+        $DataLines.Add("      title: $(ConvertTo-JavaScriptString $Record.Row.Title),")
+        $DataLines.Add("      category: $(ConvertTo-JavaScriptString $Category),")
+        $DataLines.Add("      x: $($Record.X), y: $($Record.Y), z: $($Record.Z),")
+        $DataLines.Add("      parents: $Parents,")
+        $DataLines.Add("      children: $ChildValues,")
+        $DataLines.Add("      requiredStages: $Stages")
+        $DataLines.Add("    }$Comma")
+    }
+    $DataLines.Add('  ]')
+    $DataLines.Add('};')
+    return [pscustomobject]@{ JavaLines = @($Lines); DataLines = @($DataLines) }
 }
 
 function Test-ConstellationCatalog($Rows, [string[]]$ExpectedLines) {
@@ -419,6 +464,18 @@ function Test-ConstellationCatalog($Rows, [string[]]$ExpectedLines) {
     }
     if ([regex]::Matches($Actual, '(?m)^        new Node\(').Count -ne 129) {
         throw 'Constellation Java catalog must contain exactly 129 nodes'
+    }
+}
+
+function Test-ConstellationData($Rows, [string[]]$ExpectedLines) {
+    if (-not [System.IO.File]::Exists($ConstellationDataPath)) { throw 'Missing generated constellation browser data' }
+    $Expected = ($ExpectedLines -join "`n") + "`n"
+    $Actual = [System.IO.File]::ReadAllText($ConstellationDataPath)
+    if ($Actual -ne $Expected) {
+        throw 'Constellation browser data differs from ACHIEVEMENT_PLAN.md (IDs, titles, categories, parents, children, stages, hash, or 3D positions)'
+    }
+    if ([regex]::Matches($Actual, '(?m)^      id: ').Count -ne 129) {
+        throw 'Constellation browser data must contain exactly 129 nodes'
     }
 }
 
@@ -609,8 +666,12 @@ function Test-Configuration($Rows) {
 }
 
 $Catalog = Get-Catalog
-$ConstellationLines = Get-ConstellationCatalogLines $Catalog
-if (-not $Check) { Write-AsciiFile $ConstellationCatalogPath $ConstellationLines }
-Test-ConstellationCatalog $Catalog $ConstellationLines
+$Constellation = Get-ConstellationCatalogLines $Catalog
+if (-not $Check) {
+    Write-AsciiFile $ConstellationCatalogPath $Constellation.JavaLines
+    Write-AsciiFile $ConstellationDataPath $Constellation.DataLines
+}
+Test-ConstellationCatalog $Catalog $Constellation.JavaLines
+Test-ConstellationData $Catalog $Constellation.DataLines
 if (-not $Check) { Write-Configuration $Catalog }
 Test-Configuration $Catalog
