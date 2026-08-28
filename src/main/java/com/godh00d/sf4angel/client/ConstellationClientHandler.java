@@ -43,8 +43,8 @@ public final class ConstellationClientHandler {
     @SubscribeEvent
     public void onFogColors(EntityViewRenderEvent.FogColors event) {
         if (isConstellation()) {
-            event.setRed(1.0F);
-            event.setGreen(1.0F);
+            event.setRed(0.96F);
+            event.setGreen(0.97F);
             event.setBlue(1.0F);
         }
     }
@@ -96,8 +96,8 @@ public final class ConstellationClientHandler {
                 for (String parentId : nodes[i].parents) {
                     Integer parent = AchievementConstellationCatalog.indexes().get(parentId);
                     if (parent == null || states[parent] == ConstellationManager.ABSENT) continue;
-                    buffer.pos(nodes[parent].x, nodes[parent].y, nodes[parent].z).color(0.28F, 0.63F, 0.72F, 0.62F).endVertex();
-                    buffer.pos(nodes[i].x, nodes[i].y, nodes[i].z).color(0.76F, 0.94F, 1.0F, 0.62F).endVertex();
+                    buffer.pos(nodes[parent].x, nodes[parent].y, nodes[parent].z).color(0.08F, 0.28F, 0.4F, 0.9F).endVertex();
+                    buffer.pos(nodes[i].x, nodes[i].y, nodes[i].z).color(0.12F, 0.48F, 0.62F, 0.9F).endVertex();
                 }
             }
             tessellator.draw();
@@ -110,11 +110,16 @@ public final class ConstellationClientHandler {
                     : states[i] == ConstellationManager.AVAILABLE ? 0.9F : 0.62F;
                 float blue = states[i] == ConstellationManager.COMPLETED ? 0.12F
                     : states[i] == ConstellationManager.AVAILABLE ? 1.0F : 0.72F;
-                float alpha = states[i] == ConstellationManager.MYSTERY ? 0.28F : 0.82F;
+                float alpha = states[i] == ConstellationManager.MYSTERY ? 0.45F : 0.95F;
                 AxisAlignedBB box = box(nodes[i]);
                 drawSolidBox(buffer, tessellator, box, red, green, blue, alpha);
-                RenderGlobal.drawSelectionBoundingBox(box, 1.0F, 1.0F, 1.0F,
-                    states[i] == ConstellationManager.MYSTERY ? 0.35F : 0.9F);
+                if (states[i] == ConstellationManager.COMPLETED) {
+                    RenderGlobal.drawSelectionBoundingBox(box, 0.5F, 0.28F, 0.02F, 1.0F);
+                } else if (states[i] == ConstellationManager.AVAILABLE) {
+                    RenderGlobal.drawSelectionBoundingBox(box, 0.0F, 0.36F, 0.52F, 1.0F);
+                } else {
+                    RenderGlobal.drawSelectionBoundingBox(box, 0.22F, 0.26F, 0.34F, 0.75F);
+                }
             }
 
             GlStateManager.enableTexture2D();
@@ -133,12 +138,20 @@ public final class ConstellationClientHandler {
 
     @SubscribeEvent
     public void onOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL || hoveredTitle == null) return;
+        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL || !isConstellation()) return;
         Minecraft minecraft = Minecraft.getMinecraft();
         ScaledResolution resolution = event.getResolution();
-        int width = minecraft.fontRenderer.getStringWidth(hoveredTitle);
-        minecraft.fontRenderer.drawStringWithShadow(hoveredTitle,
-            (resolution.getScaledWidth() - width) / 2.0F, resolution.getScaledHeight() / 2.0F + 12.0F, 0xFFFFFF);
+        String heading = ConstellationClientState.states().length == AchievementConstellationCatalog.COUNT
+            ? "Achievement Constellation" : "Loading Achievement Constellation...";
+        drawCentered(minecraft, resolution, heading, 10, 0x203044);
+        drawCentered(minecraft, resolution,
+            "Fly forward to explore | Aim at a cube for its name",
+            22, 0x30445C);
+        drawCentered(minecraft, resolution, "Right-click the angel to return", 34, 0x30445C);
+        if (hoveredTitle != null) {
+            drawCentered(minecraft, resolution, hoveredTitle,
+                resolution.getScaledHeight() / 2 + 12, 0x172638);
+        }
     }
 
     @SubscribeEvent
@@ -206,7 +219,7 @@ public final class ConstellationClientHandler {
             float scale = 0.025F;
             GlStateManager.scale(-scale, -scale, scale);
             minecraft.fontRenderer.drawString(text,
-                -minecraft.fontRenderer.getStringWidth(text) / 2, 0, 0x99FFFFFF);
+                -minecraft.fontRenderer.getStringWidth(text) / 2, 0, 0xDD203040);
         } finally {
             GlStateManager.popMatrix();
         }
@@ -216,6 +229,12 @@ public final class ConstellationClientHandler {
         Minecraft minecraft = Minecraft.getMinecraft();
         return minecraft.world != null && minecraft.world.provider.getDimension()
             == ConstellationDimension.getDimensionId();
+    }
+
+    private static void drawCentered(Minecraft minecraft, ScaledResolution resolution,
+                                     String text, int y, int color) {
+        int width = minecraft.fontRenderer.getStringWidth(text);
+        minecraft.fontRenderer.drawString(text, (resolution.getScaledWidth() - width) / 2, y, color);
     }
 
     private static void restoreRenderState() {
@@ -242,7 +261,7 @@ public final class ConstellationClientHandler {
                 GlStateManager.disableBlend();
                 GlStateManager.enableDepth();
                 GlStateManager.depthMask(false);
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                GlStateManager.color(0.96F, 0.97F, 1.0F, 1.0F);
                 Tessellator tessellator = Tessellator.getInstance();
                 BufferBuilder buffer = tessellator.getBuffer();
                 double size = 100.0D;

@@ -82,7 +82,7 @@ public final class ConstellationManager {
         boolean arrived = false;
         try {
             player.changeDimension(ConstellationDimension.getDimensionId(),
-                new FixedTeleporter(ARRIVAL_X, ARRIVAL_Y, ARRIVAL_Z, 0.0F, 0.0F));
+                new FixedTeleporter(ARRIVAL_X, ARRIVAL_Y, ARRIVAL_Z, -90.0F, 12.0F));
         } catch (RuntimeException exception) {
             SF4Angel.logger.error("Constellation entry failed for {}", player.getName(), exception);
         } finally {

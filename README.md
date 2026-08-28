@@ -26,9 +26,9 @@ The mod records and restores the entry-time Survival flight flags. Creative and 
 
 The constellation is a client-rendered graph; it does not create an entity for each achievement and has no clickable nodes. Aim at a cube to see its title. The visual states are:
 
-- Gold with a white outline: completed
-- Cyan with a white outline: currently available because every parent is complete and all stage requirements are eligible
-- Dim translucent cube marked `?`: mystery achievement within two dependency edges of the current frontier
+- Gold with a dark-gold outline: completed
+- Cyan with a dark-cyan outline: currently available because every parent is complete and all stage requirements are eligible
+- Dim translucent cube with a dark-gray outline and `?`: mystery achievement within two dependency edges of the current frontier
 - Absent: farther progress or stage-gated content that is not yet eligible
 
 Every visible parent relationship is drawn, including multi-parent requirements and parallel technical branches. Progress is player-specific and refreshes while the player is inside the constellation.

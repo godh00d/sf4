@@ -133,6 +133,7 @@ public class AngelPersonality {
         "The Angel descends...",
         "I am your guide through the sky.",
         "{NEXT_GOAL}",
+        "Right-click me to enter the Achievement Constellation and see every path.",
         "Complete achievements and I will show you what to do next."
     };
 
