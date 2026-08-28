@@ -102,7 +102,7 @@ public class PlayerJoinHandler {
         AchievementHandler.recordAngelAppearance(player);
 
         String nextGoal = AchievementHandler.getNextGoal(player);
-        String welcomeBack = "Welcome back. The sky missed you.";
+        String welcomeBack = AngelPersonality.getRandomWelcomeBack();
         if (nextGoal != null && !nextGoal.isEmpty()) {
             welcomeBack += " Next goal: " + nextGoal;
         }

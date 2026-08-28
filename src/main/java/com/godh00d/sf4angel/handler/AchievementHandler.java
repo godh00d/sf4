@@ -1,6 +1,7 @@
 package com.godh00d.sf4angel.handler;
 
 import com.godh00d.sf4angel.entity.EntityAngel;
+import com.godh00d.sf4angel.personality.AchievementReactions;
 import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.advancements.Advancement;
@@ -292,11 +293,12 @@ public class AchievementHandler {
         angelAppearanceCount.merge(player.getUniqueID(), 1, Integer::sum);
         LOGGER.info("Advancement completed for {}: {}", player.getName(), advancementId);
 
-        TypewriterHandler.queueMessage(player,
-            AngelPersonality.getAdvancementGreeting(getAdvancementTitle(player, advancementId)), 0, 0);
-        String nextGoal = getNextGoal(player);
-        if (nextGoal != null) {
-            TypewriterHandler.queueMessage(player, "Next goal: " + nextGoal, 80, 0);
+        TypewriterHandler.queueMessage(player, AchievementReactions.get(advancementId), 0, 0);
+        if (advancementId.startsWith("sf4angel:core/")) {
+            String nextGoal = getNextGoal(player);
+            if (nextGoal != null) {
+                TypewriterHandler.queueMessage(player, "Next goal: " + nextGoal, 80, 0);
+            }
         }
         if (getAngelAppearances(player) == 50) {
             TypewriterHandler.queueMessage(player, "The angel smiles upon you, faithful companion.", 120, 0);
@@ -341,7 +343,7 @@ public class AchievementHandler {
         Advancement advancement = event.getAdvancement();
         if (player.world.isRemote || advancement == null || advancement.getId() == null) return;
         String id = advancement.getId().toString();
-        if (!CoreAdvancementCatalog.prerequisites().containsKey(id)) return;
+        if (!AchievementReactions.contains(id)) return;
         onAdvancementCompleted((EntityPlayerMP) player, id);
     }
 

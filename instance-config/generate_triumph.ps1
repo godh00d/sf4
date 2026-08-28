@@ -7,6 +7,7 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $PlanPath = Join-Path $ProjectRoot "ACHIEVEMENT_PLAN.md"
 $TreePath = Join-Path $ProjectRoot "ACHIEVEMENT_TREE.md"
 $CoreCatalogPath = Join-Path $ProjectRoot "src\main\java\com\godh00d\sf4angel\handler\CoreAdvancementCatalog.java"
+$ReactionCatalogPath = Join-Path $ProjectRoot "src\main\java\com\godh00d\sf4angel\personality\AchievementReactions.java"
 $OutputRoot = Join-Path $PSScriptRoot "triumph"
 $ScriptRoot = Join-Path $OutputRoot "script\sf4angel"
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
@@ -126,6 +127,7 @@ function Get-Catalog {
     Test-Prerequisites @($Rows | ForEach-Object { $_ })
     Test-TreeParents @($Rows | ForEach-Object { $_ })
     Test-CoreCatalog @($Rows | ForEach-Object { $_ })
+    Test-AchievementReactions @($Rows | ForEach-Object { $_ })
     return @($Rows | ForEach-Object { $_ })
 }
 
@@ -198,6 +200,33 @@ function Test-CoreCatalog($Rows) {
         if (($Actual[$Row.Id] -join '|') -ne ($Row.Parents -join '|')) {
             throw "Core Java prerequisites differ for $($Row.Id)"
         }
+    }
+}
+
+function Test-AchievementReactions($Rows) {
+    $Content = [System.IO.File]::ReadAllText($ReactionCatalogPath)
+    $Matches = @([regex]::Matches($Content, 'reactions\.put\("(?<id>[^"]*)", "(?<text>[^"]*)"\);'))
+    if ($Matches.Count -ne 129) { throw "Achievement reaction count mismatch: $($Matches.Count)" }
+
+    $Expected = @{}
+    foreach ($Row in $Rows) { $Expected[$Row.Id] = $true }
+    $Actual = @{}
+    $Texts = @{}
+    foreach ($Match in $Matches) {
+        $Id = $Match.Groups['id'].Value
+        $Text = $Match.Groups['text'].Value
+        if ($Actual.ContainsKey($Id)) { throw "Duplicate achievement reaction ID: $Id" }
+        if ([string]::IsNullOrWhiteSpace($Text)) { throw "Blank achievement reaction: $Id" }
+        if ($Text.Length -gt 80) { throw "Achievement reaction exceeds 80 characters: $Id" }
+        if ($Text.ToCharArray() | Where-Object { [int]$_ -gt 127 }) { throw "Non-ASCII achievement reaction: $Id" }
+        if ($Texts.ContainsKey($Text)) { throw "Duplicate achievement reaction text: $Id and $($Texts[$Text])" }
+        $Actual[$Id] = $true
+        $Texts[$Text] = $Id
+    }
+    $Missing = @($Expected.Keys | Where-Object { -not $Actual.ContainsKey($_) } | Sort-Object)
+    $Extra = @($Actual.Keys | Where-Object { -not $Expected.ContainsKey($_) } | Sort-Object)
+    if ($Missing.Count -gt 0 -or $Extra.Count -gt 0) {
+        throw "Achievement reactions differ from plan. Missing: $($Missing -join ', '); extra: $($Extra -join ', ')"
     }
 }
 
@@ -453,7 +482,7 @@ function Test-Configuration($Rows) {
     if (-not $TriumphContent.Contains($Order)) { $Errors.Add('Page order mismatch') }
     if (-not $TriumphContent.EndsWith("`n") -or $TriumphContent.Contains("`r") -or $TriumphContent -match '(?m) +$') { $Errors.Add('Invalid Triumph.txt whitespace') }
     if ($Errors.Count -gt 0) { throw "Validation failed:`n- $($Errors -join "`n- ")" }
-    Write-Output 'Validated 129 achievements, 3 roots, Java/plan/tree parity, prerequisite/display parents, criteria, positions, stage gates, and whitespace.'
+    Write-Output 'Validated 129 achievements and unique reactions, 3 roots, Java/plan/tree parity, prerequisite/display parents, criteria, positions, stage gates, and whitespace.'
 }
 
 $Catalog = Get-Catalog
