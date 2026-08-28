@@ -3,6 +3,8 @@ package com.godh00d.sf4angel.constellation;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.gen.IChunkGenerator;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.Vec3d;
 
 public class WorldProviderConstellation extends WorldProvider {
 
@@ -14,6 +16,16 @@ public class WorldProviderConstellation extends WorldProvider {
     @Override
     public IChunkGenerator createChunkGenerator() {
         return new ChunkGeneratorConstellation(world);
+    }
+
+    @Override
+    public Vec3d getSkyColor(Entity cameraEntity, float partialTicks) {
+        return new Vec3d(0.96D, 0.97D, 1.0D);
+    }
+
+    @Override
+    public Vec3d getFogColor(float celestialAngle, float partialTicks) {
+        return new Vec3d(0.96D, 0.97D, 1.0D);
     }
 
     @Override

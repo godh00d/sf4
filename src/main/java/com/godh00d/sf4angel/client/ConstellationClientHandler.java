@@ -252,34 +252,8 @@ public final class ConstellationClientHandler {
     private static final class WhiteSkyRenderer extends IRenderHandler {
         @Override
         public void render(float partialTicks, WorldClient world, Minecraft minecraft) {
-            GlStateManager.pushMatrix();
-            try {
-                GlStateManager.disableTexture2D();
-                GlStateManager.disableLighting();
-                GlStateManager.disableFog();
-                GlStateManager.disableCull();
-                GlStateManager.disableBlend();
-                GlStateManager.enableDepth();
-                GlStateManager.depthMask(false);
-                GlStateManager.color(0.96F, 0.97F, 1.0F, 1.0F);
-                Tessellator tessellator = Tessellator.getInstance();
-                BufferBuilder buffer = tessellator.getBuffer();
-                double size = 100.0D;
-                buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-                buffer.pos(-size, -size, -size).endVertex(); buffer.pos(-size, size, -size).endVertex(); buffer.pos(size, size, -size).endVertex(); buffer.pos(size, -size, -size).endVertex();
-                buffer.pos(-size, -size, size).endVertex(); buffer.pos(size, -size, size).endVertex(); buffer.pos(size, size, size).endVertex(); buffer.pos(-size, size, size).endVertex();
-                buffer.pos(-size, -size, -size).endVertex(); buffer.pos(-size, -size, size).endVertex(); buffer.pos(-size, size, size).endVertex(); buffer.pos(-size, size, -size).endVertex();
-                buffer.pos(size, -size, -size).endVertex(); buffer.pos(size, size, -size).endVertex(); buffer.pos(size, size, size).endVertex(); buffer.pos(size, -size, size).endVertex();
-                buffer.pos(-size, size, -size).endVertex(); buffer.pos(-size, size, size).endVertex(); buffer.pos(size, size, size).endVertex(); buffer.pos(size, size, -size).endVertex();
-                buffer.pos(-size, -size, -size).endVertex(); buffer.pos(size, -size, -size).endVertex(); buffer.pos(size, -size, size).endVertex(); buffer.pos(-size, -size, size).endVertex();
-                tessellator.draw();
-            } finally {
-                try {
-                    GlStateManager.popMatrix();
-                } finally {
-                    restoreRenderState();
-                }
-            }
+            // The dimension's white clear color is the sky. Drawing sky geometry here can cover
+            // later entity, hand, and HUD passes in modded rendering pipelines.
         }
     }
 }
