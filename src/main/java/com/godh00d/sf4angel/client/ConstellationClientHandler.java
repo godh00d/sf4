@@ -5,7 +5,6 @@ import com.godh00d.sf4angel.constellation.ConstellationDimension;
 import com.godh00d.sf4angel.constellation.ConstellationManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderGlobal;
@@ -15,8 +14,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraftforge.client.IRenderHandler;
-import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -32,28 +29,9 @@ public final class ConstellationClientHandler {
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
         if (event.getWorld().isRemote && event.getWorld().provider.getDimension()
-            == ConstellationDimension.getDimensionId()) {
-            event.getWorld().provider.setSkyRenderer(new WhiteSkyRenderer());
-        } else if (event.getWorld().isRemote) {
+            != ConstellationDimension.getDimensionId()) {
             ConstellationClientState.clear();
             hoveredTitle = null;
-        }
-    }
-
-    @SubscribeEvent
-    public void onFogColors(EntityViewRenderEvent.FogColors event) {
-        if (isConstellation()) {
-            event.setRed(0.96F);
-            event.setGreen(0.97F);
-            event.setBlue(1.0F);
-        }
-    }
-
-    @SubscribeEvent
-    public void onFogDensity(EntityViewRenderEvent.FogDensity event) {
-        if (isConstellation()) {
-            event.setDensity(0.0F);
-            event.setCanceled(true);
         }
     }
 
@@ -96,8 +74,8 @@ public final class ConstellationClientHandler {
                 for (String parentId : nodes[i].parents) {
                     Integer parent = AchievementConstellationCatalog.indexes().get(parentId);
                     if (parent == null || states[parent] == ConstellationManager.ABSENT) continue;
-                    buffer.pos(nodes[parent].x, nodes[parent].y, nodes[parent].z).color(0.08F, 0.28F, 0.4F, 0.9F).endVertex();
-                    buffer.pos(nodes[i].x, nodes[i].y, nodes[i].z).color(0.12F, 0.48F, 0.62F, 0.9F).endVertex();
+                    buffer.pos(nodes[parent].x, nodes[parent].y, nodes[parent].z).color(0.2F, 0.62F, 0.78F, 0.9F).endVertex();
+                    buffer.pos(nodes[i].x, nodes[i].y, nodes[i].z).color(0.35F, 0.9F, 1.0F, 0.9F).endVertex();
                 }
             }
             tessellator.draw();
@@ -143,14 +121,14 @@ public final class ConstellationClientHandler {
         ScaledResolution resolution = event.getResolution();
         String heading = ConstellationClientState.states().length == AchievementConstellationCatalog.COUNT
             ? "Achievement Constellation" : "Loading Achievement Constellation...";
-        drawCentered(minecraft, resolution, heading, 10, 0x203044);
+        drawCentered(minecraft, resolution, heading, 10, 0xE8F7FF);
         drawCentered(minecraft, resolution,
             "Fly forward to explore | Aim at a cube for its name",
-            22, 0x30445C);
-        drawCentered(minecraft, resolution, "Right-click the angel to return", 34, 0x30445C);
+            22, 0xA9C8D8);
+        drawCentered(minecraft, resolution, "Right-click the angel to return", 34, 0xA9C8D8);
         if (hoveredTitle != null) {
             drawCentered(minecraft, resolution, hoveredTitle,
-                resolution.getScaledHeight() / 2 + 12, 0x172638);
+                resolution.getScaledHeight() / 2 + 12, 0xFFFFFF);
         }
     }
 
@@ -219,7 +197,7 @@ public final class ConstellationClientHandler {
             float scale = 0.025F;
             GlStateManager.scale(-scale, -scale, scale);
             minecraft.fontRenderer.drawString(text,
-                -minecraft.fontRenderer.getStringWidth(text) / 2, 0, 0xDD203040);
+                -minecraft.fontRenderer.getStringWidth(text) / 2, 0, 0xEAF8FF);
         } finally {
             GlStateManager.popMatrix();
         }
@@ -249,11 +227,4 @@ public final class ConstellationClientHandler {
         GlStateManager.enableFog();
     }
 
-    private static final class WhiteSkyRenderer extends IRenderHandler {
-        @Override
-        public void render(float partialTicks, WorldClient world, Minecraft minecraft) {
-            // The dimension's white clear color is the sky. Drawing sky geometry here can cover
-            // later entity, hand, and HUD passes in modded rendering pipelines.
-        }
-    }
 }

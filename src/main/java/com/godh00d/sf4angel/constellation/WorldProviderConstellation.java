@@ -20,12 +20,17 @@ public class WorldProviderConstellation extends WorldProvider {
 
     @Override
     public Vec3d getSkyColor(Entity cameraEntity, float partialTicks) {
-        return new Vec3d(0.96D, 0.97D, 1.0D);
+        return new Vec3d(0.012D, 0.016D, 0.045D);
     }
 
     @Override
     public Vec3d getFogColor(float celestialAngle, float partialTicks) {
-        return new Vec3d(0.96D, 0.97D, 1.0D);
+        return new Vec3d(0.012D, 0.016D, 0.045D);
+    }
+
+    @Override
+    public boolean doesXZShowFog(int x, int z) {
+        return false;
     }
 
     @Override

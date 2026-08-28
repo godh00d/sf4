@@ -45,7 +45,7 @@ public final class ConstellationManager {
     public static final byte MYSTERY = 3;
     private static final String DATA_KEY = "sf4angelConstellation";
     private static final double ARRIVAL_X = 0.5D;
-    private static final double ARRIVAL_Y = 96.0D;
+    private static final double ARRIVAL_Y = 56.0D;
     private static final double ARRIVAL_Z = 0.5D;
     private static final Map<UUID, Long> INTERACTION_COOLDOWNS = new HashMap<>();
 
@@ -82,7 +82,7 @@ public final class ConstellationManager {
         boolean arrived = false;
         try {
             player.changeDimension(ConstellationDimension.getDimensionId(),
-                new FixedTeleporter(ARRIVAL_X, ARRIVAL_Y, ARRIVAL_Z, -90.0F, -12.0F));
+                new FixedTeleporter(ARRIVAL_X, ARRIVAL_Y, ARRIVAL_Z, -90.0F, -8.0F));
         } catch (RuntimeException exception) {
             SF4Angel.logger.error("Constellation entry failed for {}", player.getName(), exception);
         } finally {
