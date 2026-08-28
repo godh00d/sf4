@@ -12,16 +12,16 @@
   <meta property="og:url" content="https://godh00d.github.io/sf4/">
   <style>
     :root {
-      color-scheme: light;
-      --paper: #f5f1e7;
-      --paper-deep: #ebe4d5;
-      --ink: #162129;
-      --muted: #657078;
-      --rule: #a9aaa3;
-      --cyan: #00a9be;
-      --amber: #dc8b16;
-      --violet: #7654b5;
-      --focus: #087d91;
+      color-scheme: dark;
+      --paper: #090914;
+      --paper-deep: #111023;
+      --ink: #eee9ff;
+      --muted: #aaa4c0;
+      --rule: #37334e;
+      --cyan: #65e8ed;
+      --amber: #ffc56e;
+      --violet: #bd91ff;
+      --focus: #7ff9f0;
     }
 
     * { box-sizing: border-box; }
@@ -32,7 +32,10 @@
       margin: 0;
       min-width: 300px;
       font-family: Georgia, "Times New Roman", serif;
-      background-color: var(--paper);
+      background:
+        radial-gradient(circle at 18% 8%, rgba(81, 45, 120, .2), transparent 32rem),
+        radial-gradient(circle at 82% 18%, rgba(27, 102, 119, .13), transparent 28rem),
+        var(--paper);
     }
 
     button, input { font: inherit; }
@@ -40,7 +43,7 @@
     button, input[type="search"] {
       border: 1px solid var(--ink);
       border-radius: 0;
-      background: rgba(245, 241, 231, .94);
+      background: rgba(16, 15, 31, .94);
       color: var(--ink);
     }
 
@@ -65,7 +68,7 @@
       align-items: end;
       margin: 0 2.2rem;
       padding: 1.25rem 0 .9rem;
-      border-bottom: 2px solid var(--ink);
+      border-bottom: 1px solid var(--rule);
     }
 
     .eyebrow, .hash, .coordinates, .node-id, .legend, .filters, .key-help, th, .catalog-table td:first-child {
@@ -105,6 +108,8 @@
       align-items: center;
       margin: .8rem 2.2rem;
     }
+
+    .toolbar > * { min-width: 0; }
 
     .search {
       display: grid;
@@ -154,7 +159,7 @@
       min-height: 560px;
       overflow: hidden;
       border-right: 1px solid var(--ink);
-      background: #f8f5ed;
+      background: #070711;
     }
 
     canvas {
@@ -194,7 +199,7 @@
       bottom: .8rem;
       margin: 0;
       padding: .25rem .4rem;
-      background: rgba(248, 245, 237, .86);
+      background: rgba(7, 7, 17, .78);
       color: var(--muted);
       font-size: .68rem;
       letter-spacing: .04em;
@@ -205,7 +210,9 @@
       position: relative;
       padding: 1.35rem 1.4rem 2rem;
       overflow: auto;
-      background-color: var(--paper-deep);
+      background:
+        linear-gradient(145deg, rgba(189, 145, 255, .06), transparent 45%),
+        var(--paper-deep);
     }
 
     .details::before {
@@ -314,8 +321,11 @@
     @media (max-width: 850px) {
       .masthead { grid-template-columns: 1fr; margin-inline: 1rem; gap: .65rem; }
       .masthead-note { text-align: left; }
-      .toolbar { grid-template-columns: 1fr; margin-inline: 1rem; }
-      .filters { justify-content: space-between; }
+      .toolbar { width: calc(100vw - 2rem); grid-template-columns: minmax(0, 1fr); margin-inline: 1rem; }
+      .search { width: 100%; grid-template-columns: minmax(0, 1fr) auto; }
+      .search input { width: 100%; }
+      .filters { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: hidden; }
+      .filters label { min-width: 0; justify-content: center; white-space: nowrap; }
       .workspace { grid-template-columns: 1fr; min-height: 0; }
       .viewport { min-height: 58svh; height: 58svh; border-right: 0; border-bottom: 1px solid var(--ink); }
       .details { min-height: 23rem; }
@@ -335,7 +345,7 @@
         align-items: center;
         padding: .45rem .55rem;
         border: 1px solid var(--rule);
-        background: rgba(248, 245, 237, .94);
+        background: rgba(10, 9, 22, .94);
         color: var(--muted);
         font: .66rem/1.35 "Courier New", Courier, monospace;
         pointer-events: auto;
@@ -345,6 +355,7 @@
 
     @media (max-width: 480px) {
       .filters { gap: .35rem; padding-inline: .4rem; font-size: .68rem; }
+      .filters label { gap: .2rem; }
       .toolbar { gap: .65rem; }
       .details { padding-inline: 1rem; }
       .detail-grid { grid-template-columns: 5.8rem 1fr; }
@@ -359,10 +370,10 @@
 <body>
   <header class="masthead">
     <div>
-      <p class="eyebrow">SF4 Angel Guide / Observatory plate 01</p>
+      <p class="eyebrow">SF4 Angel Guide / Celestial arbor 01</p>
       <h1>Achievement Constellation</h1>
     </div>
-    <p class="masthead-note">The complete fixed catalog: 129 achievements and every prerequisite route, charted in three dimensions.</p>
+    <p class="masthead-note">The complete fixed catalog: 129 achievements growing from roots into a three-dimensional celestial canopy.</p>
   </header>
 
   <section class="toolbar" aria-label="Constellation controls">
@@ -398,7 +409,7 @@
       <h2 id="detail-title" tabindex="-1">Select a catalog point</h2>
       <p class="node-id" id="detail-id">Drag to rotate; Shift-drag, middle-drag, or two-finger drag to pan.</p>
       <div id="detail-content">
-        <p>Hover a cube for a reading. Select it to isolate its direct prerequisites and unlocks, then use the linked names to move along the graph.</p>
+        <p>Hover a star for a reading. Select it to illuminate its direct roots and branches, then use the linked names to move through the tree.</p>
         <p class="and-note">Arrows travel from parent prerequisite to child achievement. Multiple incoming arrows mean AND: every parent is required.</p>
       </div>
     </aside>
@@ -408,7 +419,7 @@
     <span class="legend-item"><span class="swatch core" aria-hidden="true"></span>Core</span>
     <span class="legend-item"><span class="swatch optional" aria-hidden="true"></span>Optional</span>
     <span class="legend-item"><span class="swatch prestige" aria-hidden="true"></span>Prestige</span>
-    <p class="legend-note">Colors identify catalog categories only. Wiring is a background plate beneath depth-sorted cubes; arrows run from parent to child. In-game states depend on each player's progress.</p>
+    <p class="legend-note">Colors identify catalog boughs only. Luminous branches grow from prerequisite roots toward unlocked stars. In-game states depend on each player's progress.</p>
   </section>
 
   <details class="catalog-fallback">
@@ -436,16 +447,18 @@
     var context = canvas.getContext("2d");
     var nodes = catalog.nodes;
     var byId = new Map(nodes.map(function (node) { return [node.id, node]; }));
-    var colors = { core: "#00a9be", optional: "#dc8b16", prestige: "#7654b5" };
+    var colors = { core: "#65e8ed", optional: "#ffc56e", prestige: "#bd91ff" };
     var visibleCategories = new Set(["core", "optional", "prestige"]);
     var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var layoutById = buildMysticLayout();
     var graphCenter = nodes.reduce(function (sum, node) {
-      sum.x += node.x / nodes.length;
-      sum.y += node.y / nodes.length;
-      sum.z += node.z / nodes.length;
+      var point = layoutById.get(node.id);
+      sum.x += point.x / nodes.length;
+      sum.y += point.y / nodes.length;
+      sum.z += point.z / nodes.length;
       return sum;
     }, { x: 0, y: 0, z: 0 });
-    var view = { yaw: -0.62, pitch: -0.24, zoom: 1.45, panX: 0, panY: 0, center: copyPoint(graphCenter) };
+    var view = { yaw: -0.18, pitch: -0.08, zoom: 1.22, panX: 0, panY: 0, center: copyPoint(graphCenter) };
     var selected = null;
     var hovered = null;
     var keyboardTarget = null;
@@ -458,11 +471,67 @@
     var focusAnimation = null;
     var logicalWidth = 1;
     var logicalHeight = 1;
-    var CAMERA_DISTANCE = 125;
-    var CUBE_RADIUS = 0.82;
+    var CAMERA_DISTANCE = 145;
+    var STAR_RADIUS = 0.72;
 
     function copyPoint(point) { return { x: point.x, y: point.y, z: point.z }; }
     function clamp(value, low, high) { return Math.max(low, Math.min(high, value)); }
+
+    function hashUnit(value, salt) {
+      var hash = 2166136261 ^ salt;
+      for (var i = 0; i < value.length; i++) {
+        hash ^= value.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return (hash >>> 0) / 4294967295;
+    }
+
+    function buildMysticLayout() {
+      var depths = new Map();
+      function depthOf(node, visiting) {
+        if (depths.has(node.id)) return depths.get(node.id);
+        if (visiting.has(node.id)) return 0;
+        visiting.add(node.id);
+        var depth = node.parents.reduce(function (deepest, parentId) {
+          var parent = byId.get(parentId);
+          return parent ? Math.max(deepest, depthOf(parent, visiting) + 1) : deepest;
+        }, 0);
+        visiting.delete(node.id);
+        depths.set(node.id, depth);
+        return depth;
+      }
+      nodes.forEach(function (node) { depthOf(node, new Set()); });
+      var maxDepth = Math.max.apply(null, Array.from(depths.values()));
+      var layout = new Map();
+      nodes.forEach(function (node) {
+        var depth = depths.get(node.id);
+        var rise = maxDepth ? depth / maxDepth : 0;
+        var lane = clamp((node.y - 96) / 9, -1, 1);
+        var sway = Math.sin(rise * Math.PI * 2.3) * 3.2;
+        var spread = 10 + rise * 38;
+        var x = lane * spread + sway;
+        var y = -43 + rise * 86;
+        var z = (node.z / 5) * 4;
+
+        if (node.category === "optional") {
+          x -= 22 + (1 - rise) * 8;
+          y += (node.x - 20) * .32;
+          z -= 9;
+        } else if (node.category === "prestige") {
+          x += 28 + rise * 10;
+          y += (node.x - 12) * 1.35;
+          z += 10;
+        }
+
+        x += (hashUnit(node.id, 17) - .5) * (4.5 + rise * 4);
+        y += (hashUnit(node.id, 53) - .5) * 4.8;
+        z += (hashUnit(node.id, 91) - .5) * 10;
+        layout.set(node.id, { x: x, y: y, z: z });
+      });
+      return layout;
+    }
+
+    function displayPoint(node) { return layoutById.get(node.id) || node; }
 
     function resizeCanvas() {
       var rect = canvas.getBoundingClientRect();
@@ -530,28 +599,23 @@
     }
 
     function drawChartField() {
-      context.fillStyle = "#f8f5ed";
+      var sky = context.createRadialGradient(logicalWidth * .48, logicalHeight * .52, 0, logicalWidth * .5, logicalHeight * .5, Math.max(logicalWidth, logicalHeight) * .72);
+      sky.addColorStop(0, "#17132b");
+      sky.addColorStop(.48, "#0c0c1c");
+      sky.addColorStop(1, "#05050d");
+      context.fillStyle = sky;
       context.fillRect(0, 0, logicalWidth, logicalHeight);
-      context.strokeStyle = "rgba(22,33,41,.07)";
-      context.lineWidth = 1;
-      var spacing = 38;
-      for (var x = logicalWidth % spacing; x < logicalWidth; x += spacing) {
-        context.beginPath(); context.moveTo(x, 0); context.lineTo(x, logicalHeight); context.stroke();
+      for (var i = 0; i < 96; i++) {
+        var x = hashUnit("firmament", i * 3 + 1) * logicalWidth;
+        var y = hashUnit("firmament", i * 3 + 2) * logicalHeight;
+        var radius = .35 + hashUnit("firmament", i * 3 + 3) * 1.15;
+        context.globalAlpha = .2 + hashUnit("firmament", i + 401) * .5;
+        context.fillStyle = i % 7 === 0 ? "#c7b5ff" : "#e8f9ff";
+        context.beginPath();
+        context.arc(x, y, radius, 0, Math.PI * 2);
+        context.fill();
       }
-      for (var y = logicalHeight % spacing; y < logicalHeight; y += spacing) {
-        context.beginPath(); context.moveTo(0, y); context.lineTo(logicalWidth, y); context.stroke();
-      }
-      context.fillStyle = "rgba(22,33,41,.28)";
-      for (var i = 0; i < 23; i++) {
-        context.fillRect((i * 97 + 31) % logicalWidth, (i * i * 41 + 17) % logicalHeight, 1, 1);
-      }
-      context.strokeStyle = "rgba(22,33,41,.3)";
-      context.beginPath();
-      context.moveTo(logicalWidth * .5 - 7, logicalHeight * .5);
-      context.lineTo(logicalWidth * .5 + 7, logicalHeight * .5);
-      context.moveTo(logicalWidth * .5, logicalHeight * .5 - 7);
-      context.lineTo(logicalWidth * .5, logicalHeight * .5 + 7);
-      context.stroke();
+      context.globalAlpha = 1;
     }
 
     function relationshipSet() {
@@ -560,26 +624,37 @@
     }
 
     function drawEdge(parent, child) {
-      var a = projectPoint(parent);
-      var b = projectPoint(child);
+      var a = projectPoint(displayPoint(parent));
+      var b = projectPoint(displayPoint(child));
       if (!a || !b) return;
       var highlighted = selected && (parent.id === selected.id || child.id === selected.id);
-      context.strokeStyle = highlighted ? "rgba(22,33,41,.85)" : (selected ? "rgba(22,33,41,.08)" : "rgba(22,33,41,.22)");
-      context.lineWidth = highlighted ? 1.8 : 1;
-      context.beginPath();
-      context.moveTo(a.x, a.y);
-      context.lineTo(b.x, b.y);
-      context.stroke();
-
+      var dimmed = selected && !highlighted;
       var dx = b.x - a.x;
       var dy = b.y - a.y;
-      var length = Math.hypot(dx, dy);
+      var length = Math.max(1, Math.hypot(dx, dy));
+      var bend = (hashUnit(parent.id + child.id, 131) - .5) * Math.min(36, length * .34);
+      var controlX = (a.x + b.x) * .5 - dy / length * bend;
+      var controlY = (a.y + b.y) * .5 + dx / length * bend;
+      context.strokeStyle = highlighted ? "rgba(220,255,252,.92)" : (dimmed ? "rgba(121,112,157,.07)" : "rgba(137,214,220,.28)");
+      context.shadowColor = highlighted ? colors[child.category] : "transparent";
+      context.shadowBlur = highlighted ? 10 : 0;
+      context.lineWidth = highlighted ? 2.1 : 1;
+      context.beginPath();
+      context.moveTo(a.x, a.y);
+      context.quadraticCurveTo(controlX, controlY, b.x, b.y);
+      context.stroke();
+      context.shadowBlur = 0;
+
       if (length < 13) return;
-      var ux = dx / length;
-      var uy = dy / length;
-      var arrowX = a.x + dx * .72;
-      var arrowY = a.y + dy * .72;
-      var size = highlighted ? 5.5 : 3.5;
+      var t = .72;
+      var arrowX = (1 - t) * (1 - t) * a.x + 2 * (1 - t) * t * controlX + t * t * b.x;
+      var arrowY = (1 - t) * (1 - t) * a.y + 2 * (1 - t) * t * controlY + t * t * b.y;
+      var tangentX = 2 * (1 - t) * (controlX - a.x) + 2 * t * (b.x - controlX);
+      var tangentY = 2 * (1 - t) * (controlY - a.y) + 2 * t * (b.y - controlY);
+      var tangentLength = Math.max(1, Math.hypot(tangentX, tangentY));
+      var ux = tangentX / tangentLength;
+      var uy = tangentY / tangentLength;
+      var size = highlighted ? 5 : 3;
       context.fillStyle = context.strokeStyle;
       context.beginPath();
       context.moveTo(arrowX + ux * size, arrowY + uy * size);
@@ -589,71 +664,39 @@
       context.fill();
     }
 
-    var cubeFaces = [
-      [0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1],
-      [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]
-    ];
-    var faceShades = [-.12, .12, -.04, .18, -.16, .04];
-
-    function signedArea(face, points) {
-      return face.reduce(function (area, vertex, index) {
-        var next = points[face[(index + 1) % face.length]];
-        return area + points[vertex].x * next.y - next.x * points[vertex].y;
-      }, 0);
-    }
-
-    function shadeColor(hex, amount) {
-      var value = parseInt(hex.slice(1), 16);
-      var target = amount < 0 ? 0 : 255;
-      var strength = Math.abs(amount);
-      var channels = [value >> 16, (value >> 8) & 255, value & 255];
-      return "rgb(" + channels.map(function (channel) {
-        return Math.round(channel + (target - channel) * strength);
-      }).join(",") + ")";
-    }
-
-    function drawCube(item, related) {
+    function drawStar(item, related) {
       var node = item.node;
-      var points = [];
-      for (var i = 0; i < 8; i++) {
-        points.push(projectPoint({
-          x: node.x + ((i & 1) ? CUBE_RADIUS : -CUBE_RADIUS),
-          y: node.y + ((i & 2) ? CUBE_RADIUS : -CUBE_RADIUS),
-          z: node.z + ((i & 4) ? CUBE_RADIUS : -CUBE_RADIUS)
-        }));
-      }
-      if (points.some(function (point) { return !point; })) return;
       var isSelected = selected && selected.id === node.id;
       var isHovered = hovered && hovered.id === node.id;
       var dim = related && !related.has(node.id);
-      var faces = cubeFaces.map(function (face, index) {
-        return { face: face, index: index, z: face.reduce(function (sum, vertex) { return sum + points[vertex].z; }, 0) / 4 };
-      }).filter(function (entry) {
-        return signedArea(entry.face, points) > .01;
-      }).sort(function (a, b) { return a.z - b.z; });
+      var radius = item.radius * (isSelected ? 1.35 : isHovered ? 1.18 : 1);
+      context.globalAlpha = dim ? .16 : 1;
+      context.shadowColor = colors[node.category];
+      context.shadowBlur = dim ? 0 : (isSelected || isHovered ? 22 : 10);
+      context.fillStyle = colors[node.category];
+      context.beginPath();
+      context.arc(item.x, item.y, radius, 0, Math.PI * 2);
+      context.fill();
+      context.shadowBlur = 0;
+      context.fillStyle = "#fffdf4";
+      context.beginPath();
+      context.arc(item.x, item.y, Math.max(1.1, radius * .34), 0, Math.PI * 2);
+      context.fill();
 
-      faces.forEach(function (entry) {
-        context.beginPath();
-        entry.face.forEach(function (vertex, index) {
-          if (index) context.lineTo(points[vertex].x, points[vertex].y);
-          else context.moveTo(points[vertex].x, points[vertex].y);
-        });
-        context.closePath();
-        context.globalAlpha = dim ? .2 : 1;
-        context.fillStyle = shadeColor(colors[node.category], faceShades[entry.index]);
-        context.fill();
-        context.globalAlpha = dim ? .16 : 1;
-        context.strokeStyle = isSelected || isHovered ? "#10191f" : "rgba(22,33,41,.72)";
-        context.lineWidth = isSelected ? 2.2 : 1;
-        context.stroke();
-      });
+      var ray = radius * 2.15;
+      context.strokeStyle = colors[node.category];
+      context.lineWidth = .8;
+      context.beginPath();
+      context.moveTo(item.x - ray, item.y); context.lineTo(item.x + ray, item.y);
+      context.moveTo(item.x, item.y - ray); context.lineTo(item.x, item.y + ray);
+      context.stroke();
       context.globalAlpha = 1;
 
       if (isSelected || isHovered) {
-        context.strokeStyle = isSelected ? colors[node.category] : "#162129";
-        context.lineWidth = isSelected ? 2 : 1;
+        context.strokeStyle = isSelected ? "#fffdf4" : colors[node.category];
+        context.lineWidth = isSelected ? 1.6 : 1;
         context.beginPath();
-        context.arc(item.x, item.y, Math.max(8, item.radius + 5), 0, Math.PI * 2);
+        context.arc(item.x, item.y, Math.max(9, item.radius + 6), 0, Math.PI * 2);
         context.stroke();
       }
     }
@@ -676,18 +719,18 @@
       drawChartField();
       var related = relationshipSet();
       projectedNodes = nodes.filter(function (node) { return visibleCategories.has(node.category); }).map(function (node) {
-        var point = projectPoint(node);
+        var point = projectPoint(displayPoint(node));
         if (!point) return null;
-        return { node: node, x: point.x, y: point.y, z: point.z, radius: clamp(point.scale * CUBE_RADIUS * 1.8, 4, 13) };
+        return { node: node, x: point.x, y: point.y, z: point.z, radius: clamp(point.scale * STAR_RADIUS, 2.4, 7) };
       }).filter(Boolean);
 
-      // Wiring is intentionally one background plate; depth-sorted opaque cubes always occlude it.
+      // Branches form a background plate so nearer stars remain easy to target.
       var edges = [];
       projectedNodes.forEach(function (item) {
         item.node.children.forEach(function (childId) {
           var child = byId.get(childId);
           if (child && visibleCategories.has(child.category)) {
-            var childProjection = projectPoint(child);
+            var childProjection = projectPoint(displayPoint(child));
             if (childProjection) edges.push({ parent: item.node, child: child, z: (item.z + childProjection.z) / 2 });
           }
         });
@@ -695,14 +738,14 @@
       edges.sort(function (a, b) { return a.z - b.z; });
       edges.forEach(function (edge) { drawEdge(edge.parent, edge.child); });
       projectedNodes.sort(function (a, b) { return a.z - b.z; });
-      projectedNodes.forEach(function (item) { drawCube(item, related); });
+      projectedNodes.forEach(function (item) { drawStar(item, related); });
     }
 
     function nodeAt(clientX, clientY) {
       var rect = canvas.getBoundingClientRect();
       var x = clientX - rect.left;
       var y = clientY - rect.top;
-      // Nodes are stored back-to-front; the first reverse hit is the last-painted visible cube.
+      // Nodes are stored back-to-front; the first reverse hit is the last-painted visible star.
       for (var index = projectedNodes.length - 1; index >= 0; index--) {
         var item = projectedNodes[index];
         var distance = Math.hypot(item.x - x, item.y - y);
@@ -724,7 +767,7 @@
       keyboardTarget = node;
       if (node && moveFocus !== false) {
         focusAnimation = {
-          from: copyPoint(view.center), to: copyPoint(node),
+          from: copyPoint(view.center), to: copyPoint(displayPoint(node)),
           fromPanX: view.panX, fromPanY: view.panY, toPanX: 0, toPanY: 0,
           started: performance.now()
         };
@@ -753,9 +796,9 @@
       selected = null;
       hovered = null;
       focusAnimation = null;
-      view.yaw = -0.62;
-      view.pitch = -0.24;
-      view.zoom = 1.45;
+      view.yaw = -0.18;
+      view.pitch = -0.08;
+      view.zoom = 1.22;
       view.panX = 0;
       view.panY = 0;
       view.center = copyPoint(graphCenter);
@@ -804,7 +847,7 @@
         id.textContent = "Drag to rotate; Shift-drag, middle-drag, or two-finger drag to pan.";
         content.replaceChildren();
         var intro = document.createElement("p");
-        intro.textContent = "Hover a cube for a reading. Select it to isolate direct prerequisites and unlocks. Brackets or N/P traverse visible nodes from the focused canvas.";
+        intro.textContent = "Hover a star for a reading. Select it to illuminate direct roots and branches. Brackets or N/P traverse visible nodes from the focused canvas.";
         var note = document.createElement("p");
         note.className = "and-note";
         note.textContent = "Arrows travel from parent prerequisite to child achievement. Multiple incoming arrows mean AND: every parent is required.";
