@@ -39,8 +39,7 @@ public final class ConstellationClientHandler {
     public void onRenderWorld(RenderWorldLastEvent event) {
         byte[] states = ConstellationClientState.states();
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (!isConstellation() || states.length != AchievementConstellationCatalog.COUNT
-            || minecraft.getRenderViewEntity() == null) {
+        if (!isConstellation() || minecraft.getRenderViewEntity() == null) {
             hoveredTitle = null;
             return;
         }
@@ -58,7 +57,9 @@ public final class ConstellationClientHandler {
             GlStateManager.disableLighting();
             GlStateManager.disableTexture2D();
             GlStateManager.disableCull();
-            GlStateManager.enableDepth();
+            // Empty modded dimensions do not provide a reliable depth buffer. The constellation
+            // is the only world geometry here, so rendering through depth keeps it fail-visible.
+            GlStateManager.disableDepth();
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
@@ -70,10 +71,10 @@ public final class ConstellationClientHandler {
             BufferBuilder buffer = tessellator.getBuffer();
             buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
             for (int i = 0; i < nodes.length; i++) {
-                if (states[i] == ConstellationManager.ABSENT) continue;
+                if (stateAt(states, i) == ConstellationManager.ABSENT) continue;
                 for (String parentId : nodes[i].parents) {
                     Integer parent = AchievementConstellationCatalog.indexes().get(parentId);
-                    if (parent == null || states[parent] == ConstellationManager.ABSENT) continue;
+                    if (parent == null || stateAt(states, parent) == ConstellationManager.ABSENT) continue;
                     buffer.pos(nodes[parent].x, nodes[parent].y, nodes[parent].z).color(0.2F, 0.62F, 0.78F, 0.9F).endVertex();
                     buffer.pos(nodes[i].x, nodes[i].y, nodes[i].z).color(0.35F, 0.9F, 1.0F, 0.9F).endVertex();
                 }
@@ -81,19 +82,20 @@ public final class ConstellationClientHandler {
             tessellator.draw();
 
             for (int i = 0; i < nodes.length; i++) {
-                if (states[i] == ConstellationManager.ABSENT) continue;
-                float red = states[i] == ConstellationManager.COMPLETED ? 1.0F
-                    : states[i] == ConstellationManager.AVAILABLE ? 0.12F : 0.55F;
-                float green = states[i] == ConstellationManager.COMPLETED ? 0.72F
-                    : states[i] == ConstellationManager.AVAILABLE ? 0.9F : 0.62F;
-                float blue = states[i] == ConstellationManager.COMPLETED ? 0.12F
-                    : states[i] == ConstellationManager.AVAILABLE ? 1.0F : 0.72F;
-                float alpha = states[i] == ConstellationManager.MYSTERY ? 0.45F : 0.95F;
+                byte state = stateAt(states, i);
+                if (state == ConstellationManager.ABSENT) continue;
+                float red = state == ConstellationManager.COMPLETED ? 1.0F
+                    : state == ConstellationManager.AVAILABLE ? 0.12F : 0.55F;
+                float green = state == ConstellationManager.COMPLETED ? 0.72F
+                    : state == ConstellationManager.AVAILABLE ? 0.9F : 0.62F;
+                float blue = state == ConstellationManager.COMPLETED ? 0.12F
+                    : state == ConstellationManager.AVAILABLE ? 1.0F : 0.72F;
+                float alpha = state == ConstellationManager.MYSTERY ? 0.72F : 0.95F;
                 AxisAlignedBB box = box(nodes[i]);
                 drawSolidBox(buffer, tessellator, box, red, green, blue, alpha);
-                if (states[i] == ConstellationManager.COMPLETED) {
+                if (state == ConstellationManager.COMPLETED) {
                     RenderGlobal.drawSelectionBoundingBox(box, 0.5F, 0.28F, 0.02F, 1.0F);
-                } else if (states[i] == ConstellationManager.AVAILABLE) {
+                } else if (state == ConstellationManager.AVAILABLE) {
                     RenderGlobal.drawSelectionBoundingBox(box, 0.0F, 0.36F, 0.52F, 1.0F);
                 } else {
                     RenderGlobal.drawSelectionBoundingBox(box, 0.22F, 0.26F, 0.34F, 0.75F);
@@ -102,7 +104,7 @@ public final class ConstellationClientHandler {
 
             GlStateManager.enableTexture2D();
             for (int i = 0; i < nodes.length; i++) {
-                if (states[i] == ConstellationManager.MYSTERY) renderLabel("?", nodes[i]);
+                if (stateAt(states, i) == ConstellationManager.MYSTERY) renderLabel("?", nodes[i]);
             }
         } finally {
             try {
@@ -147,16 +149,22 @@ public final class ConstellationClientHandler {
         double nearest = Double.MAX_VALUE;
         String title = null;
         for (int i = 0; i < nodes.length; i++) {
-            if (states[i] == ConstellationManager.ABSENT) continue;
+            byte state = stateAt(states, i);
+            if (state == ConstellationManager.ABSENT) continue;
             RayTraceResult hit = box(nodes[i]).grow(0.18D).calculateIntercept(start, end);
             if (hit == null) continue;
             double distance = start.squareDistanceTo(hit.hitVec);
             if (distance < nearest) {
                 nearest = distance;
-                title = states[i] == ConstellationManager.MYSTERY ? "?" : nodes[i].title;
+                title = state == ConstellationManager.MYSTERY ? "?" : nodes[i].title;
             }
         }
         hoveredTitle = title;
+    }
+
+    private static byte stateAt(byte[] states, int index) {
+        return states.length == AchievementConstellationCatalog.COUNT
+            ? states[index] : ConstellationManager.MYSTERY;
     }
 
     private static AxisAlignedBB box(AchievementConstellationCatalog.Node node) {
