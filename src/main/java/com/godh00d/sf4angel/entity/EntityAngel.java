@@ -63,6 +63,11 @@ public class EntityAngel extends EntityCreature {
     public static final int DESPAWN_TRANSITION_TICKS = 40;
     public static final double FLY_AWAY_HEIGHT = 24.0D;
 
+    public static float smoothStep(float progress) {
+        float clamped = MathHelper.clamp(progress, 0.0F, 1.0F);
+        return clamped * clamped * (3.0F - 2.0F * clamped);
+    }
+
     private UUID ownerId;
     private boolean despawnQueued = false;
     private int tickCounter = 0;
@@ -71,6 +76,7 @@ public class EntityAngel extends EntityCreature {
     private float previousClientPupilPitch;
     private float clientPupilYaw;
     private float clientPupilPitch;
+    private int clientEyeCornerRoute;
 
     public EntityAngel(World world) {
         super(world);
@@ -353,6 +359,23 @@ public class EntityAngel extends EntityCreature {
         return previousClientPupilPitch + (clientPupilPitch - previousClientPupilPitch) * partialTicks;
     }
 
+    public int resolveEyeCornerRoute(float u, float v, float limit) {
+        boolean wrapsU = Math.abs(u) > limit;
+        boolean wrapsV = Math.abs(v) > limit;
+        if (wrapsU && wrapsV) {
+            if (clientEyeCornerRoute == 0) {
+                clientEyeCornerRoute = Math.abs(u) >= Math.abs(v) ? 1 : 2;
+            }
+        } else if (wrapsU) {
+            clientEyeCornerRoute = 1;
+        } else if (wrapsV) {
+            clientEyeCornerRoute = 2;
+        } else {
+            clientEyeCornerRoute = 0;
+        }
+        return clientEyeCornerRoute;
+    }
+
     public UUID getOwnerId() {
         if (ownerId != null) return ownerId;
         int id = this.dataManager.get(OWNER_ID);
@@ -458,8 +481,9 @@ public class EntityAngel extends EntityCreature {
         float progress = Math.min(1.0F, (float) getStateTimer() / transitionTicks);
         double transitionY = 0.0D;
         if (transitioning && getAnimationType() == ANIM_SKY) {
-            transitionY = (getVisualState() == STATE_SPAWNING ? 1.0F - progress : progress)
-                * FLY_AWAY_HEIGHT;
+            float travel = getVisualState() == STATE_SPAWNING
+                ? 1.0F - smoothStep(progress) : progress * progress;
+            transitionY = travel * FLY_AWAY_HEIGHT;
         }
         for (int i = 0; i < count; i++) {
             double direction = getVisualState() == STATE_SPAWNING ? -1.0D : 1.0D;

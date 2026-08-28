@@ -25,10 +25,10 @@ public class EntityAngelRender extends RenderLiving<EntityAngel> {
         double transitionY = 0.0D;
         if (angel.getAnimationType() == EntityAngel.ANIM_SKY) {
             if (angel.getVisualState() == EntityAngel.STATE_SPAWNING) {
-                transitionY = (1.0F - progress) * EntityAngel.FLY_AWAY_HEIGHT;
+                transitionY = (1.0F - EntityAngel.smoothStep(progress)) * EntityAngel.FLY_AWAY_HEIGHT;
             }
             if (angel.getVisualState() == EntityAngel.STATE_DESPAWNING) {
-                transitionY = progress * EntityAngel.FLY_AWAY_HEIGHT;
+                transitionY = progress * progress * EntityAngel.FLY_AWAY_HEIGHT;
             }
         }
         super.renderLivingAt(angel, x, y + transitionY, z);
@@ -37,6 +37,15 @@ public class EntityAngelRender extends RenderLiving<EntityAngel> {
     @Override
     protected void preRenderCallback(EntityAngel angel, float partialTickTime) {
         float scale = angel.getRenderScale();
+        if (angel.getAnimationType() == EntityAngel.ANIM_SKY) {
+            if (angel.getVisualState() == EntityAngel.STATE_SPAWNING) {
+                float progress = (float) angel.getStateTimer() / (EntityAngel.TRANSITION_TICKS - 1);
+                scale *= 0.82F + EntityAngel.smoothStep(progress) * 0.18F;
+            } else if (angel.getVisualState() == EntityAngel.STATE_DESPAWNING) {
+                float progress = (float) angel.getStateTimer() / (EntityAngel.DESPAWN_TRANSITION_TICKS - 1);
+                scale *= 1.0F - EntityAngel.smoothStep(progress) * 0.18F;
+            }
+        }
         GlStateManager.scale(scale, scale, scale);
     }
 
