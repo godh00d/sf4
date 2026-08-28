@@ -71,35 +71,7 @@ public final class ConstellationManager {
     }
 
     public static void enter(EntityPlayerMP player) {
-        NBTTagCompound data = getData(player);
-        if (data.getBoolean("Active") || data.getBoolean("Entering") || data.getBoolean("Exiting")) return;
-        captureSource(player, data);
-        data.setBoolean("Entering", true);
-        player.capabilities.allowFlying = true;
-        player.capabilities.isFlying = true;
-        player.sendPlayerAbilities();
-
-        boolean arrived = false;
-        try {
-            player.changeDimension(ConstellationDimension.getDimensionId(),
-                new FixedTeleporter(ARRIVAL_X, ARRIVAL_Y, ARRIVAL_Z, -90.0F, -8.0F));
-        } catch (RuntimeException exception) {
-            SF4Angel.logger.error("Constellation entry failed for {}", player.getName(), exception);
-        } finally {
-            WorldServer target = player.getServer().getWorld(ConstellationDimension.getDimensionId());
-            arrived = player.dimension == ConstellationDimension.getDimensionId() && player.world == target;
-        }
-
-        if (!arrived) {
-            rollbackFlight(player, data);
-            clearSession(data);
-            sendClear(player);
-            return;
-        }
-        data.setBoolean("Entering", false);
-        data.setBoolean("Active", true);
-        spawnAnchor(player);
-        refresh(player);
+        sendSnapshot(player);
     }
 
     public static void exit(EntityPlayerMP player) {
@@ -223,6 +195,10 @@ public final class ConstellationManager {
 
     public static void refresh(EntityPlayerMP player) {
         if (!isInside(player)) return;
+        sendSnapshot(player);
+    }
+
+    private static void sendSnapshot(EntityPlayerMP player) {
         AchievementConstellationCatalog.Node[] nodes = AchievementConstellationCatalog.nodes();
         byte[] states = new byte[nodes.length];
         boolean[] stageEligible = new boolean[nodes.length];
