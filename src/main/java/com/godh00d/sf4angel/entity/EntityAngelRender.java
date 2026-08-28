@@ -11,6 +11,7 @@ public class EntityAngelRender extends RenderLiving<EntityAngel> {
 
     private static final ResourceLocation TEXTURE = new ResourceLocation("sf4angel", "textures/entity/angel.png");
     private static final Logger LOGGER = LogManager.getLogger("sf4angel");
+    private float renderPartialTicks;
 
     public EntityAngelRender(RenderManager renderManager) {
         super(renderManager, new ModelAngel(), 0.0F);
@@ -18,14 +19,19 @@ public class EntityAngelRender extends RenderLiving<EntityAngel> {
     }
 
     @Override
+    public void doRender(EntityAngel angel, double x, double y, double z,
+                         float entityYaw, float partialTicks) {
+        renderPartialTicks = partialTicks;
+        super.doRender(angel, x, y, z, entityYaw, partialTicks);
+    }
+
+    @Override
     protected void renderLivingAt(EntityAngel angel, double x, double y, double z) {
-        int transitionTicks = angel.getVisualState() == EntityAngel.STATE_DESPAWNING
-            ? EntityAngel.DESPAWN_TRANSITION_TICKS - 1 : EntityAngel.TRANSITION_TICKS - 1;
-        float progress = Math.min(1.0F, (float) angel.getStateTimer() / transitionTicks);
+        float progress = angel.getTransitionProgress(renderPartialTicks);
         double transitionY = 0.0D;
         if (angel.getAnimationType() == EntityAngel.ANIM_SKY) {
             if (angel.getVisualState() == EntityAngel.STATE_SPAWNING) {
-                transitionY = (1.0F - EntityAngel.smoothStep(progress)) * EntityAngel.FLY_AWAY_HEIGHT;
+                transitionY = (1.0F - EntityAngel.smoothStep(progress)) * EntityAngel.SKY_SPAWN_HEIGHT;
             }
             if (angel.getVisualState() == EntityAngel.STATE_DESPAWNING) {
                 transitionY = progress * progress * EntityAngel.FLY_AWAY_HEIGHT;
@@ -36,16 +42,7 @@ public class EntityAngelRender extends RenderLiving<EntityAngel> {
 
     @Override
     protected void preRenderCallback(EntityAngel angel, float partialTickTime) {
-        float scale = angel.getRenderScale();
-        if (angel.getAnimationType() == EntityAngel.ANIM_SKY) {
-            if (angel.getVisualState() == EntityAngel.STATE_SPAWNING) {
-                float progress = (float) angel.getStateTimer() / (EntityAngel.TRANSITION_TICKS - 1);
-                scale *= 0.82F + EntityAngel.smoothStep(progress) * 0.18F;
-            } else if (angel.getVisualState() == EntityAngel.STATE_DESPAWNING) {
-                float progress = (float) angel.getStateTimer() / (EntityAngel.DESPAWN_TRANSITION_TICKS - 1);
-                scale *= 1.0F - EntityAngel.smoothStep(progress) * 0.18F;
-            }
-        }
+        float scale = angel.getRenderScale(partialTickTime);
         GlStateManager.scale(scale, scale, scale);
     }
 

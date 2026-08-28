@@ -59,9 +59,12 @@ public class EntityAngel extends EntityCreature {
     public static final int MOOD_CONCERNED = 3;
     public static final int MOOD_IRRITATED = 4;
 
-    public static final int TRANSITION_TICKS = 24;
-    public static final int DESPAWN_TRANSITION_TICKS = 40;
-    public static final double FLY_AWAY_HEIGHT = 24.0D;
+    public static final int SMOKE_TRANSITION_TICKS = 18;
+    public static final int SPIN_TRANSITION_TICKS = 32;
+    public static final int SKY_SPAWN_TICKS = 44;
+    public static final int SKY_DESPAWN_TICKS = 64;
+    public static final double SKY_SPAWN_HEIGHT = 30.0D;
+    public static final double FLY_AWAY_HEIGHT = 48.0D;
 
     public static float smoothStep(float progress) {
         float clamped = MathHelper.clamp(progress, 0.0F, 1.0F);
@@ -83,6 +86,7 @@ public class EntityAngel extends EntityCreature {
         this.setSize(1.0F, 1.0F);
         this.noClip = true;
         this.setNoGravity(true);
+        this.ignoreFrustumCheck = true;
 
     }
 
@@ -141,7 +145,7 @@ public class EntityAngel extends EntityCreature {
         int timer = getStateTimer() + 1;
         setStateTimer(timer);
 
-        if (timer >= TRANSITION_TICKS) {
+        if (timer >= getTransitionDuration()) {
             setVisualState(STATE_VISIBLE);
             setStateTimer(0);
         }
@@ -181,7 +185,7 @@ public class EntityAngel extends EntityCreature {
         int timer = getStateTimer() + 1;
         setStateTimer(timer);
 
-        if (timer >= DESPAWN_TRANSITION_TICKS) {
+        if (timer >= getTransitionDuration()) {
             setDead();
         }
     }
@@ -203,7 +207,6 @@ public class EntityAngel extends EntityCreature {
         if (getVisualState() == STATE_DESPAWNING || getVisualState() == STATE_HIDDEN) return;
         setVisualState(STATE_DESPAWNING);
         setStateTimer(0);
-        this.dataManager.set(ANIMATION_TYPE, ANIM_SKY);
     }
 
     @Override
@@ -475,21 +478,24 @@ public class EntityAngel extends EntityCreature {
     private void spawnClientParticles() {
         boolean transitioning = getVisualState() == STATE_SPAWNING || getVisualState() == STATE_DESPAWNING;
         if (!transitioning && ticksExisted % 6 != 0) return;
-        int count = transitioning ? 16 : 1;
-        int transitionTicks = getVisualState() == STATE_DESPAWNING
-            ? DESPAWN_TRANSITION_TICKS - 1 : TRANSITION_TICKS - 1;
-        float progress = Math.min(1.0F, (float) getStateTimer() / transitionTicks);
+        boolean smokeBurst = getAnimationType() == ANIM_SMOKE && getStateTimer() <= 5;
+        if (transitioning && getAnimationType() == ANIM_SMOKE && !smokeBurst && getStateTimer() % 3 != 0) return;
+        int count = !transitioning ? 1 : getAnimationType() == ANIM_SMOKE ? smokeBurst ? 30 : 4
+            : getAnimationType() == ANIM_SPIN ? 10 : 12;
+        float progress = getTransitionProgress();
         double transitionY = 0.0D;
         if (transitioning && getAnimationType() == ANIM_SKY) {
             float travel = getVisualState() == STATE_SPAWNING
                 ? 1.0F - smoothStep(progress) : progress * progress;
-            transitionY = travel * FLY_AWAY_HEIGHT;
+            transitionY = travel * (getVisualState() == STATE_SPAWNING
+                ? SKY_SPAWN_HEIGHT : FLY_AWAY_HEIGHT);
         }
         for (int i = 0; i < count; i++) {
             double direction = getVisualState() == STATE_SPAWNING ? -1.0D : 1.0D;
             double angle = direction * ticksExisted * (getAnimationType() == ANIM_SPIN ? 0.45D : 0.13D)
                 + i * Math.PI * 2.0D / count;
-            double radius = transitioning ? 0.2D + getRenderScale() * 0.8D : 0.55D + world.rand.nextDouble() * 0.35D;
+            double radius = transitioning ? 0.15D + getRenderScale() * 0.75D
+                : 0.55D + world.rand.nextDouble() * 0.35D;
             double px = posX + Math.cos(angle) * radius;
             double py = posY + transitionY + 0.35D + world.rand.nextDouble() * 1.1D;
             double pz = posZ + Math.sin(angle) * radius;
@@ -500,8 +506,17 @@ public class EntityAngel extends EntityCreature {
             EnumParticleTypes particle;
             if (transitioning && getAnimationType() == ANIM_SMOKE) {
                 particle = i % 2 == 0 ? EnumParticleTypes.SMOKE_LARGE : EnumParticleTypes.CLOUD;
+                mx = Math.cos(angle) * (0.045D + world.rand.nextDouble() * 0.055D);
+                my = 0.025D + world.rand.nextDouble() * 0.055D;
+                mz = Math.sin(angle) * (0.045D + world.rand.nextDouble() * 0.055D);
             } else if (transitioning && getAnimationType() == ANIM_SKY) {
                 particle = i % 2 == 0 ? EnumParticleTypes.END_ROD : EnumParticleTypes.FIREWORKS_SPARK;
+                my = getVisualState() == STATE_SPAWNING ? -0.025D : 0.045D;
+            } else if (transitioning && getAnimationType() == ANIM_SPIN) {
+                particle = i % 2 == 0 ? EnumParticleTypes.ENCHANTMENT_TABLE : EnumParticleTypes.FIREWORKS_SPARK;
+                mx = -Math.sin(angle) * direction * 0.035D;
+                my = (world.rand.nextDouble() - 0.5D) * 0.02D;
+                mz = Math.cos(angle) * direction * 0.035D;
             } else {
                 particle = ticksExisted % 12 == 0
                     ? EnumParticleTypes.END_ROD : EnumParticleTypes.ENCHANTMENT_TABLE;
@@ -513,20 +528,46 @@ public class EntityAngel extends EntityCreature {
     // ---- Scale for renderer ----
 
     public float getRenderScale() {
+        return getRenderScale(0.0F);
+    }
+
+    public float getRenderScale(float partialTicks) {
         int state = getVisualState();
-        int timer = getStateTimer();
+        float progress = getTransitionProgress(partialTicks);
+        int animation = getAnimationType();
 
         if (state == STATE_SPAWNING) {
-            float progress = (float) timer / (TRANSITION_TICKS - 1);
-            if (getAnimationType() != ANIM_SPIN) return 1.0F;
-            return 0.05F + progress * 0.95F;
+            if (animation == ANIM_SPIN) {
+                float remaining = progress - 1.0F;
+                float overshoot = 1.0F + 2.4F * remaining * remaining * remaining
+                    + 1.4F * remaining * remaining;
+                return 0.02F + overshoot * 0.98F;
+            }
+            if (animation == ANIM_SMOKE) return 0.72F + smoothStep(progress) * 0.28F;
+            return 0.82F + smoothStep(progress) * 0.18F;
         }
         if (state == STATE_DESPAWNING) {
-            float progress = (float) timer / DESPAWN_TRANSITION_TICKS;
-            if (getAnimationType() != ANIM_SPIN) return 1.0F;
-            return Math.max(0.05F, 1.0F - progress * 0.95F);
+            if (animation == ANIM_SPIN) return Math.max(0.02F, 1.0F - progress * progress * 0.98F);
+            if (animation == ANIM_SMOKE) return 1.0F - smoothStep(progress) * 0.3F;
+            return 1.0F - smoothStep(progress) * 0.18F;
         }
         return 1.0F;
+    }
+
+    public int getTransitionDuration() {
+        switch (getAnimationType()) {
+            case ANIM_SMOKE: return SMOKE_TRANSITION_TICKS;
+            case ANIM_SPIN: return SPIN_TRANSITION_TICKS;
+            default: return getVisualState() == STATE_DESPAWNING ? SKY_DESPAWN_TICKS : SKY_SPAWN_TICKS;
+        }
+    }
+
+    public float getTransitionProgress() {
+        return Math.min(1.0F, (float) getStateTimer() / Math.max(1, getTransitionDuration() - 1));
+    }
+
+    public float getTransitionProgress(float partialTicks) {
+        return Math.min(1.0F, (getStateTimer() + partialTicks) / Math.max(1, getTransitionDuration() - 1));
     }
 
     public float getRenderSpin() {

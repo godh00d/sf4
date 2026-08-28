@@ -376,8 +376,12 @@ public class ModelAngel extends ModelBase {
     private float getTransitionSpin(EntityAngel angel, float ageInTicks) {
         if (angel.getVisualState() != EntityAngel.STATE_VISIBLE
             && angel.getAnimationType() == EntityAngel.ANIM_SPIN) {
-            float direction = angel.getVisualState() == EntityAngel.STATE_SPAWNING ? 1.0F : -1.0F;
-            return (float) Math.toRadians(direction * ageInTicks * 18.0F);
+            float partialTicks = MathHelper.clamp(ageInTicks - angel.ticksExisted, 0.0F, 1.0F);
+            float progress = angel.getTransitionProgress(partialTicks);
+            float turns = angel.getVisualState() == EntityAngel.STATE_SPAWNING
+                ? 1.0F - progress : progress;
+            float direction = angel.getVisualState() == EntityAngel.STATE_SPAWNING ? -1.0F : 1.0F;
+            return (float) Math.toRadians(direction * turns * turns * 1080.0F);
         }
         return 0.0F;
     }

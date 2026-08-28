@@ -123,39 +123,28 @@ public class TickHandler {
                 double forwardZ = Math.cos(yaw);
                 double rightX = Math.cos(yaw);
                 double rightZ = Math.sin(yaw);
-                double wave = Math.sin(movement.phase + movement.elapsed * 0.025D);
-
-                double targetX;
-                double targetZ;
-                switch (movement.mode) {
-                    case 0: // Watch from in front, gently shifting weight.
-                        targetX = player.posX + forwardX * 6.5D + rightX * wave * 0.55D;
-                        targetZ = player.posZ + forwardZ * 6.5D + rightZ * wave * 0.55D;
-                        break;
-                    case 1: // Slow orbit that remains near the player's field of view.
-                        double orbit = yaw + movement.phase + movement.elapsed * 0.009D;
-                        targetX = player.posX + Math.cos(orbit) * 6.2D;
-                        targetZ = player.posZ + Math.sin(orbit) * 6.2D;
-                        break;
-                    case 2: // Drift from one side of the player to the other.
-                        targetX = player.posX + forwardX * 5.8D + rightX * movement.side * (1.7D + wave * 0.8D);
-                        targetZ = player.posZ + forwardZ * 5.8D + rightZ * movement.side * (1.7D + wave * 0.8D);
-                        break;
-                    case 3: // Briefly move closer as if inspecting what the player is doing.
-                        double closeDistance = 5.0D + wave * 0.3D;
-                        targetX = player.posX + forwardX * closeDistance + rightX * movement.side * 0.65D;
-                        targetZ = player.posZ + forwardZ * closeDistance + rightZ * movement.side * 0.65D;
-                        break;
-                    default: // Wander in a loose arc without leaving the player behind.
-                        double wanderAngle = yaw + movement.phase + Math.sin(movement.elapsed * 0.012D) * 0.75D;
-                        double wanderDistance = 5.5D + Math.sin(movement.elapsed * 0.019D) * 0.8D;
-                        targetX = player.posX - Math.sin(wanderAngle) * wanderDistance;
-                        targetZ = player.posZ + Math.cos(wanderAngle) * wanderDistance;
-                        break;
+                double[] target = getMovementTarget(player, movement, movement.mode, movement.elapsed,
+                    yaw, forwardX, forwardZ, rightX, rightZ);
+                if (movement.transitionElapsed < MovementState.TRANSITION_TICKS) {
+                    double[] previous = getMovementTarget(player, movement, movement.previousMode,
+                        movement.previousElapsed + movement.transitionElapsed, yaw,
+                        forwardX, forwardZ, rightX, rightZ);
+                    double blend = movement.getTransitionBlend();
+                    target[0] = previous[0] + (target[0] - previous[0]) * blend;
+                    target[1] = previous[1] + (target[1] - previous[1]) * blend;
                 }
+                double targetX = target[0];
+                double targetZ = target[1];
 
                 double targetY = player.posY + player.getEyeHeight() - 0.55D
                     + Math.sin(movement.phase + movement.elapsed * 0.04D) * 0.32D;
+                if (movement.transitionElapsed < MovementState.TRANSITION_TICKS) {
+                    double previousY = player.posY + player.getEyeHeight() - 0.55D
+                        + Math.sin(movement.phase + (movement.previousElapsed
+                        + movement.transitionElapsed) * 0.04D) * 0.32D;
+                    double blend = movement.getTransitionBlend();
+                    targetY = previousY + (targetY - previousY) * blend;
+                }
 
                 double dx = targetX - angel.posX;
                 double dy = targetY - angel.posY;
@@ -183,6 +172,43 @@ public class TickHandler {
                 angel.motionY *= 0.89D;
                 angel.motionZ *= 0.89D;
             }
+        }
+    }
+
+    private static double[] getMovementTarget(EntityPlayer player, MovementState movement, int mode,
+                                               int elapsed, double yaw, double forwardX, double forwardZ,
+                                               double rightX, double rightZ) {
+        double wave = Math.sin(movement.phase + elapsed * 0.025D);
+        switch (mode) {
+            case 0: // Hold position in front and acknowledge the player.
+                return new double[] {
+                    player.posX + forwardX * 6.5D + rightX * wave * 0.55D,
+                    player.posZ + forwardZ * 6.5D + rightZ * wave * 0.55D
+                };
+            case 1: // Make one unhurried world-space orbit.
+                double orbit = movement.phase + elapsed * 0.009D;
+                return new double[] {
+                    player.posX + Math.cos(orbit) * 6.2D,
+                    player.posZ + Math.sin(orbit) * 6.2D
+                };
+            case 2: // Deliberately cross to the other side of the player's view.
+                return new double[] {
+                    player.posX + forwardX * 5.8D + rightX * movement.side * (1.7D + wave * 0.8D),
+                    player.posZ + forwardZ * 5.8D + rightZ * movement.side * (1.7D + wave * 0.8D)
+                };
+            case 3: // Move closer briefly, as if inspecting the player.
+                double closeDistance = 5.0D + wave * 0.3D;
+                return new double[] {
+                    player.posX + forwardX * closeDistance + rightX * movement.side * 0.65D,
+                    player.posZ + forwardZ * closeDistance + rightZ * movement.side * 0.65D
+                };
+            default: // Trace a loose arc, then return to the front.
+                double wanderAngle = yaw + movement.phase + Math.sin(elapsed * 0.012D) * 0.75D;
+                double wanderDistance = 5.5D + Math.sin(elapsed * 0.019D) * 0.8D;
+                return new double[] {
+                    player.posX - Math.sin(wanderAngle) * wanderDistance,
+                    player.posZ + Math.cos(wanderAngle) * wanderDistance
+                };
         }
     }
 
@@ -224,24 +250,47 @@ public class TickHandler {
     }
 
     private static class MovementState {
-        int mode = RANDOM.nextInt(5);
+        static final int TRANSITION_TICKS = 50;
+        private static final int[] ROUTE = {0, 2, 0, 3, 0, 1, 4};
+
+        int routeIndex;
+        int mode = ROUTE[0];
+        int previousMode = mode;
         int elapsed;
-        int duration = 180 + RANDOM.nextInt(260);
+        int previousElapsed;
+        int transitionElapsed = TRANSITION_TICKS;
+        int duration = getDuration(mode);
         int side = RANDOM.nextBoolean() ? 1 : -1;
         double phase = RANDOM.nextDouble() * Math.PI * 2.0D;
 
         void tick() {
             elapsed++;
+            if (transitionElapsed < TRANSITION_TICKS) transitionElapsed++;
             if (elapsed < duration) return;
 
-            int previous = mode;
-            do {
-                mode = RANDOM.nextInt(5);
-            } while (mode == previous);
+            previousMode = mode;
+            previousElapsed = elapsed;
+            routeIndex = (routeIndex + 1) % ROUTE.length;
+            mode = ROUTE[routeIndex];
             elapsed = 0;
-            duration = 180 + RANDOM.nextInt(260);
-            side = RANDOM.nextBoolean() ? 1 : -1;
-            phase = RANDOM.nextDouble() * Math.PI * 2.0D;
+            transitionElapsed = 0;
+            duration = getDuration(mode);
+            if (mode == 2 || mode == 3) side *= -1;
+        }
+
+        double getTransitionBlend() {
+            double progress = (double) transitionElapsed / TRANSITION_TICKS;
+            return progress * progress * (3.0D - 2.0D * progress);
+        }
+
+        private static int getDuration(int mode) {
+            switch (mode) {
+                case 1: return 420 + RANDOM.nextInt(100);
+                case 2: return 190 + RANDOM.nextInt(70);
+                case 3: return 100 + RANDOM.nextInt(45);
+                case 4: return 240 + RANDOM.nextInt(90);
+                default: return 260 + RANDOM.nextInt(120);
+            }
         }
     }
 }
