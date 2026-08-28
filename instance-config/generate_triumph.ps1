@@ -330,28 +330,63 @@ function Get-ConstellationCatalogLines($Rows) {
         return $Depth
     }
 
+    $LevelRows = @{}
+    foreach ($Row in $Rows) {
+        $Depth = Get-Depth $Row.Id
+        if (-not $LevelRows.ContainsKey($Depth)) {
+            $LevelRows[$Depth] = New-Object System.Collections.Generic.List[object]
+        }
+        $LevelRows[$Depth].Add($Row)
+    }
+
+    $TreeOffsets = @{}
+    foreach ($Depth in $LevelRows.Keys) {
+        $Count = $LevelRows[$Depth].Count
+        for ($Index = 0; $Index -lt $Count; $Index++) {
+            $Magnitude = [int][math]::Ceiling($Index / 2.0)
+            $GridZ = if ($Index % 2 -eq 0) { $Magnitude } else { -$Magnitude }
+            $GridX = if ($Index -eq 0) { 0 } else { (($Index - 1) % 3) - 1 }
+            $TreeOffsets[$LevelRows[$Depth][$Index].Id] = [pscustomobject]@{
+                GridX = $GridX
+                GridZ = $GridZ
+            }
+        }
+    }
+
     $Children = @{}
     foreach ($Row in $Rows) { $Children[$Row.Id] = New-Object System.Collections.Generic.List[int] }
     for ($Index = 0; $Index -lt $Rows.Count; $Index++) {
         foreach ($Parent in $Rows[$Index].Parents) { $Children[$Parent].Add($Index) }
     }
 
-    $Slots = @{}
     $Records = New-Object System.Collections.Generic.List[object]
     foreach ($Row in $Rows) {
         $Depth = Get-Depth $Row.Id
-        $Page = $Row.Id.Split(':')[1].Split('/')[0]
-        $SlotKey = "$Page/$Depth"
-        $Slot = if ($Slots.ContainsKey($SlotKey)) { [int]$Slots[$SlotKey] } else { 0 }
-        $Slots[$SlotKey] = $Slot + 1
-        $Layer = @{ core = 0; optional = -1; prestige = 1 }[$Page]
-        $X = 8 + $Depth * 4
-        $Y = 96 + (($Slot % 7) - 3) * 3
-        $Z = $Layer * 24 + [math]::Floor($Slot / 7) * 5
+        $Offset = $TreeOffsets[$Row.Id]
+        $CharacterTotal = 0
+        for ($CharacterIndex = 0; $CharacterIndex -lt $Row.Id.Length; $CharacterIndex++) {
+            $CharacterTotal += [int]$Row.Id[$CharacterIndex] * ($CharacterIndex + 1)
+        }
+        $JitterX = (($CharacterTotal + 1) % 3) - 1
+        $JitterZ = (($CharacterTotal + 2) % 3) - 1
+        $X = 40 + $Offset.GridX * 8 + $JitterX
+        $Y = 56 + $Depth * 8
+        $Z = $Offset.GridZ * 8 + $JitterZ
         $Records.Add([pscustomobject]@{
             Row = $Row; X = [int]$X; Y = [int]$Y; Z = [int]$Z
             Stages = @(Get-RequiredStages $Row); Children = @($Children[$Row.Id])
         })
+    }
+
+    for ($Left = 0; $Left -lt $Records.Count; $Left++) {
+        for ($Right = $Left + 1; $Right -lt $Records.Count; $Right++) {
+            $DeltaX = $Records[$Left].X - $Records[$Right].X
+            $DeltaY = $Records[$Left].Y - $Records[$Right].Y
+            $DeltaZ = $Records[$Left].Z - $Records[$Right].Z
+            if ($DeltaX * $DeltaX + $DeltaY * $DeltaY + $DeltaZ * $DeltaZ -lt 25) {
+                throw "Constellation points are less than 5 blocks apart: $($Records[$Left].Row.Id), $($Records[$Right].Row.Id)"
+            }
+        }
     }
 
     $Canonical = New-Object System.Text.StringBuilder
@@ -662,7 +697,7 @@ function Test-Configuration($Rows) {
     if (-not $TriumphContent.Contains($Order)) { $Errors.Add('Page order mismatch') }
     if (-not $TriumphContent.EndsWith("`n") -or $TriumphContent.Contains("`r") -or $TriumphContent -match '(?m) +$') { $Errors.Add('Invalid Triumph.txt whitespace') }
     if ($Errors.Count -gt 0) { throw "Validation failed:`n- $($Errors -join "`n- ")" }
-    Write-Output 'Validated 129 achievements and unique reactions, 3 roots, Java/plan/tree parity, prerequisite/display parents, criteria, positions, stage gates, and whitespace.'
+    Write-Output 'Validated 129 achievements and unique reactions, 3 roots, Java/plan/tree parity, prerequisite/display parents, criteria, 5-block constellation spacing, stage gates, and whitespace.'
 }
 
 $Catalog = Get-Catalog

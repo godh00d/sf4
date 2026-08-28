@@ -419,7 +419,7 @@
     <span class="legend-item"><span class="swatch core" aria-hidden="true"></span>Core</span>
     <span class="legend-item"><span class="swatch optional" aria-hidden="true"></span>Optional</span>
     <span class="legend-item"><span class="swatch prestige" aria-hidden="true"></span>Prestige</span>
-    <p class="legend-note">Colors identify catalog boughs only. Luminous branches grow from prerequisite roots toward unlocked stars. In-game states depend on each player's progress.</p>
+    <p class="legend-note">Colors identify catalog boughs only. These are the exact in-game tree positions, with every star at least five blocks from every other star. In-game states depend on each player's progress.</p>
   </section>
 
   <details class="catalog-fallback">
@@ -458,7 +458,7 @@
       sum.z += point.z / nodes.length;
       return sum;
     }, { x: 0, y: 0, z: 0 });
-    var view = { yaw: -0.18, pitch: -0.08, zoom: 1.22, panX: 0, panY: 0, center: copyPoint(graphCenter) };
+    var view = { yaw: -0.12, pitch: -0.06, zoom: 0.9, panX: 0, panY: 0, center: copyPoint(graphCenter) };
     var selected = null;
     var hovered = null;
     var keyboardTarget = null;
@@ -487,46 +487,10 @@
     }
 
     function buildMysticLayout() {
-      var depths = new Map();
-      function depthOf(node, visiting) {
-        if (depths.has(node.id)) return depths.get(node.id);
-        if (visiting.has(node.id)) return 0;
-        visiting.add(node.id);
-        var depth = node.parents.reduce(function (deepest, parentId) {
-          var parent = byId.get(parentId);
-          return parent ? Math.max(deepest, depthOf(parent, visiting) + 1) : deepest;
-        }, 0);
-        visiting.delete(node.id);
-        depths.set(node.id, depth);
-        return depth;
-      }
-      nodes.forEach(function (node) { depthOf(node, new Set()); });
-      var maxDepth = Math.max.apply(null, Array.from(depths.values()));
       var layout = new Map();
       nodes.forEach(function (node) {
-        var depth = depths.get(node.id);
-        var rise = maxDepth ? depth / maxDepth : 0;
-        var lane = clamp((node.y - 96) / 9, -1, 1);
-        var sway = Math.sin(rise * Math.PI * 2.3) * 3.2;
-        var spread = 10 + rise * 38;
-        var x = lane * spread + sway;
-        var y = -43 + rise * 86;
-        var z = (node.z / 5) * 4;
-
-        if (node.category === "optional") {
-          x -= 22 + (1 - rise) * 8;
-          y += (node.x - 20) * .32;
-          z -= 9;
-        } else if (node.category === "prestige") {
-          x += 28 + rise * 10;
-          y += (node.x - 12) * 1.35;
-          z += 10;
-        }
-
-        x += (hashUnit(node.id, 17) - .5) * (4.5 + rise * 4);
-        y += (hashUnit(node.id, 53) - .5) * 4.8;
-        z += (hashUnit(node.id, 91) - .5) * 10;
-        layout.set(node.id, { x: x, y: y, z: z });
+        // Face the same tree seen on arrival in-game: Z spans the canopy, Y rises, X adds depth.
+        layout.set(node.id, { x: node.z, y: node.y, z: node.x });
       });
       return layout;
     }
@@ -796,9 +760,9 @@
       selected = null;
       hovered = null;
       focusAnimation = null;
-      view.yaw = -0.18;
-      view.pitch = -0.08;
-      view.zoom = 1.22;
+      view.yaw = -0.12;
+      view.pitch = -0.06;
+      view.zoom = 0.9;
       view.panX = 0;
       view.panY = 0;
       view.center = copyPoint(graphCenter);
