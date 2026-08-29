@@ -1,7 +1,6 @@
 package com.godh00d.sf4angel;
 
 import com.godh00d.sf4angel.entity.EntityAngel;
-import com.godh00d.sf4angel.constellation.ConstellationDimension;
 import com.godh00d.sf4angel.init.ModEntities;
 import com.godh00d.sf4angel.proxy.CommonProxy;
 import net.minecraftforge.fml.common.Mod;
@@ -24,7 +23,6 @@ public class SF4Angel {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         logger = event.getModLog();
-        ConstellationDimension.register(event.getSuggestedConfigurationFile(), logger);
         ModEntities.register();
         proxy.preInit();
     }

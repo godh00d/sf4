@@ -2,7 +2,8 @@ package com.godh00d.sf4angel.proxy;
 
 import com.godh00d.sf4angel.entity.EntityAngelRender;
 import com.godh00d.sf4angel.client.ConstellationClientState;
-import com.godh00d.sf4angel.client.GuiConstellation;
+import com.godh00d.sf4angel.entity.EntityConstellationObservatory;
+import com.godh00d.sf4angel.entity.RenderConstellationObservatory;
 import com.godh00d.sf4angel.network.MessageConstellationProgress;
 import com.godh00d.sf4angel.network.MessageAngelState;
 import com.godh00d.sf4angel.entity.EntityAngel;
@@ -23,6 +24,10 @@ public class ClientProxy extends CommonProxy {
             com.godh00d.sf4angel.entity.EntityAngel.class,
             EntityAngelRender::new
         );
+        RenderingRegistry.registerEntityRenderingHandler(
+            EntityConstellationObservatory.class,
+            RenderConstellationObservatory::new
+        );
         LOGGER.info("Registered EntityAngelRender during preInit");
     }
 
@@ -34,9 +39,6 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void handleConstellationProgress(MessageConstellationProgress message) {
         ConstellationClientState.accept(message);
-        if (message.getStates().length > 0 && Minecraft.getMinecraft().world != null) {
-            Minecraft.getMinecraft().displayGuiScreen(new GuiConstellation());
-        }
     }
 
     @Override

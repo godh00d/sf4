@@ -2,12 +2,12 @@ package com.godh00d.sf4angel.constellation;
 
 import com.godh00d.sf4angel.SF4Angel;
 import com.godh00d.sf4angel.entity.EntityAngel;
+import com.godh00d.sf4angel.entity.EntityConstellationObservatory;
 import com.godh00d.sf4angel.network.MessageConstellationProgress;
 import com.godh00d.sf4angel.network.PacketHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.player.EntityPlayer;
@@ -19,10 +19,9 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.ITeleporter;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -43,17 +42,25 @@ public final class ConstellationManager {
     public static final byte COMPLETED = 1;
     public static final byte AVAILABLE = 2;
     public static final byte MYSTERY = 3;
+
     private static final String DATA_KEY = "sf4angelConstellation";
-    private static final double ARRIVAL_X = 0.5D;
-    private static final double ARRIVAL_Y = 56.0D;
-    private static final double ARRIVAL_Z = 0.5D;
+    private static final int OBSERVATORY_DIMENSION = 0;
+    private static final double CENTER_Y = 512.0D;
+    private static final double ARRIVAL_OFFSET_X = -60.0D;
+    private static final double BOUNDARY_RADIUS = 108.0D;
+    private static final double MIN_Y = CENTER_Y - BOUNDARY_RADIUS;
+    private static final double MAX_Y = CENTER_Y + BOUNDARY_RADIUS;
+    private static final int CELL_SPACING = 256;
+    private static final int CELL_GRID = 78;
+    private static final int CELL_ORIGIN = 10000;
     private static final Map<UUID, Long> INTERACTION_COOLDOWNS = new HashMap<>();
 
     private ConstellationManager() {
     }
 
     public static boolean isInside(EntityPlayer player) {
-        return player.dimension == ConstellationDimension.getDimensionId() && getData(player).getBoolean("Active");
+        NBTTagCompound data = getData(player);
+        return data.getBoolean("Active") && player.dimension == OBSERVATORY_DIMENSION;
     }
 
     public static boolean hasActiveSession(EntityPlayer player) {
@@ -71,6 +78,43 @@ public final class ConstellationManager {
     }
 
     public static void enter(EntityPlayerMP player) {
+        NBTTagCompound data = getData(player);
+        if (hasActiveSession(player)) return;
+
+        captureSource(player, data);
+        Cell cell = allocateCell(player);
+        data.setDouble("CenterX", cell.x);
+        data.setDouble("CenterZ", cell.z);
+        data.setBoolean("Entering", true);
+        repairTemporaryFlight(player);
+
+        WorldServer overworld = player.getServer().getWorld(OBSERVATORY_DIMENSION);
+        double arrivalX = cell.x + ARRIVAL_OFFSET_X;
+        try {
+            overworld.getChunkFromBlockCoords(new BlockPos(arrivalX, CENTER_Y, cell.z));
+            if (player.dimension == OBSERVATORY_DIMENSION) {
+                player.connection.setPlayerLocation(arrivalX, CENTER_Y, cell.z, -90.0F, 0.0F);
+            } else {
+                player.changeDimension(OBSERVATORY_DIMENSION,
+                    new FixedTeleporter(arrivalX, CENTER_Y, cell.z, -90.0F, 0.0F));
+            }
+        } catch (RuntimeException exception) {
+            SF4Angel.logger.error("Constellation entry failed for {}", player.getName(), exception);
+        }
+
+        boolean arrived = player.dimension == OBSERVATORY_DIMENSION && player.world == overworld
+            && atPosition(player, arrivalX, CENTER_Y, cell.z);
+        if (!arrived) {
+            rollbackFlight(player, data);
+            clearSession(data);
+            sendClear(player);
+            return;
+        }
+
+        data.setBoolean("Entering", false);
+        data.setBoolean("Active", true);
+        player.fallDistance = 0.0F;
+        spawnObservatory(player);
         sendSnapshot(player);
     }
 
@@ -83,7 +127,6 @@ public final class ConstellationManager {
 
         Destination destination = destination(player, data);
         data.setBoolean("Exiting", true);
-        boolean arrived = false;
         try {
             if (player.dimension == destination.dimension) {
                 player.connection.setPlayerLocation(destination.x, destination.y, destination.z,
@@ -94,27 +137,28 @@ public final class ConstellationManager {
             }
         } catch (RuntimeException exception) {
             SF4Angel.logger.error("Constellation exit failed for {}", player.getName(), exception);
-        } finally {
-            WorldServer target = player.getServer().getWorld(destination.dimension);
-            arrived = player.dimension == destination.dimension && player.world == target;
         }
 
+        WorldServer target = player.getServer().getWorld(destination.dimension);
+        boolean arrived = player.dimension == destination.dimension && player.world == target
+            && atPosition(player, destination.x, destination.y, destination.z);
         if (!arrived) {
             data.setBoolean("Exiting", false);
             data.setBoolean("Active", true);
             repairTemporaryFlight(player);
-            if (player.dimension == ConstellationDimension.getDimensionId()) ensureAnchor(player);
-            refresh(player);
+            ensureObservatory(player);
+            sendSnapshot(player);
             return;
         }
 
-        data.setBoolean("Exiting", false);
-        player.connection.setPlayerLocation(destination.x, destination.y, destination.z,
-            destination.yaw, destination.pitch);
         restoreSavedFlight(player, data);
-        removeAnchors(player);
+        removeObservatories(player);
         clearSession(data);
         sendClear(player);
+    }
+
+    public static void refresh(EntityPlayerMP player) {
+        if (isInside(player)) sendSnapshot(player);
     }
 
     private static void captureSource(EntityPlayerMP player, NBTTagCompound data) {
@@ -139,9 +183,9 @@ public final class ConstellationManager {
         float pitch = data.getFloat("SourcePitch");
         if (!data.hasKey("SourceDimension") || !DimensionManager.isDimensionRegistered(dimension)
             || player.getServer().getWorld(dimension) == null) {
-            WorldServer overworld = player.getServer().getWorld(0);
+            WorldServer overworld = player.getServer().getWorld(OBSERVATORY_DIMENSION);
             BlockPos spawn = overworld.getSpawnPoint();
-            dimension = 0;
+            dimension = OBSERVATORY_DIMENSION;
             x = spawn.getX() + 0.5D;
             y = spawn.getY();
             z = spawn.getZ() + 0.5D;
@@ -171,8 +215,9 @@ public final class ConstellationManager {
     }
 
     private static void repairTemporaryFlight(EntityPlayerMP player) {
-        if (!player.capabilities.allowFlying) {
+        if (!player.capabilities.allowFlying || !player.capabilities.isFlying) {
             player.capabilities.allowFlying = true;
+            player.capabilities.isFlying = true;
             player.sendPlayerAbilities();
         }
     }
@@ -191,11 +236,8 @@ public final class ConstellationManager {
         data.removeTag("IsFlying");
         data.removeTag("SourceCreative");
         data.removeTag("SourceSpectator");
-    }
-
-    public static void refresh(EntityPlayerMP player) {
-        if (!isInside(player)) return;
-        sendSnapshot(player);
+        data.removeTag("CenterX");
+        data.removeTag("CenterZ");
     }
 
     private static void sendSnapshot(EntityPlayerMP player) {
@@ -288,32 +330,81 @@ public final class ConstellationManager {
         return player.getServerWorld().getAdvancementManager().getAdvancement(new ResourceLocation(id));
     }
 
-    private static void spawnAnchor(EntityPlayerMP player) {
-        removeAnchors(player);
-        createAnchor(player);
-    }
-
-    private static void ensureAnchor(EntityPlayerMP player) {
-        for (EntityAngel angel : player.world.getEntities(EntityAngel.class,
-            entity -> entity.isConstellationAnchor() && player.getUniqueID().equals(entity.getOwnerId()))) return;
-        createAnchor(player);
-    }
-
-    private static void createAnchor(EntityPlayerMP player) {
-        EntityAngel anchor = new EntityAngel(player.world);
-        anchor.setOwnerId(player.getUniqueID());
-        anchor.setConstellationAnchor(true);
-        anchor.setPosition(ARRIVAL_X + 2.25D, ARRIVAL_Y, ARRIVAL_Z);
-        player.world.spawnEntity(anchor);
-    }
-
-    private static void removeAnchors(EntityPlayerMP player) {
-        WorldServer world = DimensionManager.getWorld(ConstellationDimension.getDimensionId());
-        if (world == null) return;
-        for (EntityAngel angel : world.getEntities(EntityAngel.class,
-            entity -> entity.isConstellationAnchor() && player.getUniqueID().equals(entity.getOwnerId()))) {
-            angel.setDead();
+    private static Cell allocateCell(EntityPlayerMP player) {
+        int cellCount = CELL_GRID * CELL_GRID;
+        int start = Math.floorMod(player.getUniqueID().hashCode(), cellCount);
+        for (int offset = 0; offset < cellCount; offset++) {
+            int index = (start + offset) % cellCount;
+            Cell candidate = cell(index % CELL_GRID, index / CELL_GRID);
+            boolean occupied = false;
+            for (EntityPlayerMP other : player.getServer().getPlayerList().getPlayers()) {
+                if (other == player) continue;
+                NBTTagCompound otherData = getData(other);
+                if (!otherData.getBoolean("Active") && !otherData.getBoolean("Entering")) continue;
+                if (otherData.getDouble("CenterX") == candidate.x
+                    && otherData.getDouble("CenterZ") == candidate.z) {
+                    occupied = true;
+                    break;
+                }
+            }
+            if (!occupied) return candidate;
         }
+        throw new IllegalStateException("No constellation observatory cells are available");
+    }
+
+    private static Cell cell(int gridX, int gridZ) {
+        return new Cell(CELL_ORIGIN + gridX * CELL_SPACING, CELL_ORIGIN + gridZ * CELL_SPACING);
+    }
+
+    private static void spawnObservatory(EntityPlayerMP player) {
+        removeObservatories(player);
+        createObservatory(player);
+    }
+
+    private static void ensureObservatory(EntityPlayerMP player) {
+        for (EntityConstellationObservatory observatory : player.world.getEntities(
+            EntityConstellationObservatory.class,
+            entity -> player.getUniqueID().equals(entity.getOwnerId()))) return;
+        createObservatory(player);
+    }
+
+    private static void createObservatory(EntityPlayerMP player) {
+        NBTTagCompound data = getData(player);
+        if (!data.getBoolean("Active") || player.dimension != OBSERVATORY_DIMENSION) return;
+        double centerX = data.getDouble("CenterX");
+        double centerZ = data.getDouble("CenterZ");
+        EntityConstellationObservatory observatory = new EntityConstellationObservatory(player.world);
+        observatory.setOwnerId(player.getUniqueID());
+        observatory.setPosition(centerX - EntityConstellationObservatory.SCENE_OFFSET_X,
+            CENTER_Y, centerZ - EntityConstellationObservatory.SCENE_OFFSET_Z);
+        player.world.spawnEntity(observatory);
+    }
+
+    private static void removeObservatories(EntityPlayerMP player) {
+        WorldServer world = player.getServer().getWorld(OBSERVATORY_DIMENSION);
+        if (world == null) return;
+        for (EntityConstellationObservatory observatory : world.getEntities(
+            EntityConstellationObservatory.class,
+            entity -> player.getUniqueID().equals(entity.getOwnerId()))) observatory.setDead();
+    }
+
+    private static void constrainToCell(EntityPlayerMP player, NBTTagCompound data) {
+        double centerX = data.getDouble("CenterX");
+        double centerZ = data.getDouble("CenterZ");
+        double x = Math.max(centerX - BOUNDARY_RADIUS, Math.min(centerX + BOUNDARY_RADIUS, player.posX));
+        double y = Math.max(MIN_Y, Math.min(MAX_Y, player.posY));
+        double z = Math.max(centerZ - BOUNDARY_RADIUS, Math.min(centerZ + BOUNDARY_RADIUS, player.posZ));
+        if (x == player.posX && y == player.posY && z == player.posZ) return;
+        player.connection.setPlayerLocation(x, y, z, player.rotationYaw, player.rotationPitch);
+        player.motionX = player.motionY = player.motionZ = 0.0D;
+        player.fallDistance = 0.0F;
+    }
+
+    private static boolean atPosition(EntityPlayerMP player, double x, double y, double z) {
+        double dx = player.posX - x;
+        double dy = player.posY - y;
+        double dz = player.posZ - z;
+        return dx * dx + dy * dy + dz * dz < 0.01D;
     }
 
     private static void sendClear(EntityPlayerMP player) {
@@ -335,13 +426,9 @@ public final class ConstellationManager {
         NBTTagCompound data = getData(player);
         if (data.getBoolean("Entering")) {
             data.setBoolean("Entering", false);
-            if (player.dimension == ConstellationDimension.getDimensionId()) data.setBoolean("Active", true);
-            else {
-                rollbackFlight(player, data);
-                clearSession(data);
-                sendClear(player);
-                return;
-            }
+            data.setBoolean("Active", true);
+            exit(player);
+            return;
         }
         if (data.getBoolean("Exiting")) data.setBoolean("Exiting", false);
         if (data.getBoolean("Active")) exit(player);
@@ -363,10 +450,7 @@ public final class ConstellationManager {
         EntityPlayerMP player = (EntityPlayerMP) event.player;
         NBTTagCompound data = getData(player);
         if (data.getBoolean("Entering") || data.getBoolean("Exiting")) return;
-        if (event.toDim == ConstellationDimension.getDimensionId() && data.getBoolean("Active")) {
-            ensureAnchor(player);
-            refresh(player);
-        } else if (data.getBoolean("Active")) {
+        if (data.getBoolean("Active") && event.toDim != OBSERVATORY_DIMENSION) {
             player.getServerWorld().addScheduledTask(() -> exit(player));
         }
     }
@@ -376,25 +460,22 @@ public final class ConstellationManager {
         if (event.phase != TickEvent.Phase.END || event.player.world.isRemote) return;
         EntityPlayerMP player = (EntityPlayerMP) event.player;
         NBTTagCompound data = getData(player);
-        if (data.getBoolean("Active") && player.dimension != ConstellationDimension.getDimensionId()) {
+        if (!data.getBoolean("Active")) return;
+        if (player.dimension != OBSERVATORY_DIMENSION) {
             if (player.ticksExisted % 20 == 0) exit(player);
             return;
         }
-        if (!isInside(player)) return;
         repairTemporaryFlight(player);
-        WorldServer world = player.getServerWorld();
-        world.getWorldInfo().setRaining(false);
-        world.getWorldInfo().setThundering(false);
-        world.getWorldInfo().setRainTime(0);
-        world.getWorldInfo().setThunderTime(0);
-        if (player.ticksExisted % 20 == 0) refresh(player);
-        if (player.ticksExisted % 100 == 0) ensureAnchor(player);
+        player.fallDistance = 0.0F;
+        constrainToCell(player, data);
+        if (player.ticksExisted % 20 == 0) sendSnapshot(player);
+        if (player.ticksExisted % 100 == 0) ensureObservatory(player);
     }
 
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         INTERACTION_COOLDOWNS.remove(event.player.getUniqueID());
-        if (!event.player.world.isRemote) removeAnchors((EntityPlayerMP) event.player);
+        if (!event.player.world.isRemote) removeObservatories((EntityPlayerMP) event.player);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -443,11 +524,14 @@ public final class ConstellationManager {
         }
     }
 
-    @SubscribeEvent
-    public static void onEntityJoin(EntityJoinWorldEvent event) {
-        if (!event.getWorld().isRemote && event.getWorld().provider.getDimension()
-            == ConstellationDimension.getDimensionId() && event.getEntity() instanceof EntityLiving
-            && !(event.getEntity() instanceof EntityAngel)) event.setCanceled(true);
+    private static final class Cell {
+        private final double x;
+        private final double z;
+
+        private Cell(double x, double z) {
+            this.x = x;
+            this.z = z;
+        }
     }
 
     private static final class Destination {

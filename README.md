@@ -20,7 +20,7 @@ Additional behavior includes:
 
 [Explore the public interactive 3D Achievement Constellation](https://godh00d.github.io/sf4/). The visualization shows the complete fixed catalog of all 129 achievements and their dependency routes; visibility and state colors inside the game remain specific to each player's progress and eligible stages.
 
-Right-click your visible angel with the main hand to enter the constellation. The angel remains within ordinary Survival interaction reach in every movement mode. Right-click the stationary angel anchor beside the arrival point to return to the exact dimension, position, and view direction from which you entered. Left-clicking a normal angel retains its existing irritated lightning response.
+Right-click your visible angel with the main hand to enter the constellation. The player moves to an isolated, owner-specific observatory cell in the normal overworld and receives temporary flight. Right-click the stationary angel beside the arrival point to return to the exact dimension, position, view direction, and entry-time flight state from which you entered. Left-clicking a normal angel retains its existing irritated lightning response.
 
 Players cannot take normal damage in the constellation, including void damage and `/kill` damage routed through Forge. If another mod forces death without a damage event, respawn recovery returns the player and transfers any generated drops to the saved return location so they are not stranded in the void.
 
@@ -28,14 +28,14 @@ The mod records and restores the entry-time Survival flight flags. Creative and 
 
 The constellation is a client-rendered graph; it does not create an entity for each achievement and has no clickable nodes. Aim at a cube to see its title. The visual states are:
 
-- Gold with a dark-gold outline: completed
-- Cyan with a dark-cyan outline: currently available because every parent is complete and all stage requirements are eligible
-- Dim translucent cube with a dark-gray outline and `?`: mystery achievement within two dependency edges of the current frontier
+- Green: completed
+- Gold: currently available because every parent is complete and all stage requirements are eligible
+- Blue: mystery achievement within two dependency edges of the current frontier
 - Absent: farther progress or stage-gated content that is not yet eligible
 
 Every visible parent relationship is drawn, including multi-parent requirements and parallel technical branches. Progress is player-specific and refreshes while the player is inside the constellation.
 
-The constellation uses an empty, mob-free white-void dimension. Its stable IDs are configured in `config/sf4angel.cfg` under `constellation.dimensionId` and `constellation.dimensionTypeId`; defaults are `42420` and `42421`. Change these values before world startup if another mod owns either ID. Registration fails with a clear startup error rather than silently selecting another ID.
+The constellation renderer belongs to the owner-only return angel entity and draws an inward-facing white room, dependency edges, and achievement cubes through Minecraft's normal entity-rendering pipeline. The server allocates cells far from the active island and above build terrain, resolves collisions between active players, enforces the virtual room boundary, and recovers interrupted sessions on login or respawn. No custom dimension, physical constellation blocks, full-screen GUI, or world-last render hook is used.
 
 ## Achievement Catalog
 
