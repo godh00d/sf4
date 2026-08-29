@@ -11,14 +11,10 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = "sf4angel")
 public class PlayerJoinHandler {
-
-    private static final Set<UUID> greetedPlayers = new HashSet<>();
 
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
@@ -29,8 +25,7 @@ public class PlayerJoinHandler {
 
         removeExistingAngels(mp);
 
-        if (!greetedPlayers.contains(player.getUniqueID())) {
-            greetedPlayers.add(player.getUniqueID());
+        if (AchievementHandler.getRecordedAngelAppearances(player) == 0) {
             spawnFreshAngel(mp);
         } else {
             spawnReturningAngel(mp);

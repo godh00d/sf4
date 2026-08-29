@@ -248,6 +248,10 @@ public class AchievementHandler {
         return angelAppearanceCount.getOrDefault(player.getUniqueID(), 0);
     }
 
+    public static int getRecordedAngelAppearances(EntityPlayer player) {
+        return getPersistedData(player).getInteger("sf4angelAppearances");
+    }
+
     public static String getNextGoal(EntityPlayerMP player) {
         for (Map.Entry<String, List<String>> node : CoreAdvancementCatalog.prerequisites().entrySet()) {
             Advancement advancement = getAdvancement(player, node.getKey());

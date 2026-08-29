@@ -62,8 +62,8 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         drawSkyShell();
-        drawNebulaVeils(animationTime);
         drawStars(animationTime);
+        drawShootingStars(animationTime);
         GlStateManager.pushMatrix();
         GlStateManager.translate(sceneX, sceneY, sceneZ);
         double cameraX = -sceneX;
@@ -133,45 +133,6 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         vertex(buffer, x, y, z, red, green, blue, 255);
     }
 
-    private static void drawNebulaVeils(float animationTime) {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        int[] reds = {24, 72, 96};
-        int[] greens = {112, 70, 30};
-        int[] blues = {138, 124, 68};
-        double[] heights = {-4.8D, 0.2D, 4.7D};
-        for (int band = 0; band < 3; band++) {
-            double phase = animationTime * (0.00045D + band * 0.00013D) + band * 2.1D;
-            int centerAlpha = 14 + band * 3;
-            for (int segment = 0; segment < 64; segment++) {
-                double firstAngle = segment * Math.PI * 2.0D / 64.0D;
-                double secondAngle = (segment + 1) * Math.PI * 2.0D / 64.0D;
-                double firstCenter = heights[band] + Math.sin(firstAngle * (2.0D + band)
-                    + phase) * (1.0D + band * 0.22D);
-                double secondCenter = heights[band] + Math.sin(secondAngle * (2.0D + band)
-                    + phase) * (1.0D + band * 0.22D);
-                nebulaVertex(buffer, firstAngle, firstCenter - 1.7D, reds[band], greens[band], blues[band], 0);
-                nebulaVertex(buffer, secondAngle, secondCenter - 1.7D, reds[band], greens[band], blues[band], 0);
-                nebulaVertex(buffer, secondAngle, secondCenter, reds[band], greens[band], blues[band], centerAlpha);
-                nebulaVertex(buffer, firstAngle, firstCenter, reds[band], greens[band], blues[band], centerAlpha);
-                nebulaVertex(buffer, firstAngle, firstCenter, reds[band], greens[band], blues[band], centerAlpha);
-                nebulaVertex(buffer, secondAngle, secondCenter, reds[band], greens[band], blues[band], centerAlpha);
-                nebulaVertex(buffer, secondAngle, secondCenter + 1.7D, reds[band], greens[band], blues[band], 0);
-                nebulaVertex(buffer, firstAngle, firstCenter + 1.7D, reds[band], greens[band], blues[band], 0);
-            }
-        }
-        tessellator.draw();
-    }
-
-    private static void nebulaVertex(BufferBuilder buffer, double angle, double y,
-                                     int red, int green, int blue, int alpha) {
-        double shellRadius = SKY_RADIUS - 0.42D;
-        double horizontalRadius = Math.sqrt(Math.max(0.0D, shellRadius * shellRadius - y * y));
-        vertex(buffer, Math.cos(angle) * horizontalRadius, y,
-            Math.sin(angle) * horizontalRadius, red, green, blue, alpha);
-    }
-
     private static void drawStars(float animationTime) {
         GL11.glPointSize(1.35F);
         Tessellator tessellator = Tessellator.getInstance();
@@ -189,6 +150,56 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
                 height * (SKY_RADIUS - 0.2D), Math.sin(angle) * radius * (SKY_RADIUS - 0.2D),
                 warm ? 255 : brightness - 18, warm ? brightness : Math.min(255, brightness + 8),
                 warm ? brightness - 72 : 255, alpha);
+        }
+        tessellator.draw();
+    }
+
+    private static void drawShootingStars(float animationTime) {
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < 5; i++) {
+            double cycle = (animationTime * 0.0017D + i * 0.217D) % 1.0D;
+            if (cycle > 0.16D) continue;
+            double progress = cycle / 0.16D;
+            double fade = Math.sin(progress * Math.PI);
+            double startX = Math.sin(i * 8.31D + 0.7D) * 8.5D;
+            double startY = 7.5D - i % 3 * 3.2D;
+            double startZ = Math.cos(i * 5.17D + 1.1D) * 8.5D;
+            double directionX = 0.72D - i % 2 * 1.34D;
+            double directionY = -0.34D - i % 3 * 0.07D;
+            double directionZ = 0.58D - i % 4 * 0.37D;
+            double directionLength = Math.sqrt(directionX * directionX
+                + directionY * directionY + directionZ * directionZ);
+            directionX /= directionLength;
+            directionY /= directionLength;
+            directionZ /= directionLength;
+            double headX = startX + directionX * progress * 8.0D;
+            double headY = startY + directionY * progress * 8.0D;
+            double headZ = startZ + directionZ * progress * 8.0D;
+            double tailLength = 1.3D + fade * 1.4D;
+            double tailX = headX - directionX * tailLength;
+            double tailY = headY - directionY * tailLength;
+            double tailZ = headZ - directionZ * tailLength;
+            double sideX = directionY * -headZ - directionZ * -headY;
+            double sideY = directionZ * -headX - directionX * -headZ;
+            double sideZ = directionX * -headY - directionY * -headX;
+            double sideLength = Math.sqrt(sideX * sideX + sideY * sideY + sideZ * sideZ);
+            if (sideLength < 0.0001D) continue;
+            sideX /= sideLength;
+            sideY /= sideLength;
+            sideZ /= sideLength;
+            double headWidth = 0.075D * fade;
+            double tailWidth = 0.012D * fade;
+            int headAlpha = (int) (235.0D * fade);
+            vertex(buffer, tailX + sideX * tailWidth, tailY + sideY * tailWidth,
+                tailZ + sideZ * tailWidth, 112, 190, 255, 0);
+            vertex(buffer, tailX - sideX * tailWidth, tailY - sideY * tailWidth,
+                tailZ - sideZ * tailWidth, 112, 190, 255, 0);
+            vertex(buffer, headX - sideX * headWidth, headY - sideY * headWidth,
+                headZ - sideZ * headWidth, 240, 250, 255, headAlpha);
+            vertex(buffer, headX + sideX * headWidth, headY + sideY * headWidth,
+                headZ + sideZ * headWidth, 240, 250, 255, headAlpha);
         }
         tessellator.draw();
     }
@@ -378,7 +389,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             + binormals[offset + 2] * TENDRIL_SIN[side];
         double energy = energies[ring];
         double breathing = 0.975D + Math.sin(animationTime * 0.045D - progress * 8.0D + seed) * 0.025D;
-        double envelope = 0.03D + Math.sin(progress * Math.PI) * 0.97D;
+        double envelope = 0.55D + Math.sin(progress * Math.PI) * 0.45D;
         double surfaceRipple = 1.0D + Math.sin(side * Math.PI * 0.75D - progress * 11.0D
             + animationTime * 0.055D + seed) * 0.025D;
         double radius = baseRadius * envelope * (breathing + energy * 0.06D) * surfaceRipple;
