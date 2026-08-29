@@ -29,9 +29,9 @@ Both the mod jar and the matching Triumph configuration are required on the serv
 ## Installation
 
 1. Back up the SkyFactory 4 instance and stop any server using it.
-2. Download the latest `SF4-Angel-Guide-*.zip` from [GitHub Releases](https://github.com/godh00d/sf4/releases).
-3. Extract the archive into the SkyFactory 4 instance root and allow its `mods` and `config` directories to merge.
-4. Repeat the installation for the dedicated server and each client.
+2. Download and extract the latest `SF4-Angel-Guide-*.zip` from [GitHub Releases](https://github.com/godh00d/sf4/releases).
+3. Double-click `Install-SF4Angel.bat`. It detects the standard CurseForge instance and backs up every file it replaces.
+4. Run the same installer for each client. For a dedicated server, pass its folder to `Install-SF4Angel.bat "C:\path\to\server"`.
 5. Start the pack and confirm that `logs/latest.log` contains no Triumph parsing errors.
 
 Detailed upgrade and removal notes are in [docs/INSTALLATION.md](docs/INSTALLATION.md).

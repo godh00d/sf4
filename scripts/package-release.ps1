@@ -32,6 +32,9 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'instance-config\triumph\script\s
     -Destination $scriptDirectory.FullName -Recurse
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\INSTALLATION.md') -Destination $stagingRoot
 Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination $stagingRoot
+Copy-Item -LiteralPath (Join-Path $projectRoot 'scripts\Install-SF4Angel.bat') -Destination $stagingRoot
+Copy-Item -LiteralPath (Join-Path $projectRoot 'scripts\install-release.ps1') `
+    -Destination (Join-Path $stagingRoot 'Install-SF4Angel.ps1')
 
 Compress-Archive -Path (Join-Path $stagingRoot '*') -DestinationPath $outputArchive
 $hash = Get-FileHash -LiteralPath $outputArchive -Algorithm SHA256

@@ -4,7 +4,9 @@ SF4 Angel Guide is an addon for an existing SkyFactory 4.2.4 instance. It is not
 
 ## Install A Release
 
-Stop Minecraft and the dedicated server before changing files. Back up the instance, then extract `SF4-Angel-Guide-<version>.zip` into the instance root. The archive has this layout:
+Stop Minecraft and any dedicated server, extract `SF4-Angel-Guide-<version>.zip`, and double-click `Install-SF4Angel.bat`. The installer detects the standard CurseForge SkyFactory 4 location. If that location does not exist, it asks you to select the instance folder.
+
+Before changing anything, the installer copies the existing SF4 Angel jar, Triumph root configuration, and SF4 Angel scripts into `sf4angel-backups/install-<timestamp>` inside the instance. It then installs this layout:
 
 ```text
 mods/
@@ -15,9 +17,17 @@ config/
     script/sf4angel/...
 ```
 
-Allow `mods` and `config` to merge with the existing directories. The archive replaces only the SF4 Angel scripts under `config/triumph/script/sf4angel`; it does not contain unrelated Triumph pages.
+The installer replaces only old SF4 Angel jars, the Triumph root configuration, and scripts under `config/triumph/script/sf4angel`. It does not remove unrelated Triumph script pages.
 
 Install the same release on the dedicated server and every client. Mixing a jar from one release with scripts from another can leave achievements missing or impossible to complete.
+
+Install a dedicated server or a nonstandard instance from a command prompt with:
+
+```text
+Install-SF4Angel.bat "C:\path\to\instance"
+```
+
+Manual installation remains possible by merging the release archive's `mods` and `config` directories into the instance root.
 
 ## Upgrade
 
