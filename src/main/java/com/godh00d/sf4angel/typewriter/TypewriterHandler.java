@@ -22,6 +22,7 @@ public class TypewriterHandler {
     public static void queueMessage(EntityPlayer player, String message, int delayBefore, int delayAfter) {
         PlayerTypewriterState state = states.computeIfAbsent(player.getUniqueID(), k -> new PlayerTypewriterState());
         state.queue.add(new TypewriterMessage(message, delayBefore, delayAfter));
+        state.despawnDelay = 0;
     }
 
     public static void queueRedMessage(EntityPlayer player, String message, int delayBefore, int delayAfter) {
@@ -42,12 +43,15 @@ public class TypewriterHandler {
     public static void clearMessages(EntityPlayer player) {
         PlayerTypewriterState state = states.get(player.getUniqueID());
         if (state != null) {
+            boolean cancelledDialogue = state.currentMessage != null || !state.queue.isEmpty();
             state.queue.clear();
             state.currentMessage = null;
             state.phase = Phase.IDLE;
             state.tickCount = 0;
             state.charIndex = 0;
-            state.despawnDelay = 0;
+            if (state.despawnWhenReady && cancelledDialogue) {
+                state.despawnDelay = DESPAWN_DELAY_TICKS;
+            }
         }
     }
 

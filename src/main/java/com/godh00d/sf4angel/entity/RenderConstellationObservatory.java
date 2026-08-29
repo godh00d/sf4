@@ -15,6 +15,7 @@ import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
 
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 public final class RenderConstellationObservatory extends EntityAngelRender {
@@ -27,7 +28,18 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     private static final double CATALOG_CENTER_Z = -32.0D;
     private static final double SCENE_SCALE = 0.41D;
     private static final double SKY_RADIUS = 14.0D;
+    private static final int SKY_LATITUDES = 18;
+    private static final int SKY_LONGITUDES = 36;
+    private static final int SKY_STAR_COUNT = 640;
+    private static final double[] SKY_STARS = createSkyStars();
     private static final float NODE_RADIUS = 0.48F;
+    private static final double[] ICOSAHEDRON_VERTICES = createIcosahedronVertices();
+    private static final int[] ICOSAHEDRON_FACES = {
+        0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11,
+        1, 5, 9, 5, 11, 4, 11, 10, 2, 10, 7, 6, 7, 1, 8,
+        3, 9, 4, 3, 4, 2, 3, 2, 6, 3, 6, 8, 3, 8, 9,
+        4, 9, 5, 2, 4, 11, 6, 2, 10, 8, 6, 7, 9, 8, 1
+    };
     private static final int TENDRIL_SEGMENTS = 20;
     private static final int TENDRIL_SIDES = 8;
     private static final double[] TENDRIL_COS = tendrilCircle(true);
@@ -62,6 +74,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         drawSkyShell();
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
         drawStars(animationTime);
         drawShootingStars(animationTime);
         GlStateManager.pushMatrix();
@@ -88,6 +101,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         drawStarGlows(states, animationTime, cameraX, cameraY, cameraZ);
 
         GL11.glDepthMask(true);
+        GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         drawNodes(states, animationTime);
         GlStateManager.popMatrix();
@@ -105,24 +119,29 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     private static void drawSkyShell() {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        double r = SKY_RADIUS;
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        skyQuad(buffer, -r, -r, -r, -r, r, -r, r, r, -r, r, -r, -r);
-        skyQuad(buffer, r, -r, r, r, r, r, -r, r, r, -r, -r, r);
-        skyQuad(buffer, -r, -r, r, -r, -r, -r, r, -r, -r, r, -r, r);
-        skyQuad(buffer, -r, r, -r, -r, r, r, r, r, r, r, r, -r);
-        skyQuad(buffer, -r, -r, r, -r, r, r, -r, r, -r, -r, -r, -r);
-        skyQuad(buffer, r, -r, -r, r, r, -r, r, r, r, r, -r, r);
+        buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+        for (int latitude = 0; latitude < SKY_LATITUDES; latitude++) {
+            double firstLatitude = -Math.PI * 0.5D + Math.PI * latitude / SKY_LATITUDES;
+            double secondLatitude = -Math.PI * 0.5D + Math.PI * (latitude + 1) / SKY_LATITUDES;
+            for (int longitude = 0; longitude < SKY_LONGITUDES; longitude++) {
+                double firstLongitude = Math.PI * 2.0D * longitude / SKY_LONGITUDES;
+                double secondLongitude = longitude + 1 == SKY_LONGITUDES
+                    ? 0.0D : Math.PI * 2.0D * (longitude + 1) / SKY_LONGITUDES;
+                skySphereVertex(buffer, firstLatitude, firstLongitude);
+                skySphereVertex(buffer, secondLatitude, firstLongitude);
+                skySphereVertex(buffer, secondLatitude, secondLongitude);
+                skySphereVertex(buffer, firstLatitude, firstLongitude);
+                skySphereVertex(buffer, secondLatitude, secondLongitude);
+                skySphereVertex(buffer, firstLatitude, secondLongitude);
+            }
+        }
         tessellator.draw();
     }
 
-    private static void skyQuad(BufferBuilder buffer, double x1, double y1, double z1,
-                                double x2, double y2, double z2, double x3, double y3, double z3,
-                                double x4, double y4, double z4) {
-        skyVertex(buffer, x1, y1, z1);
-        skyVertex(buffer, x2, y2, z2);
-        skyVertex(buffer, x3, y3, z3);
-        skyVertex(buffer, x4, y4, z4);
+    private static void skySphereVertex(BufferBuilder buffer, double latitude, double longitude) {
+        double horizontal = Math.cos(latitude) * SKY_RADIUS;
+        skyVertex(buffer, Math.cos(longitude) * horizontal, Math.sin(latitude) * SKY_RADIUS,
+            Math.sin(longitude) * horizontal);
     }
 
     private static void skyVertex(BufferBuilder buffer, double x, double y, double z) {
@@ -134,74 +153,274 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     }
 
     private static void drawStars(float animationTime) {
-        GL11.glPointSize(1.35F);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION_COLOR);
-        for (int i = 0; i < 320; i++) {
-            double height = -1.0D + 2.0D * (i + 0.5D) / 320.0D;
-            double radius = Math.sqrt(1.0D - height * height);
-            double angle = i * 2.399963229728653D;
-            double flicker = Math.sin(animationTime * (0.009D + i % 7 * 0.0013D) + i * 0.91D);
-            int brightness = 145 + i * 73 % 60 + (int) ((flicker + 1.0D) * 22.0D);
-            int alpha = 145 + (int) ((flicker + 1.0D) * 42.0D);
-            boolean warm = i % 13 == 0;
-            vertex(buffer, Math.cos(angle) * radius * (SKY_RADIUS - 0.2D),
-                height * (SKY_RADIUS - 0.2D), Math.sin(angle) * radius * (SKY_RADIUS - 0.2D),
-                warm ? 255 : brightness - 18, warm ? brightness : Math.min(255, brightness + 8),
-                warm ? brightness - 72 : 255, alpha);
+        double[] basis = new double[6];
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < SKY_STAR_COUNT; i++) {
+            int offset = i * 8;
+            double wave = Math.sin(animationTime * SKY_STARS[offset + 5] + SKY_STARS[offset + 4]);
+            boolean rare = SKY_STARS[offset + 6] > 0.5D;
+            double blink = rare ? 0.38D + Math.pow(wave * 0.5D + 0.5D, 2.0D) * 0.62D
+                : 0.82D + wave * 0.18D;
+            int alpha = (int) ((rare ? 245.0D : 178.0D) * blink);
+            setSkyStarBasis(offset, basis);
+            appendSkyDiamond(buffer, offset, basis,
+                SKY_STARS[offset + 3] * (rare ? 0.82D + blink * 0.18D : 1.0D), alpha);
         }
         tessellator.draw();
+
+        buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < SKY_STAR_COUNT; i++) {
+            int offset = i * 8;
+            if (SKY_STARS[offset + 6] < 0.5D) continue;
+            double wave = Math.sin(animationTime * SKY_STARS[offset + 5] + SKY_STARS[offset + 4]);
+            double blink = 0.38D + Math.pow(wave * 0.5D + 0.5D, 2.0D) * 0.62D;
+            setSkyStarBasis(offset, basis);
+            appendSkyGlow(buffer, offset, basis, SKY_STARS[offset + 3] * (2.4D + blink * 0.8D),
+                (int) (92.0D * blink));
+        }
+        tessellator.draw();
+    }
+
+    private static void appendSkyDiamond(BufferBuilder buffer, int offset, double[] basis,
+                                         double size, int alpha) {
+        double radius = SKY_RADIUS - 0.18D;
+        double x = SKY_STARS[offset] * radius;
+        double y = SKY_STARS[offset + 1] * radius;
+        double z = SKY_STARS[offset + 2] * radius;
+        int red = SKY_STARS[offset + 7] > 0.5D ? 255 : 184;
+        int green = SKY_STARS[offset + 7] > 0.5D ? 214 : 220;
+        int blue = SKY_STARS[offset + 7] > 0.5D ? 152 : 255;
+        vertex(buffer, x + basis[3] * size, y + basis[4] * size, z + basis[5] * size,
+            red, green, blue, alpha);
+        vertex(buffer, x + basis[0] * size, y + basis[1] * size, z + basis[2] * size,
+            red, green, blue, alpha);
+        vertex(buffer, x - basis[3] * size, y - basis[4] * size, z - basis[5] * size,
+            red, green, blue, alpha);
+        vertex(buffer, x - basis[0] * size, y - basis[1] * size, z - basis[2] * size,
+            red, green, blue, alpha);
+    }
+
+    private static void appendSkyGlow(BufferBuilder buffer, int offset, double[] basis,
+                                      double radius, int alpha) {
+        double centerRadius = SKY_RADIUS - 0.2D;
+        double x = SKY_STARS[offset] * centerRadius;
+        double y = SKY_STARS[offset + 1] * centerRadius;
+        double z = SKY_STARS[offset + 2] * centerRadius;
+        for (int wedge = 0; wedge < 12; wedge++) {
+            double first = wedge * Math.PI * 2.0D / 12.0D;
+            double second = (wedge + 1) * Math.PI * 2.0D / 12.0D;
+            vertex(buffer, x, y, z, 228, 240, 255, alpha);
+            billboardOffsetVertex(buffer, x, y, z, basis[0], basis[1], basis[2],
+                basis[3], basis[4], basis[5], Math.cos(first) * radius,
+                Math.sin(first) * radius, 154, 202, 255, 0);
+            billboardOffsetVertex(buffer, x, y, z, basis[0], basis[1], basis[2],
+                basis[3], basis[4], basis[5], Math.cos(second) * radius,
+                Math.sin(second) * radius, 154, 202, 255, 0);
+        }
+    }
+
+    private static void setSkyStarBasis(int offset, double[] result) {
+        double directionX = SKY_STARS[offset];
+        double directionY = SKY_STARS[offset + 1];
+        double directionZ = SKY_STARS[offset + 2];
+        double rightX = Math.abs(directionY) < 0.9D ? directionZ : 0.0D;
+        double rightY = Math.abs(directionY) < 0.9D ? 0.0D : -directionZ;
+        double rightZ = Math.abs(directionY) < 0.9D ? -directionX : directionY;
+        double rightLength = Math.sqrt(rightX * rightX + rightY * rightY + rightZ * rightZ);
+        rightX /= rightLength;
+        rightY /= rightLength;
+        rightZ /= rightLength;
+        double upX = directionY * rightZ - directionZ * rightY;
+        double upY = directionZ * rightX - directionX * rightZ;
+        double upZ = directionX * rightY - directionY * rightX;
+        double rollCos = Math.cos(SKY_STARS[offset + 4]);
+        double rollSin = Math.sin(SKY_STARS[offset + 4]);
+        result[0] = rightX * rollCos + upX * rollSin;
+        result[1] = rightY * rollCos + upY * rollSin;
+        result[2] = rightZ * rollCos + upZ * rollSin;
+        result[3] = upX * rollCos - rightX * rollSin;
+        result[4] = upY * rollCos - rightY * rollSin;
+        result[5] = upZ * rollCos - rightZ * rollSin;
+    }
+
+    private static double[] createSkyStars() {
+        Random random = new Random(10842L);
+        double[] stars = new double[SKY_STAR_COUNT * 8];
+        for (int i = 0; i < SKY_STAR_COUNT; i++) {
+            int offset = i * 8;
+            double y = random.nextDouble() * 2.0D - 1.0D;
+            double angle = random.nextDouble() * Math.PI * 2.0D;
+            double horizontal = Math.sqrt(1.0D - y * y);
+            boolean rare = random.nextDouble() < 0.018D;
+            double sizeRoll = random.nextDouble();
+            stars[offset] = Math.cos(angle) * horizontal;
+            stars[offset + 1] = y;
+            stars[offset + 2] = Math.sin(angle) * horizontal;
+            stars[offset + 3] = rare ? 0.10D + sizeRoll * 0.08D
+                : 0.018D + sizeRoll * sizeRoll * sizeRoll * 0.045D;
+            stars[offset + 4] = random.nextDouble() * Math.PI * 2.0D;
+            stars[offset + 5] = 0.025D + random.nextDouble() * 0.045D;
+            stars[offset + 6] = rare ? 1.0D : 0.0D;
+            stars[offset + 7] = random.nextDouble() < 0.12D ? 1.0D : 0.0D;
+        }
+        return stars;
     }
 
     private static void drawShootingStars(float animationTime) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        for (int i = 0; i < 5; i++) {
-            double cycle = (animationTime * 0.0017D + i * 0.217D) % 1.0D;
-            if (cycle > 0.16D) continue;
-            double progress = cycle / 0.16D;
+        for (int i = 0; i < 4; i++) {
+            double progress = shootingProgress(animationTime, i);
+            if (progress < 0.0D) continue;
+            double[] configuration = shootingConfiguration(i);
             double fade = Math.sin(progress * Math.PI);
-            double startX = Math.sin(i * 8.31D + 0.7D) * 8.5D;
-            double startY = 7.5D - i % 3 * 3.2D;
-            double startZ = Math.cos(i * 5.17D + 1.1D) * 8.5D;
-            double directionX = 0.72D - i % 2 * 1.34D;
-            double directionY = -0.34D - i % 3 * 0.07D;
-            double directionZ = 0.58D - i % 4 * 0.37D;
-            double directionLength = Math.sqrt(directionX * directionX
-                + directionY * directionY + directionZ * directionZ);
-            directionX /= directionLength;
-            directionY /= directionLength;
-            directionZ /= directionLength;
-            double headX = startX + directionX * progress * 8.0D;
-            double headY = startY + directionY * progress * 8.0D;
-            double headZ = startZ + directionZ * progress * 8.0D;
-            double tailLength = 1.3D + fade * 1.4D;
-            double tailX = headX - directionX * tailLength;
-            double tailY = headY - directionY * tailLength;
-            double tailZ = headZ - directionZ * tailLength;
-            double sideX = directionY * -headZ - directionZ * -headY;
-            double sideY = directionZ * -headX - directionX * -headZ;
-            double sideZ = directionX * -headY - directionY * -headX;
+            appendShootingTrail(buffer, progress, fade, configuration, 0.13D, 58, 82, 154, 255);
+            appendShootingTrail(buffer, progress, fade, configuration, 0.038D, 225, 224, 246, 255);
+        }
+        tessellator.draw();
+
+        buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < 4; i++) {
+            double progress = shootingProgress(animationTime, i);
+            if (progress < 0.0D) continue;
+            appendShootingHead(buffer, progress, Math.sin(progress * Math.PI), shootingConfiguration(i));
+        }
+        tessellator.draw();
+    }
+
+    private static double shootingProgress(float animationTime, int index) {
+        double cycle = (animationTime * 0.00065D + index * 0.241D) % 1.0D;
+        return cycle <= 0.022D ? cycle / 0.022D : -1.0D;
+    }
+
+    private static double[] shootingConfiguration(int index) {
+        double y = -0.48D + index * 0.29D;
+        double angle = index * 2.17D + 0.63D;
+        double horizontal = Math.sqrt(1.0D - y * y);
+        double startX = Math.cos(angle) * horizontal;
+        double startZ = Math.sin(angle) * horizontal;
+        double tangentX = startZ;
+        double tangentY = 0.0D;
+        double tangentZ = -startX;
+        double tangentLength = Math.sqrt(tangentX * tangentX + tangentZ * tangentZ);
+        tangentX /= tangentLength;
+        tangentZ /= tangentLength;
+        double bendX = y * tangentZ;
+        double bendY = startZ * tangentX - startX * tangentZ;
+        double bendZ = -y * tangentX;
+        double roll = index * 1.31D + 0.4D;
+        double rollCos = Math.cos(roll);
+        double rollSin = Math.sin(roll);
+        return new double[] {
+            startX, y, startZ,
+            tangentX * rollCos + bendX * rollSin,
+            tangentY * rollCos + bendY * rollSin,
+            tangentZ * rollCos + bendZ * rollSin,
+            bendX * rollCos - tangentX * rollSin,
+            bendY * rollCos - tangentY * rollSin,
+            bendZ * rollCos - tangentZ * rollSin
+        };
+    }
+
+    private static void appendShootingTrail(BufferBuilder buffer, double progress, double fade,
+                                            double[] configuration, double maximumWidth,
+                                            int maximumAlpha, int red, int green, int blue) {
+        double tail = Math.max(0.0D, progress - 0.28D);
+        double[] first = new double[3];
+        double[] second = new double[3];
+        for (int segment = 0; segment < 12; segment++) {
+            double firstFraction = segment / 12.0D;
+            double secondFraction = (segment + 1) / 12.0D;
+            shootingPoint(first, tail + (progress - tail) * firstFraction, configuration);
+            shootingPoint(second, tail + (progress - tail) * secondFraction, configuration);
+            double tangentX = second[0] - first[0];
+            double tangentY = second[1] - first[1];
+            double tangentZ = second[2] - first[2];
+            double radialX = (first[0] + second[0]) * 0.5D;
+            double radialY = (first[1] + second[1]) * 0.5D;
+            double radialZ = (first[2] + second[2]) * 0.5D;
+            double sideX = radialY * tangentZ - radialZ * tangentY;
+            double sideY = radialZ * tangentX - radialX * tangentZ;
+            double sideZ = radialX * tangentY - radialY * tangentX;
             double sideLength = Math.sqrt(sideX * sideX + sideY * sideY + sideZ * sideZ);
             if (sideLength < 0.0001D) continue;
             sideX /= sideLength;
             sideY /= sideLength;
             sideZ /= sideLength;
-            double headWidth = 0.075D * fade;
-            double tailWidth = 0.012D * fade;
-            int headAlpha = (int) (235.0D * fade);
-            vertex(buffer, tailX + sideX * tailWidth, tailY + sideY * tailWidth,
-                tailZ + sideZ * tailWidth, 112, 190, 255, 0);
-            vertex(buffer, tailX - sideX * tailWidth, tailY - sideY * tailWidth,
-                tailZ - sideZ * tailWidth, 112, 190, 255, 0);
-            vertex(buffer, headX - sideX * headWidth, headY - sideY * headWidth,
-                headZ - sideZ * headWidth, 240, 250, 255, headAlpha);
-            vertex(buffer, headX + sideX * headWidth, headY + sideY * headWidth,
-                headZ + sideZ * headWidth, 240, 250, 255, headAlpha);
+            double firstWidth = maximumWidth * Math.pow(firstFraction, 0.68D) * fade;
+            double secondWidth = maximumWidth * Math.pow(secondFraction, 0.68D) * fade;
+            int firstAlpha = (int) (maximumAlpha * Math.pow(firstFraction, 1.35D) * fade);
+            int secondAlpha = (int) (maximumAlpha * Math.pow(secondFraction, 1.35D) * fade);
+            vertex(buffer, first[0] + sideX * firstWidth, first[1] + sideY * firstWidth,
+                first[2] + sideZ * firstWidth, red, green, blue, firstAlpha);
+            vertex(buffer, first[0] - sideX * firstWidth, first[1] - sideY * firstWidth,
+                first[2] - sideZ * firstWidth, red, green, blue, firstAlpha);
+            vertex(buffer, second[0] - sideX * secondWidth, second[1] - sideY * secondWidth,
+                second[2] - sideZ * secondWidth, red, green, blue, secondAlpha);
+            vertex(buffer, second[0] + sideX * secondWidth, second[1] + sideY * secondWidth,
+                second[2] + sideZ * secondWidth, red, green, blue, secondAlpha);
         }
-        tessellator.draw();
+    }
+
+    private static void appendShootingHead(BufferBuilder buffer, double progress, double fade,
+                                           double[] configuration) {
+        double[] center = new double[3];
+        double[] before = new double[3];
+        shootingPoint(center, progress, configuration);
+        shootingPoint(before, Math.max(0.0D, progress - 0.01D), configuration);
+        double upX = center[0] - before[0];
+        double upY = center[1] - before[1];
+        double upZ = center[2] - before[2];
+        double upLength = Math.sqrt(upX * upX + upY * upY + upZ * upZ);
+        if (upLength < 0.0001D) return;
+        upX /= upLength;
+        upY /= upLength;
+        upZ /= upLength;
+        double rightX = center[1] * upZ - center[2] * upY;
+        double rightY = center[2] * upX - center[0] * upZ;
+        double rightZ = center[0] * upY - center[1] * upX;
+        double rightLength = Math.sqrt(rightX * rightX + rightY * rightY + rightZ * rightZ);
+        if (rightLength < 0.0001D) return;
+        rightX /= rightLength;
+        rightY /= rightLength;
+        rightZ /= rightLength;
+        appendRadialGlow(buffer, center[0], center[1], center[2], rightX, rightY, rightZ,
+            upX, upY, upZ, 0.34D * fade, 86, 154, 202, 255);
+        appendRadialGlow(buffer, center[0], center[1], center[2], rightX, rightY, rightZ,
+            upX, upY, upZ, 0.14D * fade, 225, 238, 248, 255);
+    }
+
+    private static void appendRadialGlow(BufferBuilder buffer, double x, double y, double z,
+                                         double rightX, double rightY, double rightZ,
+                                         double upX, double upY, double upZ,
+                                         double radius, int alpha, int red, int green, int blue) {
+        for (int wedge = 0; wedge < 12; wedge++) {
+            double first = wedge * Math.PI * 2.0D / 12.0D;
+            double second = (wedge + 1) * Math.PI * 2.0D / 12.0D;
+            vertex(buffer, x, y, z, red, green, blue, alpha);
+            billboardOffsetVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
+                Math.cos(first) * radius, Math.sin(first) * radius, red, green, blue, 0);
+            billboardOffsetVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
+                Math.cos(second) * radius, Math.sin(second) * radius, red, green, blue, 0);
+        }
+    }
+
+    private static void shootingPoint(double[] result, double progress, double[] configuration) {
+        double pathLength = 0.58D;
+        double bend = Math.sin(progress * Math.PI) * 0.065D;
+        double cosine = Math.cos(pathLength * progress);
+        double sine = Math.sin(pathLength * progress);
+        double x = configuration[0] * cosine + configuration[3] * sine + configuration[6] * bend;
+        double y = configuration[1] * cosine + configuration[4] * sine + configuration[7] * bend;
+        double z = configuration[2] * cosine + configuration[5] * sine + configuration[8] * bend;
+        double length = Math.sqrt(x * x + y * y + z * z);
+        double radius = SKY_RADIUS - 0.34D;
+        result[0] = x / length * radius;
+        result[1] = y / length * radius;
+        result[2] = z / length * radius;
     }
 
     private static void drawTendrilTubes(byte[] states, float animationTime, double radiusScale,
@@ -593,15 +812,10 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             int green = starGreen(state);
             int blue = starBlue(state);
             double pulse = starPulse(state, i, animationTime);
-            double coreRadius = NODE_RADIUS * 0.62D * pulse * starScale(state);
-            star(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
+            double coreRadius = NODE_RADIUS * 0.86D * pulse * starScale(state);
+            nodeStar(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
                 coreRadius, red, green, blue,
                 state == ConstellationManager.MYSTERY ? 165 : 255);
-            if (state != ConstellationManager.MYSTERY) {
-                star(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
-                    coreRadius * 0.34D, Math.min(255, red + 85), Math.min(255, green + 85),
-                    Math.min(255, blue + 85), 245);
-            }
         }
         tessellator.draw();
     }
@@ -640,6 +854,98 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     private static boolean visible(byte[] states, int index) {
         if (states.length != NODES.length || states[index] == ConstellationManager.ABSENT) return false;
         return NODES[index].id.startsWith("sf4angel:core/") || states[index] == ConstellationManager.COMPLETED;
+    }
+
+    private static void nodeStar(BufferBuilder buffer, double x, double y, double z, double radius,
+                                 int red, int green, int blue, int alpha) {
+        double baseRadius = radius * 0.72D;
+        double tipRadius = radius * 1.42D;
+        for (int face = 0; face < ICOSAHEDRON_FACES.length / 3; face++) {
+            int first = ICOSAHEDRON_FACES[face * 3] * 3;
+            int second = ICOSAHEDRON_FACES[face * 3 + 1] * 3;
+            int third = ICOSAHEDRON_FACES[face * 3 + 2] * 3;
+            double firstX = ICOSAHEDRON_VERTICES[first] * baseRadius;
+            double firstY = ICOSAHEDRON_VERTICES[first + 1] * baseRadius;
+            double firstZ = ICOSAHEDRON_VERTICES[first + 2] * baseRadius;
+            double secondX = ICOSAHEDRON_VERTICES[second] * baseRadius;
+            double secondY = ICOSAHEDRON_VERTICES[second + 1] * baseRadius;
+            double secondZ = ICOSAHEDRON_VERTICES[second + 2] * baseRadius;
+            double thirdX = ICOSAHEDRON_VERTICES[third] * baseRadius;
+            double thirdY = ICOSAHEDRON_VERTICES[third + 1] * baseRadius;
+            double thirdZ = ICOSAHEDRON_VERTICES[third + 2] * baseRadius;
+            double tipX = firstX + secondX + thirdX;
+            double tipY = firstY + secondY + thirdY;
+            double tipZ = firstZ + secondZ + thirdZ;
+            double tipLength = Math.sqrt(tipX * tipX + tipY * tipY + tipZ * tipZ);
+            tipX = tipX / tipLength * tipRadius;
+            tipY = tipY / tipLength * tipRadius;
+            tipZ = tipZ / tipLength * tipRadius;
+            stellarTriangle(buffer, x, y, z, firstX, firstY, firstZ,
+                secondX, secondY, secondZ, tipX, tipY, tipZ, red, green, blue, alpha, face * 3);
+            stellarTriangle(buffer, x, y, z, secondX, secondY, secondZ,
+                thirdX, thirdY, thirdZ, tipX, tipY, tipZ, red, green, blue, alpha, face * 3 + 1);
+            stellarTriangle(buffer, x, y, z, thirdX, thirdY, thirdZ,
+                firstX, firstY, firstZ, tipX, tipY, tipZ, red, green, blue, alpha, face * 3 + 2);
+        }
+    }
+
+    private static void stellarTriangle(BufferBuilder buffer, double centerX, double centerY, double centerZ,
+                                        double firstX, double firstY, double firstZ,
+                                        double secondX, double secondY, double secondZ,
+                                        double thirdX, double thirdY, double thirdZ,
+                                        int red, int green, int blue, int alpha, int facet) {
+        double edgeOneX = secondX - firstX;
+        double edgeOneY = secondY - firstY;
+        double edgeOneZ = secondZ - firstZ;
+        double edgeTwoX = thirdX - firstX;
+        double edgeTwoY = thirdY - firstY;
+        double edgeTwoZ = thirdZ - firstZ;
+        double normalX = edgeOneY * edgeTwoZ - edgeOneZ * edgeTwoY;
+        double normalY = edgeOneZ * edgeTwoX - edgeOneX * edgeTwoZ;
+        double normalZ = edgeOneX * edgeTwoY - edgeOneY * edgeTwoX;
+        double centroidX = firstX + secondX + thirdX;
+        double centroidY = firstY + secondY + thirdY;
+        double centroidZ = firstZ + secondZ + thirdZ;
+        if (normalX * centroidX + normalY * centroidY + normalZ * centroidZ < 0.0D) {
+            double swapX = secondX;
+            double swapY = secondY;
+            double swapZ = secondZ;
+            secondX = thirdX;
+            secondY = thirdY;
+            secondZ = thirdZ;
+            thirdX = swapX;
+            thirdY = swapY;
+            thirdZ = swapZ;
+            normalX = -normalX;
+            normalY = -normalY;
+            normalZ = -normalZ;
+        }
+        double normalLength = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+        double light = Math.max(0.0D, (normalX * 0.34D + normalY * 0.78D + normalZ * 0.52D)
+            / normalLength);
+        double shade = 0.34D + light * 0.58D + (facet % 5) * 0.016D;
+        int facetRed = Math.min(255, (int) (red * shade));
+        int facetGreen = Math.min(255, (int) (green * shade));
+        int facetBlue = Math.min(255, (int) (blue * shade));
+        vertex(buffer, centerX + firstX, centerY + firstY, centerZ + firstZ,
+            facetRed, facetGreen, facetBlue, alpha);
+        vertex(buffer, centerX + secondX, centerY + secondY, centerZ + secondZ,
+            facetRed, facetGreen, facetBlue, alpha);
+        vertex(buffer, centerX + thirdX, centerY + thirdY, centerZ + thirdZ,
+            facetRed, facetGreen, facetBlue, alpha);
+    }
+
+    private static double[] createIcosahedronVertices() {
+        double phi = (1.0D + Math.sqrt(5.0D)) * 0.5D;
+        double scale = 1.0D / Math.sqrt(1.0D + phi * phi);
+        return new double[] {
+            -scale, phi * scale, 0.0D, scale, phi * scale, 0.0D,
+            -scale, -phi * scale, 0.0D, scale, -phi * scale, 0.0D,
+            0.0D, -scale, phi * scale, 0.0D, scale, phi * scale,
+            0.0D, -scale, -phi * scale, 0.0D, scale, -phi * scale,
+            phi * scale, 0.0D, -scale, phi * scale, 0.0D, scale,
+            -phi * scale, 0.0D, -scale, -phi * scale, 0.0D, scale
+        };
     }
 
     private static void star(BufferBuilder buffer, double x, double y, double z, double radius,
