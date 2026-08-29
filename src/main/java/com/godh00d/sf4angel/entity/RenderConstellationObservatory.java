@@ -60,19 +60,22 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         drawStars(animationTime);
         GlStateManager.pushMatrix();
         GlStateManager.translate(sceneX, sceneY, sceneZ);
+        double cameraX = -sceneX;
+        double cameraY = -sceneY;
+        double cameraZ = -sceneZ;
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        drawEdges(states, animationTime, 7.0F, 78, 48, 156, 54, true);
-        drawEdges(states, animationTime, 2.5F, 92, 72, 168, 24, false);
-        drawTendrilSparks(states, animationTime);
-        drawMotes(animationTime);
-        drawNodeAuras(states, animationTime);
-        drawStarRays(states, animationTime, 5.0F, 1.45D, 48);
+        drawTendrilRibbons(states, animationTime, cameraX, cameraY, cameraZ,
+            0.34D, 78, 48, 156, 32, true);
+        drawTendrilRibbons(states, animationTime, cameraX, cameraY, cameraZ,
+            0.15D, 92, 72, 168, 15, false);
+        drawTendrilRibbons(states, animationTime, cameraX, cameraY, cameraZ,
+            0.105D, 188, 150, 255, 195, true);
+        drawTendrilRibbons(states, animationTime, cameraX, cameraY, cameraZ,
+            0.045D, 138, 118, 196, 88, false);
+        drawMagicParticles(states, animationTime, cameraX, cameraY, cameraZ);
+        drawStarGlows(states, animationTime, cameraX, cameraY, cameraZ);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        drawEdges(states, animationTime, 2.0F, 164, 132, 238, 225, true);
-        drawEdges(states, animationTime, 0.8F, 126, 108, 184, 105, false);
         drawNodes(states, animationTime);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        drawStarRays(states, animationTime, 1.5F, 1.0D, 210);
         GlStateManager.popMatrix();
         GL11.glPopAttrib();
 
@@ -135,23 +138,279 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         tessellator.draw();
     }
 
-    private static void drawEdges(byte[] states, float animationTime, float width,
-                                  int red, int green, int blue, int alpha, boolean layoutEdges) {
-        GL11.glLineWidth(width);
+    private static void drawTendrilRibbons(byte[] states, float animationTime,
+                                            double cameraX, double cameraY, double cameraZ,
+                                            double width, int red, int green, int blue, int alpha,
+                                            boolean layoutEdges) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-        for (int i = 0; i < NODES.length; i++) {
-            if (!visible(states, i)) continue;
-            AchievementConstellationCatalog.Node node = NODES[i];
-            for (String parentId : node.parents) {
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        for (int childIndex = 0; childIndex < NODES.length; childIndex++) {
+            if (!visible(states, childIndex)) continue;
+            for (String parentId : NODES[childIndex].parents) {
                 Integer parentIndex = INDEXES.get(parentId);
                 if (parentIndex == null || !visible(states, parentIndex)) continue;
-                if ((parentIndex == LAYOUT_PARENTS[i]) != layoutEdges) continue;
-                appendTendril(buffer, parentIndex, i, animationTime, red, green, blue, alpha);
+                if ((parentIndex == LAYOUT_PARENTS[childIndex]) != layoutEdges) continue;
+                int edgeAlpha = states[childIndex] == ConstellationManager.MYSTERY
+                    ? (int) (alpha * 0.48D) : alpha;
+                appendTendrilRibbon(buffer, parentIndex, childIndex, animationTime,
+                    cameraX, cameraY, cameraZ, width, red, green, blue, edgeAlpha);
             }
         }
         tessellator.draw();
+    }
+
+    private static void appendTendrilRibbon(BufferBuilder buffer, int parentIndex, int childIndex,
+                                             float animationTime, double cameraX, double cameraY,
+                                             double cameraZ, double width,
+                                             int red, int green, int blue, int alpha) {
+        double startX = nodeX(parentIndex, animationTime);
+        double startY = nodeY(parentIndex, animationTime);
+        double startZ = nodeZ(parentIndex, animationTime);
+        double endX = nodeX(childIndex, animationTime);
+        double endY = nodeY(childIndex, animationTime);
+        double endZ = nodeZ(childIndex, animationTime);
+        double seed = parentIndex * 1.731D + childIndex * 0.917D;
+        double bendX = Math.sin(seed) * 0.92D;
+        double bendY = 0.55D + Math.cos(seed * 0.71D) * 0.38D;
+        double bendZ = Math.cos(seed) * 0.92D;
+        double[] first = new double[3];
+        double[] second = new double[3];
+        for (int segment = 0; segment < 16; segment++) {
+            double firstProgress = segment / 16.0D;
+            double secondProgress = (segment + 1) / 16.0D;
+            sampleTendril(first, firstProgress, startX, startY, startZ, endX, endY, endZ,
+                bendX, bendY, bendZ, seed, animationTime);
+            sampleTendril(second, secondProgress, startX, startY, startZ, endX, endY, endZ,
+                bendX, bendY, bendZ, seed, animationTime);
+
+            double tangentX = second[0] - first[0];
+            double tangentY = second[1] - first[1];
+            double tangentZ = second[2] - first[2];
+            double tangentLength = Math.sqrt(tangentX * tangentX + tangentY * tangentY + tangentZ * tangentZ);
+            if (tangentLength < 0.0001D) continue;
+            tangentX /= tangentLength;
+            tangentY /= tangentLength;
+            tangentZ /= tangentLength;
+            double middleX = (first[0] + second[0]) * 0.5D;
+            double middleY = (first[1] + second[1]) * 0.5D;
+            double middleZ = (first[2] + second[2]) * 0.5D;
+            double cameraDirectionX = cameraX - middleX;
+            double cameraDirectionY = cameraY - middleY;
+            double cameraDirectionZ = cameraZ - middleZ;
+            double cameraLength = Math.sqrt(cameraDirectionX * cameraDirectionX
+                + cameraDirectionY * cameraDirectionY + cameraDirectionZ * cameraDirectionZ);
+            if (cameraLength > 0.0001D) {
+                cameraDirectionX /= cameraLength;
+                cameraDirectionY /= cameraLength;
+                cameraDirectionZ /= cameraLength;
+            }
+            double sideX = tangentY * cameraDirectionZ - tangentZ * cameraDirectionY;
+            double sideY = tangentZ * cameraDirectionX - tangentX * cameraDirectionZ;
+            double sideZ = tangentX * cameraDirectionY - tangentY * cameraDirectionX;
+            double sideLength = Math.sqrt(sideX * sideX + sideY * sideY + sideZ * sideZ);
+            if (sideLength < 0.0001D) {
+                sideX = -tangentZ;
+                sideY = 0.0D;
+                sideZ = tangentX;
+                sideLength = Math.sqrt(sideX * sideX + sideZ * sideZ);
+            }
+            if (sideLength < 0.0001D) {
+                sideX = 1.0D;
+                sideY = sideZ = 0.0D;
+                sideLength = 1.0D;
+            }
+            sideX /= sideLength;
+            sideY /= sideLength;
+            sideZ /= sideLength;
+            double firstWidth = width * (0.30D + Math.sin(firstProgress * Math.PI) * 0.70D);
+            double secondWidth = width * (0.30D + Math.sin(secondProgress * Math.PI) * 0.70D);
+            int firstAlpha = flowingAlpha(alpha, firstProgress, animationTime, seed);
+            int secondAlpha = flowingAlpha(alpha, secondProgress, animationTime, seed);
+            vertex(buffer, first[0] + sideX * firstWidth, first[1] + sideY * firstWidth,
+                first[2] + sideZ * firstWidth, red, green, blue, firstAlpha);
+            vertex(buffer, first[0] - sideX * firstWidth, first[1] - sideY * firstWidth,
+                first[2] - sideZ * firstWidth, red, green, blue, firstAlpha);
+            vertex(buffer, second[0] - sideX * secondWidth, second[1] - sideY * secondWidth,
+                second[2] - sideZ * secondWidth, red, green, blue, secondAlpha);
+            vertex(buffer, second[0] + sideX * secondWidth, second[1] + sideY * secondWidth,
+                second[2] + sideZ * secondWidth, red, green, blue, secondAlpha);
+        }
+    }
+
+    private static void sampleTendril(double[] result, double progress,
+                                      double startX, double startY, double startZ,
+                                      double endX, double endY, double endZ,
+                                      double bendX, double bendY, double bendZ, double seed,
+                                      float animationTime) {
+        double arc = Math.sin(progress * Math.PI);
+        double ripple = Math.sin(progress * Math.PI * 2.0D + animationTime * 0.018D + seed)
+            * 0.14D * arc;
+        result[0] = startX + (endX - startX) * progress + bendX * arc + ripple * bendZ;
+        result[1] = startY + (endY - startY) * progress + bendY * arc
+            + Math.sin(progress * Math.PI * 3.0D + seed) * 0.09D * arc;
+        result[2] = startZ + (endZ - startZ) * progress + bendZ * arc - ripple * bendX;
+    }
+
+    private static int flowingAlpha(int alpha, double progress, float animationTime, double seed) {
+        return (int) (alpha * (0.84D
+            + Math.sin(animationTime * 0.012D - progress * 5.0D + seed) * 0.14D));
+    }
+
+    private static void drawMagicParticles(byte[] states, float animationTime,
+                                           double cameraX, double cameraY, double cameraZ) {
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        for (int childIndex = 0; childIndex < NODES.length; childIndex++) {
+            int parentIndex = LAYOUT_PARENTS[childIndex];
+            if (parentIndex < 0 || !visible(states, parentIndex) || !visible(states, childIndex)) continue;
+            double seed = parentIndex * 1.731D + childIndex * 0.917D;
+            double progress = (animationTime * 0.0045D + seed * 0.137D) % 1.0D;
+            double startX = nodeX(parentIndex, animationTime);
+            double startY = nodeY(parentIndex, animationTime);
+            double startZ = nodeZ(parentIndex, animationTime);
+            double endX = nodeX(childIndex, animationTime);
+            double endY = nodeY(childIndex, animationTime);
+            double endZ = nodeZ(childIndex, animationTime);
+            double[] point = new double[3];
+            sampleTendril(point, progress, startX, startY, startZ, endX, endY, endZ,
+                Math.sin(seed) * 0.92D, 0.55D + Math.cos(seed * 0.71D) * 0.38D,
+                Math.cos(seed) * 0.92D, seed, animationTime);
+            appendBillboardDiamond(buffer, point[0], point[1], point[2], cameraX, cameraY, cameraZ,
+                0.16D, 232, 214, 255, 225);
+        }
+        for (int i = 0; i < 90; i++) {
+            double cycle = (animationTime * 0.0012D + i * 0.61803398875D) % 1.0D;
+            double x = Math.sin(i * 12.9898D) * 70.0D;
+            double y = -54.0D + cycle * 108.0D;
+            double z = Math.cos(i * 7.233D) * 46.0D;
+            int alpha = (int) (Math.sin(cycle * Math.PI) * 92.0D);
+            double size = 0.045D + (i % 5) * 0.012D;
+            appendBillboardDiamond(buffer, x, y, z, cameraX, cameraY, cameraZ,
+                size, 166, 124, 244, alpha);
+        }
+        tessellator.draw();
+    }
+
+    private static void appendBillboardDiamond(BufferBuilder buffer, double x, double y, double z,
+                                                double cameraX, double cameraY, double cameraZ,
+                                                double size, int red, int green, int blue, int alpha) {
+        double directionX = cameraX - x;
+        double directionY = cameraY - y;
+        double directionZ = cameraZ - z;
+        double directionLength = Math.sqrt(directionX * directionX
+            + directionY * directionY + directionZ * directionZ);
+        if (directionLength < 0.0001D) return;
+        directionX /= directionLength;
+        directionY /= directionLength;
+        directionZ /= directionLength;
+        double rightX = -directionZ;
+        double rightY = 0.0D;
+        double rightZ = directionX;
+        double rightLength = Math.sqrt(rightX * rightX + rightZ * rightZ);
+        if (rightLength < 0.0001D) {
+            rightX = 1.0D;
+            rightZ = 0.0D;
+            rightLength = 1.0D;
+        }
+        rightX /= rightLength;
+        rightZ /= rightLength;
+        double upX = rightY * directionZ - rightZ * directionY;
+        double upY = rightZ * directionX - rightX * directionZ;
+        double upZ = rightX * directionY - rightY * directionX;
+        vertex(buffer, x + upX * size, y + upY * size, z + upZ * size, red, green, blue, alpha);
+        vertex(buffer, x + rightX * size, y + rightY * size, z + rightZ * size, red, green, blue, alpha);
+        vertex(buffer, x - upX * size, y - upY * size, z - upZ * size, red, green, blue, alpha);
+        vertex(buffer, x - rightX * size, y - rightY * size, z - rightZ * size, red, green, blue, alpha);
+    }
+
+    private static void drawStarGlows(byte[] states, float animationTime,
+                                      double cameraX, double cameraY, double cameraZ) {
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < NODES.length; i++) {
+            if (!visible(states, i) || states[i] == ConstellationManager.MYSTERY) continue;
+            int state = states[i];
+            double x = nodeX(i, animationTime);
+            double y = nodeY(i, animationTime);
+            double z = nodeZ(i, animationTime);
+            double directionX = cameraX - x;
+            double directionY = cameraY - y;
+            double directionZ = cameraZ - z;
+            double directionLength = Math.sqrt(directionX * directionX
+                + directionY * directionY + directionZ * directionZ);
+            if (directionLength < 0.0001D) continue;
+            directionX /= directionLength;
+            directionY /= directionLength;
+            directionZ /= directionLength;
+            double rightX = -directionZ;
+            double rightY = 0.0D;
+            double rightZ = directionX;
+            double rightLength = Math.sqrt(rightX * rightX + rightZ * rightZ);
+            if (rightLength < 0.0001D) {
+                rightX = 1.0D;
+                rightZ = 0.0D;
+                rightLength = 1.0D;
+            }
+            rightX /= rightLength;
+            rightZ /= rightLength;
+            double upX = rightY * directionZ - rightZ * directionY;
+            double upY = rightZ * directionX - rightX * directionZ;
+            double upZ = rightX * directionY - rightY * directionX;
+            int red = starRed(state);
+            int green = starGreen(state);
+            int blue = starBlue(state);
+            double pulse = starPulse(state, i, animationTime) * starScale(state);
+            double haloRadius = NODE_RADIUS * 3.2D * pulse;
+            int centerAlpha = state == ConstellationManager.COMPLETED ? 56 : 42;
+            for (int wedge = 0; wedge < 16; wedge++) {
+                double firstAngle = wedge * Math.PI * 2.0D / 16.0D;
+                double secondAngle = (wedge + 1) * Math.PI * 2.0D / 16.0D;
+                vertex(buffer, x, y, z, red, green, blue, centerAlpha);
+                billboardVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
+                    firstAngle, haloRadius, red, green, blue, 0);
+                billboardVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
+                    secondAngle, haloRadius, red, green, blue, 0);
+            }
+            double rotation = animationTime * 0.004D + i * 0.47D;
+            for (int rayIndex = 0; rayIndex < 10; rayIndex++) {
+                double angle = rotation + rayIndex * Math.PI * 2.0D / 10.0D;
+                double length = NODE_RADIUS * pulse * (rayIndex % 2 == 0 ? 4.2D : 2.8D);
+                double base = NODE_RADIUS * pulse * 0.18D;
+                double directionRight = Math.cos(angle);
+                double directionUp = Math.sin(angle);
+                double perpendicularRight = -directionUp;
+                double perpendicularUp = directionRight;
+                billboardOffsetVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
+                    perpendicularRight * base, perpendicularUp * base, red, green, blue, 118);
+                billboardOffsetVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
+                    -perpendicularRight * base, -perpendicularUp * base, red, green, blue, 118);
+                billboardOffsetVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
+                    directionRight * length, directionUp * length, red, green, blue, 0);
+            }
+        }
+        tessellator.draw();
+    }
+
+    private static void billboardVertex(BufferBuilder buffer, double x, double y, double z,
+                                        double rightX, double rightY, double rightZ,
+                                        double upX, double upY, double upZ,
+                                        double angle, double radius,
+                                        int red, int green, int blue, int alpha) {
+        billboardOffsetVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
+            Math.cos(angle) * radius, Math.sin(angle) * radius, red, green, blue, alpha);
+    }
+
+    private static void billboardOffsetVertex(BufferBuilder buffer, double x, double y, double z,
+                                              double rightX, double rightY, double rightZ,
+                                              double upX, double upY, double upZ,
+                                              double rightOffset, double upOffset,
+                                              int red, int green, int blue, int alpha) {
+        vertex(buffer, x + rightX * rightOffset + upX * upOffset,
+            y + rightY * rightOffset + upY * upOffset,
+            z + rightZ * rightOffset + upZ * upOffset, red, green, blue, alpha);
     }
 
     private static int[] layoutParents() {
@@ -170,74 +429,6 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         return parents;
     }
 
-    private static void drawTendrilSparks(byte[] states, float animationTime) {
-        GL11.glPointSize(2.4F);
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION_COLOR);
-        for (int childIndex = 0; childIndex < NODES.length; childIndex++) {
-            int parentIndex = LAYOUT_PARENTS[childIndex];
-            if (parentIndex < 0 || !visible(states, parentIndex) || !visible(states, childIndex)) continue;
-            double seed = parentIndex * 1.731D + childIndex * 0.917D;
-            double progress = (animationTime * 0.0045D + seed * 0.137D) % 1.0D;
-            double startX = nodeX(parentIndex, animationTime);
-            double startY = nodeY(parentIndex, animationTime);
-            double startZ = nodeZ(parentIndex, animationTime);
-            double endX = nodeX(childIndex, animationTime);
-            double endY = nodeY(childIndex, animationTime);
-            double endZ = nodeZ(childIndex, animationTime);
-            double bendX = Math.sin(seed) * 0.72D;
-            double bendY = 0.38D + Math.cos(seed * 0.71D) * 0.30D;
-            double bendZ = Math.cos(seed) * 0.72D;
-            double arc = Math.sin(progress * Math.PI);
-            double ripple = Math.sin(progress * Math.PI * 2.0D + animationTime * 0.018D + seed)
-                * 0.11D * arc;
-            double x = startX + (endX - startX) * progress + bendX * arc + ripple * bendZ;
-            double y = startY + (endY - startY) * progress + bendY * arc
-                + Math.sin(progress * Math.PI * 3.0D + seed) * 0.07D * arc;
-            double z = startZ + (endZ - startZ) * progress + bendZ * arc - ripple * bendX;
-            vertex(buffer, x, y, z, 225, 205, 255, 210);
-        }
-        tessellator.draw();
-    }
-
-    private static void appendTendril(BufferBuilder buffer, int parentIndex, int childIndex,
-                                      float animationTime, int red, int green, int blue, int alpha) {
-        double startX = nodeX(parentIndex, animationTime);
-        double startY = nodeY(parentIndex, animationTime);
-        double startZ = nodeZ(parentIndex, animationTime);
-        double endX = nodeX(childIndex, animationTime);
-        double endY = nodeY(childIndex, animationTime);
-        double endZ = nodeZ(childIndex, animationTime);
-        double seed = parentIndex * 1.731D + childIndex * 0.917D;
-        double bendX = Math.sin(seed) * 0.72D;
-        double bendY = 0.38D + Math.cos(seed * 0.71D) * 0.30D;
-        double bendZ = Math.cos(seed) * 0.72D;
-
-        for (int segment = 0; segment < 16; segment++) {
-            appendTendrilVertex(buffer, segment / 16.0D, startX, startY, startZ, endX, endY, endZ,
-                bendX, bendY, bendZ, seed, animationTime, red, green, blue, alpha);
-            appendTendrilVertex(buffer, (segment + 1) / 16.0D, startX, startY, startZ, endX, endY, endZ,
-                bendX, bendY, bendZ, seed, animationTime, red, green, blue, alpha);
-        }
-    }
-
-    private static void appendTendrilVertex(BufferBuilder buffer, double progress,
-                                             double startX, double startY, double startZ,
-                                             double endX, double endY, double endZ,
-                                             double bendX, double bendY, double bendZ, double seed,
-                                             float animationTime, int red, int green, int blue, int alpha) {
-        double arc = Math.sin(progress * Math.PI);
-        double ripple = Math.sin(progress * Math.PI * 2.0D + animationTime * 0.018D + seed) * 0.11D * arc;
-        double x = startX + (endX - startX) * progress + bendX * arc + ripple * bendZ;
-        double y = startY + (endY - startY) * progress + bendY * arc
-            + Math.sin(progress * Math.PI * 3.0D + seed) * 0.07D * arc;
-        double z = startZ + (endZ - startZ) * progress + bendZ * arc - ripple * bendX;
-        int flowingAlpha = (int) (alpha * (0.86D
-            + Math.sin(animationTime * 0.012D - progress * 4.0D + seed) * 0.10D));
-        vertex(buffer, x, y, z, red, green, blue, flowingAlpha);
-    }
-
     private static void drawNodes(byte[] states, float animationTime) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
@@ -249,71 +440,17 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             int green = starGreen(state);
             int blue = starBlue(state);
             double pulse = starPulse(state, i, animationTime);
+            double coreRadius = NODE_RADIUS * 0.62D * pulse * starScale(state);
             star(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
-                NODE_RADIUS * 0.62D * pulse * starScale(state), red, green, blue,
+                coreRadius, red, green, blue,
                 state == ConstellationManager.MYSTERY ? 165 : 255);
+            if (state != ConstellationManager.MYSTERY) {
+                star(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
+                    coreRadius * 0.34D, Math.min(255, red + 85), Math.min(255, green + 85),
+                    Math.min(255, blue + 85), 245);
+            }
         }
         tessellator.draw();
-    }
-
-    private static void drawNodeAuras(byte[] states, float animationTime) {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
-        for (int i = 0; i < NODES.length; i++) {
-            if (!visible(states, i)) continue;
-            int state = states[i];
-            if (state == ConstellationManager.MYSTERY) continue;
-            int red = starRed(state);
-            int green = starGreen(state);
-            int blue = starBlue(state);
-            double breath = (2.0D + Math.sin(animationTime * 0.025D + i * 0.67D) * 0.16D)
-                * starPulse(state, i, animationTime) * starScale(state);
-            star(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
-                NODE_RADIUS * breath,
-                red, green, blue, 42);
-        }
-        tessellator.draw();
-    }
-
-    private static void drawStarRays(byte[] states, float animationTime, float width,
-                                     double sizeMultiplier, int alpha) {
-        GL11.glLineWidth(width);
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-        for (int i = 0; i < NODES.length; i++) {
-            if (!visible(states, i)) continue;
-            int state = states[i];
-            int red = starRed(state);
-            int green = starGreen(state);
-            int blue = starBlue(state);
-            double x = nodeX(i, animationTime);
-            double y = nodeY(i, animationTime);
-            double z = nodeZ(i, animationTime);
-            double radius = NODE_RADIUS * 2.45D * starPulse(state, i, animationTime)
-                * starScale(state) * sizeMultiplier;
-            int rayAlpha = state == ConstellationManager.MYSTERY ? (int) (alpha * 0.42D) : alpha;
-            ray(buffer, x, y, z, radius, 1.0D, 0.0D, 0.0D, red, green, blue, rayAlpha);
-            ray(buffer, x, y, z, radius, 0.0D, 1.0D, 0.0D, red, green, blue, rayAlpha);
-            ray(buffer, x, y, z, radius, 0.0D, 0.0D, 1.0D, red, green, blue, rayAlpha);
-            if (state == ConstellationManager.MYSTERY) continue;
-            double diagonal = 0.5773502691896258D;
-            ray(buffer, x, y, z, radius, diagonal, diagonal, diagonal, red, green, blue, rayAlpha);
-            ray(buffer, x, y, z, radius, diagonal, diagonal, -diagonal, red, green, blue, rayAlpha);
-            ray(buffer, x, y, z, radius, diagonal, -diagonal, diagonal, red, green, blue, rayAlpha);
-            ray(buffer, x, y, z, radius, -diagonal, diagonal, diagonal, red, green, blue, rayAlpha);
-        }
-        tessellator.draw();
-    }
-
-    private static void ray(BufferBuilder buffer, double x, double y, double z, double radius,
-                            double directionX, double directionY, double directionZ,
-                            int red, int green, int blue, int alpha) {
-        vertex(buffer, x - directionX * radius, y - directionY * radius, z - directionZ * radius,
-            red, green, blue, alpha);
-        vertex(buffer, x + directionX * radius, y + directionY * radius, z + directionZ * radius,
-            red, green, blue, alpha);
     }
 
     private static double starPulse(int state, int index, float animationTime) {
@@ -352,42 +489,37 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         return NODES[index].id.startsWith("sf4angel:core/") || states[index] == ConstellationManager.COMPLETED;
     }
 
-    private static void drawMotes(float animationTime) {
-        GL11.glPointSize(2.2F);
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION_COLOR);
-        for (int i = 0; i < 56; i++) {
-            double cycle = (animationTime * 0.0015D + i * 0.61803398875D) % 1.0D;
-            double x = Math.sin(i * 12.9898D) * 30.0D;
-            double y = -30.0D + cycle * 60.0D;
-            double z = Math.cos(i * 7.233D) * 22.0D;
-            int alpha = (int) (Math.sin(cycle * Math.PI) * 105.0D);
-            vertex(buffer, x, y, z, 158, 116, 244, alpha);
-        }
-        tessellator.draw();
-    }
-
     private static void star(BufferBuilder buffer, double x, double y, double z, double radius,
                              int red, int green, int blue, int alpha) {
         double tip = radius * 1.65D;
         double waist = radius * 1.25D;
-        triangle(buffer, x, y + tip, z, x + waist, y, z, x, y, z + waist, red, green, blue, alpha);
-        triangle(buffer, x, y + tip, z, x, y, z + waist, x - waist, y, z, red, green, blue, alpha);
-        triangle(buffer, x, y + tip, z, x - waist, y, z, x, y, z - waist, red, green, blue, alpha);
-        triangle(buffer, x, y + tip, z, x, y, z - waist, x + waist, y, z, red, green, blue, alpha);
-        triangle(buffer, x, y - tip, z, x, y, z + waist, x + waist, y, z, red, green, blue, alpha);
-        triangle(buffer, x, y - tip, z, x - waist, y, z, x, y, z + waist, red, green, blue, alpha);
-        triangle(buffer, x, y - tip, z, x, y, z - waist, x - waist, y, z, red, green, blue, alpha);
-        triangle(buffer, x, y - tip, z, x + waist, y, z, x, y, z - waist, red, green, blue, alpha);
+        triangle(buffer, x, y + tip, z, x + waist, y, z, x, y, z + waist,
+            red, green, blue, alpha, 1.00D);
+        triangle(buffer, x, y + tip, z, x, y, z + waist, x - waist, y, z,
+            red, green, blue, alpha, 0.82D);
+        triangle(buffer, x, y + tip, z, x - waist, y, z, x, y, z - waist,
+            red, green, blue, alpha, 0.68D);
+        triangle(buffer, x, y + tip, z, x, y, z - waist, x + waist, y, z,
+            red, green, blue, alpha, 0.90D);
+        triangle(buffer, x, y - tip, z, x, y, z + waist, x + waist, y, z,
+            red, green, blue, alpha, 0.72D);
+        triangle(buffer, x, y - tip, z, x - waist, y, z, x, y, z + waist,
+            red, green, blue, alpha, 0.62D);
+        triangle(buffer, x, y - tip, z, x, y, z - waist, x - waist, y, z,
+            red, green, blue, alpha, 0.78D);
+        triangle(buffer, x, y - tip, z, x + waist, y, z, x, y, z - waist,
+            red, green, blue, alpha, 0.86D);
     }
 
     private static void triangle(BufferBuilder buffer, double x1, double y1, double z1,
                                  double x2, double y2, double z2, double x3, double y3, double z3,
-                                 int red, int green, int blue, int alpha) {
-        vertex(buffer, x1, y1, z1, red, green, blue, alpha);
-        vertex(buffer, x2, y2, z2, red, green, blue, alpha);
-        vertex(buffer, x3, y3, z3, red, green, blue, alpha);
+                                 int red, int green, int blue, int alpha, double shade) {
+        int shadedRed = (int) (red * shade);
+        int shadedGreen = (int) (green * shade);
+        int shadedBlue = (int) (blue * shade);
+        vertex(buffer, x1, y1, z1, shadedRed, shadedGreen, shadedBlue, alpha);
+        vertex(buffer, x2, y2, z2, shadedRed, shadedGreen, shadedBlue, alpha);
+        vertex(buffer, x3, y3, z3, shadedRed, shadedGreen, shadedBlue, alpha);
     }
 
     private static void vertex(BufferBuilder buffer, double x, double y, double z,

@@ -84,8 +84,10 @@ public final class ConstellationManager {
             player.sendStatusMessage(new TextComponentString("I will return you to the exact place we left."), true);
             exit(player);
         } else {
-            player.sendStatusMessage(new TextComponentString(
-                "Follow me. Fly to explore, aim at visible lights, and right-click me again to return."), true);
+            if (!getData(player).getBoolean("ObservatoryIntroduced")) {
+                player.sendStatusMessage(new TextComponentString(
+                    "Follow me. Fly to explore, aim at visible lights, and right-click me again to return."), true);
+            }
             enter(player);
         }
     }
@@ -272,12 +274,14 @@ public final class ConstellationManager {
         for (int i = 0; i < nodes.length; i++) {
             AchievementConstellationCatalog.Node node = nodes[i];
             stageEligible[i] = ownsStages(player, node);
+            if (!stageEligible[i]) continue;
             Advancement advancement = advancement(player, node.id);
             AdvancementProgress progress = advancement == null ? null : player.getAdvancements().getProgress(advancement);
             if (progress != null && progress.isDone()) states[i] = COMPLETED;
         }
         for (int i = 0; i < nodes.length; i++) {
             if (states[i] == COMPLETED || !stageEligible[i]) continue;
+            if (nodes[i].parents.isEmpty() && !nodes[i].stages.isEmpty()) continue;
             boolean parentsComplete = true;
             for (String parent : nodes[i].parents) {
                 Integer parentIndex = indexes.get(parent);
@@ -293,16 +297,19 @@ public final class ConstellationManager {
     }
 
     private static void explainObservatory(EntityPlayerMP player, NBTTagCompound data) {
-        TypewriterHandler.clearMessages(player);
-        TypewriterHandler.queueMessage(player,
-            "This is your living constellation. Fly to explore it, and aim at a visible light to identify its path.",
-            0, 20);
-        TypewriterHandler.queueMessage(player,
-            "Gold remembers what you completed, blue marks the next step, and grey veils one more dead path beyond it.",
-            0, 20);
-        TypewriterHandler.queueMessage(player,
-            "The paths beyond that horizon remain hidden. I will stay beside you; right-click me when you wish to return.",
-            0, 20);
+        if (!data.getBoolean("ObservatoryIntroduced")) {
+            TypewriterHandler.clearMessages(player);
+            TypewriterHandler.queueMessage(player,
+                "This is your living constellation. Fly to explore it, and aim at a visible light to identify its path.",
+                0, 20);
+            TypewriterHandler.queueMessage(player,
+                "Gold remembers what you completed, blue marks the next step, and grey veils one more dead path beyond it.",
+                0, 20);
+            TypewriterHandler.queueMessage(player,
+                "The paths beyond that horizon remain hidden. I will stay beside you; right-click me when you wish to return.",
+                0, 20);
+            data.setBoolean("ObservatoryIntroduced", true);
+        }
         data.setLong("NextObservatoryComment", player.world.getTotalWorldTime() + 1200L);
     }
 
