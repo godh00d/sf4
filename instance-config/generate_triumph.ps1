@@ -330,26 +330,114 @@ function Get-ConstellationCatalogLines($Rows) {
         return $Depth
     }
 
-    $LevelRows = @{}
+    # The progression is a DAG. Pick one deterministic parent only for spatial layout;
+    # every real dependency edge is still retained and rendered below.
+    $LayoutParent = @{}
+    $LayoutChildren = @{}
+    foreach ($Row in $Rows) { $LayoutChildren[$Row.Id] = New-Object System.Collections.Generic.List[string] }
     foreach ($Row in $Rows) {
-        $Depth = Get-Depth $Row.Id
-        if (-not $LevelRows.ContainsKey($Depth)) {
-            $LevelRows[$Depth] = New-Object System.Collections.Generic.List[object]
+        $ChosenParent = $null
+        $ChosenDepth = -1
+        foreach ($Parent in $Row.Parents) {
+            $ParentDepth = Get-Depth $Parent
+            if ($ParentDepth -gt $ChosenDepth) {
+                $ChosenParent = $Parent
+                $ChosenDepth = $ParentDepth
+            }
         }
-        $LevelRows[$Depth].Add($Row)
+        $LayoutParent[$Row.Id] = $ChosenParent
+        if ($null -ne $ChosenParent) { $LayoutChildren[$ChosenParent].Add($Row.Id) }
     }
 
-    $TreeOffsets = @{}
-    foreach ($Depth in $LevelRows.Keys) {
-        $Count = $LevelRows[$Depth].Count
-        for ($Index = 0; $Index -lt $Count; $Index++) {
-            $Magnitude = [int][math]::Ceiling($Index / 2.0)
-            $GridZ = if ($Index % 2 -eq 0) { $Magnitude } else { -$Magnitude }
-            $GridX = if ($Index -eq 0) { 0 } else { (($Index - 1) % 3) - 1 }
-            $TreeOffsets[$LevelRows[$Depth][$Index].Id] = [pscustomobject]@{
-                GridX = $GridX
-                GridZ = $GridZ
+    $SubtreeWeights = @{}
+    function Get-SubtreeWeight([string]$Id) {
+        if ($SubtreeWeights.ContainsKey($Id)) { return [int]$SubtreeWeights[$Id] }
+        if ($LayoutChildren[$Id].Count -eq 0) {
+            $SubtreeWeights[$Id] = 1
+            return 1
+        }
+        $Weight = 0
+        foreach ($Child in $LayoutChildren[$Id]) { $Weight += Get-SubtreeWeight $Child }
+        $SubtreeWeights[$Id] = [math]::Max(1, $Weight)
+        return [int]$SubtreeWeights[$Id]
+    }
+    foreach ($Row in $Rows) { [void](Get-SubtreeWeight $Row.Id) }
+
+    $Coordinates = @{}
+    $Headings = @{}
+    $Roots = @($Rows | Where-Object { $null -eq $LayoutParent[$_.Id] })
+    for ($RootIndex = 0; $RootIndex -lt $Roots.Count; $RootIndex++) {
+        if ($RootIndex -eq 0) {
+            $RootX = 40
+            $RootZ = 0
+            $Heading = 0.0
+        } else {
+            $RingIndex = $RootIndex - 1
+            $Ring = [int][math]::Floor($RingIndex / 8.0)
+            $Slot = $RingIndex % 8
+            $Heading = ($Slot / 8.0) * [math]::PI * 2.0 + $Ring * 0.19
+            $Radius = 14 + $Ring * 11
+            $RootX = 40 + [int][math]::Round([math]::Cos($Heading) * $Radius)
+            $RootZ = [int][math]::Round([math]::Sin($Heading) * $Radius)
+        }
+        $Coordinates[$Roots[$RootIndex].Id] = [pscustomobject]@{ X = $RootX; Y = 56; Z = $RootZ }
+        $Headings[$Roots[$RootIndex].Id] = $Heading
+    }
+
+    function Test-ConstellationPosition([int]$X, [int]$Y, [int]$Z) {
+        foreach ($Existing in $Coordinates.Values) {
+            $DeltaX = $X - $Existing.X
+            $DeltaY = $Y - $Existing.Y
+            $DeltaZ = $Z - $Existing.Z
+            if ($DeltaX * $DeltaX + $DeltaY * $DeltaY + $DeltaZ * $DeltaZ -lt 49) { return $false }
+        }
+        return $true
+    }
+
+    $MaximumDepth = 0
+    foreach ($Row in $Rows) { $MaximumDepth = [math]::Max($MaximumDepth, (Get-Depth $Row.Id)) }
+    for ($Depth = 1; $Depth -le $MaximumDepth; $Depth++) {
+        foreach ($Row in @($Rows | Where-Object { (Get-Depth $_.Id) -eq $Depth })) {
+            $ParentId = [string]$LayoutParent[$Row.Id]
+            $ParentCoordinate = $Coordinates[$ParentId]
+            $Siblings = $LayoutChildren[$ParentId]
+            $TotalWeight = 0
+            foreach ($Sibling in $Siblings) { $TotalWeight += [int]$SubtreeWeights[$Sibling] }
+            $WeightBefore = 0
+            foreach ($Sibling in $Siblings) {
+                if ($Sibling -eq $Row.Id) { break }
+                $WeightBefore += [int]$SubtreeWeights[$Sibling]
             }
+            $Weight = [int]$SubtreeWeights[$Row.Id]
+            $Sector = (($WeightBefore + $Weight / 2.0) / [math]::Max(1, $TotalWeight)) - 0.5
+            $Fan = [math]::Min(2.35, 0.72 + [math]::Log($TotalWeight + 1.0) * 0.42)
+            $Heading = [double]$Headings[$ParentId] + $Sector * $Fan
+            $Step = if ($Siblings.Count -eq 1) { 3.0 } else {
+                10.0 + [math]::Min(8.0, [math]::Sqrt($Weight) * 1.7)
+            }
+            $CandidateX = [int][math]::Round($ParentCoordinate.X + [math]::Cos($Heading) * $Step)
+            $CandidateY = 56 + $Depth * 8
+            $CandidateZ = [int][math]::Round($ParentCoordinate.Z + [math]::Sin($Heading) * $Step)
+
+            if (-not (Test-ConstellationPosition $CandidateX $CandidateY $CandidateZ)) {
+                $Found = $false
+                for ($Attempt = 1; $Attempt -le 160; $Attempt++) {
+                    $SearchRadius = 7.0 * [math]::Ceiling([math]::Sqrt($Attempt))
+                    $SearchAngle = $Attempt * 2.399963229728653
+                    $SearchX = $CandidateX + [int][math]::Round([math]::Cos($SearchAngle) * $SearchRadius)
+                    $SearchZ = $CandidateZ + [int][math]::Round([math]::Sin($SearchAngle) * $SearchRadius)
+                    if (Test-ConstellationPosition $SearchX $CandidateY $SearchZ) {
+                        $CandidateX = $SearchX
+                        $CandidateZ = $SearchZ
+                        $Found = $true
+                        break
+                    }
+                }
+                if (-not $Found) { throw "Could not place constellation node $($Row.Id)" }
+            }
+            $Coordinates[$Row.Id] = [pscustomobject]@{ X = $CandidateX; Y = $CandidateY; Z = $CandidateZ }
+            $Headings[$Row.Id] = [math]::Atan2(
+                $CandidateZ - $ParentCoordinate.Z, $CandidateX - $ParentCoordinate.X)
         }
     }
 
@@ -361,19 +449,9 @@ function Get-ConstellationCatalogLines($Rows) {
 
     $Records = New-Object System.Collections.Generic.List[object]
     foreach ($Row in $Rows) {
-        $Depth = Get-Depth $Row.Id
-        $Offset = $TreeOffsets[$Row.Id]
-        $CharacterTotal = 0
-        for ($CharacterIndex = 0; $CharacterIndex -lt $Row.Id.Length; $CharacterIndex++) {
-            $CharacterTotal += [int]$Row.Id[$CharacterIndex] * ($CharacterIndex + 1)
-        }
-        $JitterX = (($CharacterTotal + 1) % 3) - 1
-        $JitterZ = (($CharacterTotal + 2) % 3) - 1
-        $X = 40 + $Offset.GridX * 8 + $JitterX
-        $Y = 56 + $Depth * 8
-        $Z = $Offset.GridZ * 8 + $JitterZ
+        $Coordinate = $Coordinates[$Row.Id]
         $Records.Add([pscustomobject]@{
-            Row = $Row; X = [int]$X; Y = [int]$Y; Z = [int]$Z
+            Row = $Row; X = [int]$Coordinate.X; Y = [int]$Coordinate.Y; Z = [int]$Coordinate.Z
             Stages = @(Get-RequiredStages $Row); Children = @($Children[$Row.Id])
         })
     }
@@ -383,8 +461,8 @@ function Get-ConstellationCatalogLines($Rows) {
             $DeltaX = $Records[$Left].X - $Records[$Right].X
             $DeltaY = $Records[$Left].Y - $Records[$Right].Y
             $DeltaZ = $Records[$Left].Z - $Records[$Right].Z
-            if ($DeltaX * $DeltaX + $DeltaY * $DeltaY + $DeltaZ * $DeltaZ -lt 25) {
-                throw "Constellation points are less than 5 blocks apart: $($Records[$Left].Row.Id), $($Records[$Right].Row.Id)"
+            if ($DeltaX * $DeltaX + $DeltaY * $DeltaY + $DeltaZ * $DeltaZ -lt 49) {
+                throw "Constellation points are less than 7 blocks apart: $($Records[$Left].Row.Id), $($Records[$Right].Row.Id)"
             }
         }
     }
@@ -697,7 +775,7 @@ function Test-Configuration($Rows) {
     if (-not $TriumphContent.Contains($Order)) { $Errors.Add('Page order mismatch') }
     if (-not $TriumphContent.EndsWith("`n") -or $TriumphContent.Contains("`r") -or $TriumphContent -match '(?m) +$') { $Errors.Add('Invalid Triumph.txt whitespace') }
     if ($Errors.Count -gt 0) { throw "Validation failed:`n- $($Errors -join "`n- ")" }
-    Write-Output 'Validated 129 achievements and unique reactions, 3 roots, Java/plan/tree parity, prerequisite/display parents, criteria, 5-block constellation spacing, stage gates, and whitespace.'
+    Write-Output 'Validated 129 achievements and unique reactions, 3 roots, Java/plan/tree parity, prerequisite/display parents, criteria, 7-block constellation spacing, stage gates, and whitespace.'
 }
 
 $Catalog = Get-Catalog
