@@ -1,5 +1,6 @@
 ﻿# Generated build state
 build/
+dist/
 .gradle/
 fg3_src/
 localRepo/

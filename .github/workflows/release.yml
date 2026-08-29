@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: gradle
+      - name: Verify tag version
+        shell: powershell
+        run: |
+          $version = '${{ github.ref_name }}'.Substring(1)
+          $gradleVersion = (Select-String -Path build.gradle -Pattern "^version = '([^']+)'$").Matches[0].Groups[1].Value
+          $sourceVersion = (Select-String -Path src/main/java/com/godh00d/sf4angel/Reference.java -Pattern 'VERSION = "([^"]+)"').Matches[0].Groups[1].Value
+          if ($version -ne $gradleVersion -or $version -ne $sourceVersion) {
+              throw "Tag $version, Gradle $gradleVersion, and source $sourceVersion must match."
+          }
+          "RELEASE_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Build mod
+        shell: powershell
+        run: ./gradlew.bat clean build
+      - name: Validate achievement catalog
+        shell: powershell
+        run: ./instance-config/generate_triumph.ps1 -Check
+      - name: Package release
+        shell: powershell
+        run: ./scripts/package-release.ps1 -Version $env:RELEASE_VERSION
+      - name: Publish GitHub release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create '${{ github.ref_name }}' "dist/SF4-Angel-Guide-$env:RELEASE_VERSION.zip" --generate-notes --title "SF4 Angel Guide $env:RELEASE_VERSION"

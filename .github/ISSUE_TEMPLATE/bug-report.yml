@@ -1,0 +1,41 @@
+name: Bug report
+description: Report reproducible behavior in SF4 Angel Guide
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Search existing issues and test with matching client, server, jar, and Triumph script versions before reporting.
+  - type: input
+    id: version
+    attributes:
+      label: SF4 Angel Guide version
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include SkyFactory, Forge, and Triumph versions and whether this is single-player or a dedicated server.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Describe the shortest sequence that reliably produces the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Attach the relevant latest.log section or crash report. Remove account tokens, addresses, and other secrets.
+      render: text

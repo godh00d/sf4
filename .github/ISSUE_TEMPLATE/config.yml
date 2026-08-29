@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Installation guide
+    url: https://github.com/godh00d/sf4/blob/master/docs/INSTALLATION.md
+    about: Check installation, upgrades, and troubleshooting before reporting a bug.
