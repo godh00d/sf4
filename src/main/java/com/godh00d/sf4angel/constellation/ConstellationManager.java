@@ -128,6 +128,7 @@ public final class ConstellationManager {
             return;
         }
 
+        TypewriterHandler.clearMessages(player);
         data.setBoolean("Entering", false);
         data.setBoolean("Active", true);
         player.fallDistance = 0.0F;
@@ -169,6 +170,7 @@ public final class ConstellationManager {
             return;
         }
 
+        TypewriterHandler.clearMessages(player);
         restoreSavedFlight(player, data);
         removeObservatories(player);
         clearSession(data);
@@ -298,7 +300,6 @@ public final class ConstellationManager {
 
     private static void explainObservatory(EntityPlayerMP player, NBTTagCompound data) {
         if (!data.getBoolean("ObservatoryIntroduced")) {
-            TypewriterHandler.clearMessages(player);
             TypewriterHandler.queueMessage(player,
                 "This is your living constellation. Fly to explore it, and aim at a visible light to identify its path.",
                 0, 20);

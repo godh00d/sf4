@@ -45,6 +45,9 @@ public class TypewriterHandler {
             state.queue.clear();
             state.currentMessage = null;
             state.phase = Phase.IDLE;
+            state.tickCount = 0;
+            state.charIndex = 0;
+            state.despawnDelay = 0;
         }
     }
 

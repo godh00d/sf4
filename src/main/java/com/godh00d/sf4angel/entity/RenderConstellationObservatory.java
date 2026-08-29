@@ -62,6 +62,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         drawSkyShell();
+        drawNebulaVeils(animationTime);
         drawStars(animationTime);
         GlStateManager.pushMatrix();
         GlStateManager.translate(sceneX, sceneY, sceneZ);
@@ -70,20 +71,20 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         double cameraZ = -sceneZ;
 
         GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthMask(false);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        drawMagicParticles(states, animationTime);
-
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glDepthMask(true);
         GL11.glDisable(GL11.GL_BLEND);
-        drawTendrilTubes(states, animationTime, 1.0D, 156, 112, 232, 255);
+        drawTendrilTubes(states, animationTime, 0.30D, 208, 246, 255, 255);
 
         GL11.glDepthMask(false);
         GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        drawTendrilTubes(states, animationTime, 1.0D, 76, 188, 246, 112);
+
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        drawTendrilTubes(states, animationTime, 1.85D, 104, 68, 210, 38);
+        drawTendrilTubes(states, animationTime, 1.52D, 255, 126, 46, 22);
         GL11.glDisable(GL11.GL_CULL_FACE);
+        drawPlasmaMotes(animationTime);
         drawStarGlows(states, animationTime, cameraX, cameraY, cameraZ);
 
         GL11.glDepthMask(true);
@@ -126,10 +127,49 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
 
     private static void skyVertex(BufferBuilder buffer, double x, double y, double z) {
         double height = (y / SKY_RADIUS + 1.0D) * 0.5D;
-        int red = (int) (6.0D + height * 28.0D);
-        int green = (int) (7.0D + height * 10.0D);
-        int blue = (int) (24.0D + height * 48.0D);
+        int red = (int) (2.0D + height * 7.0D);
+        int green = (int) (5.0D + height * 15.0D);
+        int blue = (int) (12.0D + height * 26.0D);
         vertex(buffer, x, y, z, red, green, blue, 255);
+    }
+
+    private static void drawNebulaVeils(float animationTime) {
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        int[] reds = {24, 72, 96};
+        int[] greens = {112, 70, 30};
+        int[] blues = {138, 124, 68};
+        double[] heights = {-4.8D, 0.2D, 4.7D};
+        for (int band = 0; band < 3; band++) {
+            double phase = animationTime * (0.00045D + band * 0.00013D) + band * 2.1D;
+            int centerAlpha = 14 + band * 3;
+            for (int segment = 0; segment < 64; segment++) {
+                double firstAngle = segment * Math.PI * 2.0D / 64.0D;
+                double secondAngle = (segment + 1) * Math.PI * 2.0D / 64.0D;
+                double firstCenter = heights[band] + Math.sin(firstAngle * (2.0D + band)
+                    + phase) * (1.0D + band * 0.22D);
+                double secondCenter = heights[band] + Math.sin(secondAngle * (2.0D + band)
+                    + phase) * (1.0D + band * 0.22D);
+                nebulaVertex(buffer, firstAngle, firstCenter - 1.7D, reds[band], greens[band], blues[band], 0);
+                nebulaVertex(buffer, secondAngle, secondCenter - 1.7D, reds[band], greens[band], blues[band], 0);
+                nebulaVertex(buffer, secondAngle, secondCenter, reds[band], greens[band], blues[band], centerAlpha);
+                nebulaVertex(buffer, firstAngle, firstCenter, reds[band], greens[band], blues[band], centerAlpha);
+                nebulaVertex(buffer, firstAngle, firstCenter, reds[band], greens[band], blues[band], centerAlpha);
+                nebulaVertex(buffer, secondAngle, secondCenter, reds[band], greens[band], blues[band], centerAlpha);
+                nebulaVertex(buffer, secondAngle, secondCenter + 1.7D, reds[band], greens[band], blues[band], 0);
+                nebulaVertex(buffer, firstAngle, firstCenter + 1.7D, reds[band], greens[band], blues[band], 0);
+            }
+        }
+        tessellator.draw();
+    }
+
+    private static void nebulaVertex(BufferBuilder buffer, double angle, double y,
+                                     int red, int green, int blue, int alpha) {
+        double shellRadius = SKY_RADIUS - 0.42D;
+        double horizontalRadius = Math.sqrt(Math.max(0.0D, shellRadius * shellRadius - y * y));
+        vertex(buffer, Math.cos(angle) * horizontalRadius, y,
+            Math.sin(angle) * horizontalRadius, red, green, blue, alpha);
     }
 
     private static void drawStars(float animationTime) {
@@ -144,9 +184,11 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             double flicker = Math.sin(animationTime * (0.009D + i % 7 * 0.0013D) + i * 0.91D);
             int brightness = 145 + i * 73 % 60 + (int) ((flicker + 1.0D) * 22.0D);
             int alpha = 145 + (int) ((flicker + 1.0D) * 42.0D);
+            boolean warm = i % 13 == 0;
             vertex(buffer, Math.cos(angle) * radius * (SKY_RADIUS - 0.2D),
                 height * (SKY_RADIUS - 0.2D), Math.sin(angle) * radius * (SKY_RADIUS - 0.2D),
-                brightness, brightness - 12, 255, alpha);
+                warm ? 255 : brightness - 18, warm ? brightness : Math.min(255, brightness + 8),
+                warm ? brightness - 72 : 255, alpha);
         }
         tessellator.draw();
     }
@@ -335,19 +377,19 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         double radialZ = normals[offset + 2] * TENDRIL_COS[side]
             + binormals[offset + 2] * TENDRIL_SIN[side];
         double energy = energies[ring];
-        double breathing = 0.90D + Math.sin(animationTime * 0.045D - progress * 8.0D + seed) * 0.08D;
+        double breathing = 0.975D + Math.sin(animationTime * 0.045D - progress * 8.0D + seed) * 0.025D;
         double envelope = 0.03D + Math.sin(progress * Math.PI) * 0.97D;
         double surfaceRipple = 1.0D + Math.sin(side * Math.PI * 0.75D - progress * 11.0D
-            + animationTime * 0.055D + seed) * 0.065D;
-        double radius = baseRadius * envelope * (breathing + energy * 0.72D) * surfaceRipple;
+            + animationTime * 0.055D + seed) * 0.025D;
+        double radius = baseRadius * envelope * (breathing + energy * 0.06D) * surfaceRipple;
         double light = Math.max(0.0D, radialX * 0.32D + radialY * 0.81D + radialZ * 0.49D);
         double spiral = Math.sin(side * Math.PI * 0.5D - progress * 13.0D
             + animationTime * 0.075D + seed) * 0.5D + 0.5D;
-        double brightness = 0.48D + light * 0.34D + spiral * 0.12D + energy * 0.28D;
-        int vertexRed = Math.min(255, (int) (red * brightness + (255 - red) * energy * 0.62D));
-        int vertexGreen = Math.min(255, (int) (green * brightness + (255 - green) * energy * 0.62D));
-        int vertexBlue = Math.min(255, (int) (blue * brightness + (255 - blue) * energy * 0.62D));
-        int vertexAlpha = Math.min(255, (int) (alpha * (0.72D + energy * 0.28D)));
+        double brightness = 0.45D + light * 0.30D + spiral * 0.10D + energy * 0.48D;
+        int vertexRed = Math.min(255, (int) (red * brightness + (255 - red) * energy * 0.76D));
+        int vertexGreen = Math.min(255, (int) (green * brightness + (255 - green) * energy * 0.76D));
+        int vertexBlue = Math.min(255, (int) (blue * brightness + (255 - blue) * energy * 0.76D));
+        int vertexAlpha = Math.min(255, (int) (alpha * (0.68D + energy * 0.32D)));
         vertex(buffer, points[offset] + radialX * radius, points[offset + 1] + radialY * radius,
             points[offset + 2] + radialZ * radius, vertexRed, vertexGreen, vertexBlue, vertexAlpha);
     }
@@ -355,7 +397,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     private static double pulseEnergy(double distance, double[] distances, double totalLength,
                                       float animationTime, double seed) {
         if (totalLength < 0.0001D) return 0.0D;
-        double sigma = Math.max(0.34D, totalLength * 0.055D);
+        double sigma = Math.max(0.42D, totalLength * 0.09D);
         double strongest = 0.0D;
         for (int pulse = 0; pulse < 2; pulse++) {
             double sample = pulseProgress(animationTime, seed, pulse) * TENDRIL_SEGMENTS;
@@ -375,48 +417,24 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         return progress - Math.floor(progress);
     }
 
-    private static void drawMagicParticles(byte[] states, float animationTime) {
+    private static void drawPlasmaMotes(float animationTime) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
-        double[] point = new double[3];
-        for (int childIndex = 0; childIndex < NODES.length; childIndex++) {
-            if (!visible(states, childIndex)) continue;
-            for (String parentId : NODES[childIndex].parents) {
-                Integer parentIndex = INDEXES.get(parentId);
-                if (parentIndex == null || !visible(states, parentIndex)) continue;
-                boolean structural = parentIndex == LAYOUT_PARENTS[childIndex];
-                double seed = parentIndex * 1.731D + childIndex * 0.917D;
-                double startX = nodeX(parentIndex, animationTime);
-                double startY = nodeY(parentIndex, animationTime);
-                double startZ = nodeZ(parentIndex, animationTime);
-                double endX = nodeX(childIndex, animationTime);
-                double endY = nodeY(childIndex, animationTime);
-                double endZ = nodeZ(childIndex, animationTime);
-                for (int pulse = 0; pulse < 2; pulse++) {
-                    double progress = pulseProgress(animationTime, seed, pulse);
-                    double endpointFade = Math.min(1.0D, Math.min(progress, 1.0D - progress) * 10.0D);
-                    sampleTendril(point, 0, progress, startX, startY, startZ, endX, endY, endZ,
-                        Math.sin(seed) * 0.92D, 0.55D + Math.cos(seed * 0.71D) * 0.38D,
-                        Math.cos(seed) * 0.92D, seed, animationTime);
-                    double radius = (structural ? (pulse == 0 ? 0.31D : 0.24D) : 0.13D)
-                        * endpointFade
-                        * (0.86D + Math.sin(animationTime * 0.10D + seed + pulse * 2.4D) * 0.14D);
-                    int alpha = (int) (235.0D * endpointFade
-                        * (states[childIndex] == ConstellationManager.MYSTERY ? 0.48D : 1.0D));
-                    star(buffer, point[0], point[1], point[2], radius, 238, 220, 255, alpha);
-                }
-            }
-        }
         for (int i = 0; i < 90; i++) {
-            double cycle = (animationTime * 0.0012D + i * 0.61803398875D) % 1.0D;
-            double x = Math.sin(i * 12.9898D) * 70.0D;
+            double cycle = (animationTime * 0.0018D + i * 0.61803398875D) % 1.0D;
+            double curl = cycle * Math.PI * 2.0D + animationTime * 0.006D + i * 0.71D;
+            double x = Math.sin(i * 12.9898D) * 68.0D + Math.sin(curl) * 0.65D;
             double y = -54.0D + cycle * 108.0D;
-            double z = Math.cos(i * 7.233D) * 46.0D;
-            int alpha = (int) (Math.sin(cycle * Math.PI) * 92.0D);
+            double z = Math.cos(i * 7.233D) * 44.0D + Math.cos(curl) * 0.65D;
+            int alpha = (int) (Math.sin(cycle * Math.PI) * 108.0D);
             double size = (0.032D + (i % 5) * 0.008D)
                 * (0.85D + Math.sin(animationTime * 0.055D + i * 1.9D) * 0.15D);
-            star(buffer, x, y, z, size, 166, 124, 244, alpha);
+            if (i % 5 == 0) {
+                star(buffer, x, y, z, size, 255, 142, 52, alpha);
+            } else {
+                star(buffer, x, y, z, size, 116, 218, 255, alpha);
+            }
         }
         tessellator.draw();
     }
