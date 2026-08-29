@@ -3,6 +3,7 @@ package com.godh00d.sf4angel.entity;
 import com.godh00d.sf4angel.client.ConstellationClientState;
 import com.godh00d.sf4angel.constellation.AchievementConstellationCatalog;
 import com.godh00d.sf4angel.constellation.ConstellationManager;
+import net.minecraft.advancements.Advancement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -11,10 +12,12 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
 
 import java.util.Map;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -87,15 +90,15 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glDepthMask(true);
         GL11.glDisable(GL11.GL_BLEND);
-        drawTendrilTubes(states, animationTime, 0.30D, 208, 246, 255, 255);
+        drawTendrilTubes(states, animationTime, 0.30D, 0, 255);
 
         GL11.glDepthMask(false);
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        drawTendrilTubes(states, animationTime, 1.0D, 76, 188, 246, 112);
+        drawTendrilTubes(states, animationTime, 1.0D, 1, 112);
 
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        drawTendrilTubes(states, animationTime, 1.52D, 255, 126, 46, 22);
+        drawTendrilTubes(states, animationTime, 1.52D, 2, 22);
         GL11.glDisable(GL11.GL_CULL_FACE);
         drawPlasmaMotes(animationTime);
         drawStarGlows(states, animationTime, cameraX, cameraY, cameraZ);
@@ -110,9 +113,11 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         super.doRender(angel, x, y, z, entityYaw, partialTicks);
         int hovered = hoveredNode(observatory, player, states, partialTicks, animationTime);
         if (hovered >= 0) {
-            String title = states[hovered] == ConstellationManager.MYSTERY
+            boolean mystery = states[hovered] == ConstellationManager.MYSTERY;
+            String title = mystery
                 ? "Unrevealed achievement" : NODES[hovered].title;
-            renderNodeLabel(title, hovered, sceneX, sceneY, sceneZ, animationTime);
+            renderNodeLabel(title, nodeHint(hovered, mystery), hovered,
+                sceneX, sceneY, sceneZ, animationTime);
         }
     }
 
@@ -424,7 +429,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     }
 
     private static void drawTendrilTubes(byte[] states, float animationTime, double radiusScale,
-                                         int red, int green, int blue, int alpha) {
+                                         int layer, int alpha) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
@@ -443,21 +448,39 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
                 boolean structural = parentIndex == LAYOUT_PARENTS[childIndex];
                 double radius = structural ? 0.19D : 0.072D;
                 int edgeAlpha = structural ? alpha : (int) (alpha * 0.46D);
-                int edgeRed = structural ? red : (int) (red * 0.72D);
-                int edgeGreen = structural ? green : (int) (green * 0.78D);
-                int edgeBlue = structural ? blue : (int) (blue * 0.88D);
-                if (states[childIndex] == ConstellationManager.MYSTERY) {
-                    edgeRed *= 0.44D;
-                    edgeGreen *= 0.44D;
-                    edgeBlue *= 0.44D;
-                    edgeAlpha *= 0.48D;
+                int edgeRed = tendrilRed(states[childIndex], layer);
+                int edgeGreen = tendrilGreen(states[childIndex], layer);
+                int edgeBlue = tendrilBlue(states[childIndex], layer);
+                if (!structural) {
+                    edgeRed *= 0.72D;
+                    edgeGreen *= 0.78D;
+                    edgeBlue *= 0.88D;
                 }
+                if (states[childIndex] == ConstellationManager.MYSTERY) edgeAlpha *= 0.82D;
                 appendTendrilTube(buffer, parentIndex, childIndex, animationTime,
                     radius * radiusScale, edgeRed, edgeGreen, edgeBlue, edgeAlpha,
                     points, tangents, normals, binormals, distances, energies);
             }
         }
         tessellator.draw();
+    }
+
+    private static int tendrilRed(int state, int layer) {
+        if (state == ConstellationManager.COMPLETED) return 255;
+        if (state == ConstellationManager.AVAILABLE) return layer == 0 ? 206 : layer == 1 ? 68 : 38;
+        return layer == 0 ? 150 : layer == 1 ? 96 : 74;
+    }
+
+    private static int tendrilGreen(int state, int layer) {
+        if (state == ConstellationManager.COMPLETED) return layer == 0 ? 236 : layer == 1 ? 188 : 112;
+        if (state == ConstellationManager.AVAILABLE) return layer == 0 ? 244 : layer == 1 ? 154 : 82;
+        return layer == 0 ? 155 : layer == 1 ? 103 : 80;
+    }
+
+    private static int tendrilBlue(int state, int layer) {
+        if (state == ConstellationManager.COMPLETED) return layer == 0 ? 166 : layer == 1 ? 60 : 24;
+        if (state == ConstellationManager.AVAILABLE) return 255;
+        return layer == 0 ? 166 : layer == 1 ? 118 : 94;
     }
 
     private static void appendTendrilTube(BufferBuilder buffer, int parentIndex, int childIndex,
@@ -812,7 +835,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             int green = starGreen(state);
             int blue = starBlue(state);
             double pulse = starPulse(state, i, animationTime);
-            double coreRadius = NODE_RADIUS * 0.86D * pulse * starScale(state);
+            double coreRadius = NODE_RADIUS * 1.10D * pulse * starScale(state);
             nodeStar(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
                 coreRadius, red, green, blue,
                 state == ConstellationManager.MYSTERY ? 165 : 255);
@@ -824,7 +847,8 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         if (state == ConstellationManager.MYSTERY) return 0.90D;
         double strength = state == ConstellationManager.COMPLETED ? 1.0D : 0.65D;
         return 1.0D + Math.sin(animationTime * 0.040D + index * 0.73D) * 0.10D * strength
-            + Math.sin(animationTime * 0.017D + index * 1.31D) * 0.04D * strength;
+            + Math.sin(animationTime * 0.017D + index * 1.31D) * 0.04D * strength
+            + Math.sin(animationTime * 0.155D + index * 2.43D) * 0.035D * strength;
     }
 
     private static double starScale(int state) {
@@ -858,34 +882,47 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
 
     private static void nodeStar(BufferBuilder buffer, double x, double y, double z, double radius,
                                  int red, int green, int blue, int alpha) {
-        double baseRadius = radius * 0.72D;
-        double tipRadius = radius * 1.42D;
         for (int face = 0; face < ICOSAHEDRON_FACES.length / 3; face++) {
             int first = ICOSAHEDRON_FACES[face * 3] * 3;
             int second = ICOSAHEDRON_FACES[face * 3 + 1] * 3;
             int third = ICOSAHEDRON_FACES[face * 3 + 2] * 3;
-            double firstX = ICOSAHEDRON_VERTICES[first] * baseRadius;
-            double firstY = ICOSAHEDRON_VERTICES[first + 1] * baseRadius;
-            double firstZ = ICOSAHEDRON_VERTICES[first + 2] * baseRadius;
-            double secondX = ICOSAHEDRON_VERTICES[second] * baseRadius;
-            double secondY = ICOSAHEDRON_VERTICES[second + 1] * baseRadius;
-            double secondZ = ICOSAHEDRON_VERTICES[second + 2] * baseRadius;
-            double thirdX = ICOSAHEDRON_VERTICES[third] * baseRadius;
-            double thirdY = ICOSAHEDRON_VERTICES[third + 1] * baseRadius;
-            double thirdZ = ICOSAHEDRON_VERTICES[third + 2] * baseRadius;
-            double tipX = firstX + secondX + thirdX;
-            double tipY = firstY + secondY + thirdY;
-            double tipZ = firstZ + secondZ + thirdZ;
-            double tipLength = Math.sqrt(tipX * tipX + tipY * tipY + tipZ * tipZ);
-            tipX = tipX / tipLength * tipRadius;
-            tipY = tipY / tipLength * tipRadius;
-            tipZ = tipZ / tipLength * tipRadius;
+            double firstX = ICOSAHEDRON_VERTICES[first] * radius;
+            double firstY = ICOSAHEDRON_VERTICES[first + 1] * radius;
+            double firstZ = ICOSAHEDRON_VERTICES[first + 2] * radius;
+            double secondX = ICOSAHEDRON_VERTICES[second] * radius;
+            double secondY = ICOSAHEDRON_VERTICES[second + 1] * radius;
+            double secondZ = ICOSAHEDRON_VERTICES[second + 2] * radius;
+            double thirdX = ICOSAHEDRON_VERTICES[third] * radius;
+            double thirdY = ICOSAHEDRON_VERTICES[third + 1] * radius;
+            double thirdZ = ICOSAHEDRON_VERTICES[third + 2] * radius;
+            double firstSecondLength = Math.sqrt((firstX + secondX) * (firstX + secondX)
+                + (firstY + secondY) * (firstY + secondY) + (firstZ + secondZ) * (firstZ + secondZ));
+            double secondThirdLength = Math.sqrt((secondX + thirdX) * (secondX + thirdX)
+                + (secondY + thirdY) * (secondY + thirdY) + (secondZ + thirdZ) * (secondZ + thirdZ));
+            double thirdFirstLength = Math.sqrt((thirdX + firstX) * (thirdX + firstX)
+                + (thirdY + firstY) * (thirdY + firstY) + (thirdZ + firstZ) * (thirdZ + firstZ));
+            double firstSecondX = (firstX + secondX) / firstSecondLength * radius;
+            double firstSecondY = (firstY + secondY) / firstSecondLength * radius;
+            double firstSecondZ = (firstZ + secondZ) / firstSecondLength * radius;
+            double secondThirdX = (secondX + thirdX) / secondThirdLength * radius;
+            double secondThirdY = (secondY + thirdY) / secondThirdLength * radius;
+            double secondThirdZ = (secondZ + thirdZ) / secondThirdLength * radius;
+            double thirdFirstX = (thirdX + firstX) / thirdFirstLength * radius;
+            double thirdFirstY = (thirdY + firstY) / thirdFirstLength * radius;
+            double thirdFirstZ = (thirdZ + firstZ) / thirdFirstLength * radius;
+            int facet = face * 4;
             stellarTriangle(buffer, x, y, z, firstX, firstY, firstZ,
-                secondX, secondY, secondZ, tipX, tipY, tipZ, red, green, blue, alpha, face * 3);
-            stellarTriangle(buffer, x, y, z, secondX, secondY, secondZ,
-                thirdX, thirdY, thirdZ, tipX, tipY, tipZ, red, green, blue, alpha, face * 3 + 1);
-            stellarTriangle(buffer, x, y, z, thirdX, thirdY, thirdZ,
-                firstX, firstY, firstZ, tipX, tipY, tipZ, red, green, blue, alpha, face * 3 + 2);
+                firstSecondX, firstSecondY, firstSecondZ, thirdFirstX, thirdFirstY, thirdFirstZ,
+                red, green, blue, alpha, facet);
+            stellarTriangle(buffer, x, y, z, firstSecondX, firstSecondY, firstSecondZ,
+                secondX, secondY, secondZ, secondThirdX, secondThirdY, secondThirdZ,
+                red, green, blue, alpha, facet + 1);
+            stellarTriangle(buffer, x, y, z, thirdFirstX, thirdFirstY, thirdFirstZ,
+                secondThirdX, secondThirdY, secondThirdZ, thirdX, thirdY, thirdZ,
+                red, green, blue, alpha, facet + 2);
+            stellarTriangle(buffer, x, y, z, firstSecondX, firstSecondY, firstSecondZ,
+                secondThirdX, secondThirdY, secondThirdZ, thirdFirstX, thirdFirstY, thirdFirstZ,
+                red, green, blue, alpha, facet + 3);
         }
     }
 
@@ -1027,10 +1064,39 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         return nearest;
     }
 
-    private void renderNodeLabel(String title, int index,
+    private static String nodeHint(int index, boolean mystery) {
+        if (mystery) return "Hint: Complete the blue achievement leading to this path.";
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft.getConnection() == null) return "Hint: Continue this achievement branch.";
+        Advancement advancement = minecraft.getConnection().getAdvancementManager().getAdvancementList()
+            .getAdvancement(new ResourceLocation(NODES[index].id));
+        if (advancement == null || advancement.getDisplay() == null) {
+            return "Hint: Continue this achievement branch.";
+        }
+        String description = advancement.getDisplay().getDescription().getUnformattedText().trim();
+        if (description.startsWith("First inventory acquisition")
+            && !advancement.getDisplay().getIcon().isEmpty()) {
+            return "Hint: Acquire " + advancement.getDisplay().getIcon().getDisplayName() + ".";
+        }
+        int clauseEnd = description.indexOf(';');
+        if (clauseEnd > 0) description = description.substring(0, clauseEnd);
+        if (description.length() > 108) {
+            int breakAt = description.lastIndexOf(' ', 105);
+            description = description.substring(0, breakAt > 40 ? breakAt : 105) + "...";
+        }
+        return "Hint: " + description;
+    }
+
+    private void renderNodeLabel(String title, String hint, int index,
                                  double sceneX, double sceneY, double sceneZ, float animationTime) {
         FontRenderer font = getFontRendererFromRenderManager();
         float scale = 0.025F;
+        List<String> hintLines = font.listFormattedStringToWidth(hint, 220);
+        if (hintLines.size() > 3) hintLines = hintLines.subList(0, 3);
+        int width = font.getStringWidth(title);
+        for (String line : hintLines) width = Math.max(width, font.getStringWidth(line));
+        int halfWidth = width / 2;
+        int height = 12 + hintLines.size() * 9;
         GlStateManager.pushMatrix();
         GlStateManager.translate(sceneX + nodeX(index, animationTime),
             sceneY + nodeY(index, animationTime) + 1.05D,
@@ -1045,16 +1111,19 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
             GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
             GlStateManager.DestFactor.ZERO);
-        int halfWidth = font.getStringWidth(title) / 2;
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
         buffer.pos(-halfWidth - 2, -2, 0.0D).color(10, 18, 30, 190).endVertex();
-        buffer.pos(-halfWidth - 2, 10, 0.0D).color(10, 18, 30, 190).endVertex();
-        buffer.pos(halfWidth + 2, 10, 0.0D).color(10, 18, 30, 190).endVertex();
+        buffer.pos(-halfWidth - 2, height, 0.0D).color(10, 18, 30, 190).endVertex();
+        buffer.pos(halfWidth + 2, height, 0.0D).color(10, 18, 30, 190).endVertex();
         buffer.pos(halfWidth + 2, -2, 0.0D).color(10, 18, 30, 190).endVertex();
         tessellator.draw();
-        font.drawString(title, -halfWidth, 0, 0xFFF7FBFF);
+        font.drawString(title, -font.getStringWidth(title) / 2, 0, 0xFFF7FBFF);
+        for (int lineIndex = 0; lineIndex < hintLines.size(); lineIndex++) {
+            String line = hintLines.get(lineIndex);
+            font.drawString(line, -font.getStringWidth(line) / 2, 11 + lineIndex * 9, 0xFFB8C9DA);
+        }
         GlStateManager.enableDepth();
         GlStateManager.enableLighting();
         GlStateManager.disableBlend();
