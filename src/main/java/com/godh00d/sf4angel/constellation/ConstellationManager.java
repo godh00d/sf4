@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
@@ -75,7 +76,14 @@ public final class ConstellationManager {
         Long last = INTERACTION_COOLDOWNS.get(player.getUniqueID());
         if (last != null && now - last < 500000000L) return;
         INTERACTION_COOLDOWNS.put(player.getUniqueID(), now);
-        if (angel.isConstellationAnchor()) exit(player); else enter(player);
+        if (angel.isConstellationAnchor()) {
+            player.sendStatusMessage(new TextComponentString("I will return you to the exact place we left."), true);
+            exit(player);
+        } else {
+            player.sendStatusMessage(new TextComponentString(
+                "Follow me. Fly to explore, aim at visible lights, and right-click me again to return."), true);
+            enter(player);
+        }
     }
 
     public static void enter(EntityPlayerMP player) {
@@ -281,7 +289,8 @@ public final class ConstellationManager {
     private static void explainObservatory(EntityPlayerMP player, NBTTagCompound data) {
         TypewriterHandler.clearMessages(player);
         TypewriterHandler.queueMessage(player,
-            "This is your living constellation: every light is an achievement in your journey.", 0, 20);
+            "This is your living constellation. Fly to explore it, and aim at a visible light to identify its path.",
+            0, 20);
         TypewriterHandler.queueMessage(player,
             "Green remembers what you completed, gold marks the next step, and blue veils one more step beyond it.",
             0, 20);
