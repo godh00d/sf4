@@ -5,6 +5,7 @@ import com.godh00d.sf4angel.entity.EntityAngel;
 import com.godh00d.sf4angel.entity.EntityConstellationObservatory;
 import com.godh00d.sf4angel.network.MessageConstellationProgress;
 import com.godh00d.sf4angel.network.PacketHandler;
+import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.entity.Entity;
@@ -116,6 +117,7 @@ public final class ConstellationManager {
         player.fallDistance = 0.0F;
         spawnObservatory(player);
         sendSnapshot(player);
+        explainObservatory(player, data);
     }
 
     public static void exit(EntityPlayerMP player) {
@@ -238,9 +240,16 @@ public final class ConstellationManager {
         data.removeTag("SourceSpectator");
         data.removeTag("CenterX");
         data.removeTag("CenterZ");
+        data.removeTag("NextObservatoryComment");
     }
 
     private static void sendSnapshot(EntityPlayerMP player) {
+        byte[] states = progressStates(player);
+        PacketHandler.INSTANCE.sendTo(new MessageConstellationProgress(states.length,
+            AchievementConstellationCatalog.HASH, states), player);
+    }
+
+    private static byte[] progressStates(EntityPlayerMP player) {
         AchievementConstellationCatalog.Node[] nodes = AchievementConstellationCatalog.nodes();
         byte[] states = new byte[nodes.length];
         boolean[] stageEligible = new boolean[nodes.length];
@@ -249,7 +258,6 @@ public final class ConstellationManager {
         for (int i = 0; i < nodes.length; i++) {
             AchievementConstellationCatalog.Node node = nodes[i];
             stageEligible[i] = ownsStages(player, node);
-            if (!stageEligible[i]) continue;
             Advancement advancement = advancement(player, node.id);
             AdvancementProgress progress = advancement == null ? null : player.getAdvancements().getProgress(advancement);
             if (progress != null && progress.isDone()) states[i] = COMPLETED;
@@ -267,8 +275,51 @@ public final class ConstellationManager {
             if (parentsComplete) states[i] = AVAILABLE;
         }
         applyMysteryFrontier(nodes, states, stageEligible);
-        PacketHandler.INSTANCE.sendTo(new MessageConstellationProgress(nodes.length,
-            AchievementConstellationCatalog.HASH, states), player);
+        return states;
+    }
+
+    private static void explainObservatory(EntityPlayerMP player, NBTTagCompound data) {
+        TypewriterHandler.clearMessages(player);
+        TypewriterHandler.queueMessage(player,
+            "This is your living constellation: every light is an achievement in your journey.", 0, 20);
+        TypewriterHandler.queueMessage(player,
+            "Green remembers what you completed, gold marks the next step, and blue veils one more step beyond it.",
+            0, 20);
+        TypewriterHandler.queueMessage(player,
+            "The paths beyond that horizon remain hidden. I will stay beside you; right-click me when you wish to return.",
+            0, 20);
+        data.setLong("NextObservatoryComment", player.world.getTotalWorldTime() + 1200L);
+    }
+
+    private static void commentOnProgress(EntityPlayerMP player, NBTTagCompound data) {
+        if (TypewriterHandler.hasActiveMessages(player)) return;
+        byte[] states = progressStates(player);
+        AchievementConstellationCatalog.Node[] nodes = AchievementConstellationCatalog.nodes();
+        int completed = 0;
+        int available = 0;
+        String availableTitle = null;
+        for (int i = 0; i < states.length; i++) {
+            if (states[i] == COMPLETED) completed++;
+            if (states[i] == AVAILABLE) {
+                available++;
+                if (availableTitle == null) availableTitle = nodes[i].title;
+            }
+        }
+
+        long cycle = player.world.getTotalWorldTime() / 1200L % 3L;
+        if (cycle == 0L || availableTitle == null) {
+            TypewriterHandler.queueMessage(player,
+                "You have awakened " + completed + " of " + states.length + " lights. Each one changes the shape of this sky.",
+                0, 0);
+        } else if (cycle == 1L) {
+            TypewriterHandler.queueMessage(player,
+                availableTitle + " burns gold among " + available + " paths now within your reach.", 0, 0);
+        } else {
+            TypewriterHandler.queueMessage(player,
+                "I can see only two steps beyond your completed path, but no farther. What remains hidden must be earned.",
+                0, 0);
+        }
+        data.setLong("NextObservatoryComment", player.world.getTotalWorldTime() + 1200L);
     }
 
     private static boolean ownsStages(EntityPlayerMP player, AchievementConstellationCatalog.Node node) {
@@ -284,30 +335,16 @@ public final class ConstellationManager {
             throw new IllegalArgumentException("Constellation frontier arrays differ in length");
         }
         Deque<int[]> frontier = new ArrayDeque<>();
-        boolean hasAvailable = false;
         for (int i = 0; i < states.length; i++) {
             if (states[i] == AVAILABLE) {
                 frontier.addLast(new int[] {i, 0});
-                hasAvailable = true;
-            }
-        }
-        if (!hasAvailable) {
-            for (int i = 0; i < states.length; i++) {
-                if (states[i] != COMPLETED) continue;
-                for (int child : nodes[i].children()) {
-                    validateChild(child, nodes.length);
-                    if (stageEligible[child] && states[child] == ABSENT) {
-                        frontier.addLast(new int[] {i, 0});
-                        break;
-                    }
-                }
             }
         }
 
         boolean[] visited = new boolean[nodes.length];
         while (!frontier.isEmpty()) {
             int[] current = frontier.removeFirst();
-            if (current[1] >= 2) continue;
+            if (current[1] >= 1) continue;
             for (int child : nodes[current[0]].children()) {
                 validateChild(child, nodes.length);
                 if (!stageEligible[child] || states[child] != ABSENT) continue;
@@ -375,6 +412,7 @@ public final class ConstellationManager {
         double centerZ = data.getDouble("CenterZ");
         EntityConstellationObservatory observatory = new EntityConstellationObservatory(player.world);
         observatory.setOwnerId(player.getUniqueID());
+        observatory.setSceneCenter(centerX, CENTER_Y, centerZ);
         observatory.setPosition(centerX - EntityConstellationObservatory.SCENE_OFFSET_X,
             CENTER_Y, centerZ - EntityConstellationObservatory.SCENE_OFFSET_Z);
         player.world.spawnEntity(observatory);
@@ -470,6 +508,9 @@ public final class ConstellationManager {
         constrainToCell(player, data);
         if (player.ticksExisted % 20 == 0) sendSnapshot(player);
         if (player.ticksExisted % 100 == 0) ensureObservatory(player);
+        if (player.world.getTotalWorldTime() >= data.getLong("NextObservatoryComment")) {
+            commentOnProgress(player, data);
+        }
     }
 
     @SubscribeEvent

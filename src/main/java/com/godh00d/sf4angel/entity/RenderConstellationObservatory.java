@@ -38,7 +38,15 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         UUID owner = angel.getOwnerId();
         if (player == null || owner == null || !owner.equals(player.getUniqueID())) return;
 
+        EntityConstellationObservatory observatory = (EntityConstellationObservatory) angel;
         byte[] states = ConstellationClientState.states();
+        float animationTime = angel.ticksExisted + partialTicks;
+        double entityX = angel.lastTickPosX + (angel.posX - angel.lastTickPosX) * partialTicks;
+        double entityY = angel.lastTickPosY + (angel.posY - angel.lastTickPosY) * partialTicks;
+        double entityZ = angel.lastTickPosZ + (angel.posZ - angel.lastTickPosZ) * partialTicks;
+        double sceneX = x + observatory.getSceneX() - entityX;
+        double sceneY = y + observatory.getSceneY() - entityY;
+        double sceneZ = z + observatory.getSceneZ() - entityZ;
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_LIGHTING);
@@ -48,21 +56,26 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         drawSkyShell();
-        drawStars();
+        drawStars(animationTime);
         GlStateManager.pushMatrix();
-        GlStateManager.translate(x + EntityConstellationObservatory.SCENE_OFFSET_X, y,
-            z + EntityConstellationObservatory.SCENE_OFFSET_Z);
-        drawEdges(states);
+        GlStateManager.translate(sceneX, sceneY, sceneZ);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        drawNodeAuras(states);
+        drawEdges(states, animationTime, 4.0F, 78, 48, 156, 58);
+        drawMotes(animationTime);
+        drawNodeAuras(states, animationTime);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        drawNodes(states);
+        drawEdges(states, animationTime, 1.5F, 146, 116, 224, 220);
+        drawNodes(states, animationTime);
         GlStateManager.popMatrix();
         GL11.glPopAttrib();
 
         super.doRender(angel, x, y, z, entityYaw, partialTicks);
-        int hovered = hoveredNode(angel, player, states, partialTicks);
-        if (hovered >= 0) renderNodeLabel(angel, NODES[hovered], x, y, z);
+        int hovered = hoveredNode(observatory, player, states, partialTicks, animationTime);
+        if (hovered >= 0) {
+            String title = states[hovered] == ConstellationManager.MYSTERY
+                ? "Unrevealed achievement" : NODES[hovered].title;
+            renderNodeLabel(title, hovered, sceneX, sceneY, sceneZ, animationTime);
+        }
     }
 
     private static void drawSkyShell() {
@@ -96,7 +109,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         vertex(buffer, x, y, z, red, green, blue, 255);
     }
 
-    private static void drawStars() {
+    private static void drawStars(float animationTime) {
         GL11.glPointSize(1.8F);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
@@ -105,7 +118,8 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             double height = -1.0D + 2.0D * (i + 0.5D) / 128.0D;
             double radius = Math.sqrt(1.0D - height * height);
             double angle = i * 2.399963229728653D;
-            int brightness = 155 + i * 73 % 100;
+            int brightness = 170 + i * 73 % 70
+                + (int) (Math.sin(animationTime * 0.012D + i * 0.91D) * 10.0D);
             vertex(buffer, Math.cos(angle) * radius * (SKY_RADIUS - 0.2D),
                 height * (SKY_RADIUS - 0.2D), Math.sin(angle) * radius * (SKY_RADIUS - 0.2D),
                 brightness, brightness - 12, 255, 210);
@@ -113,8 +127,9 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         tessellator.draw();
     }
 
-    private static void drawEdges(byte[] states) {
-        GL11.glLineWidth(1.7F);
+    private static void drawEdges(byte[] states, float animationTime, float width,
+                                  int red, int green, int blue, int alpha) {
+        GL11.glLineWidth(width);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
@@ -124,60 +139,77 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             for (String parentId : node.parents) {
                 Integer parentIndex = INDEXES.get(parentId);
                 if (parentIndex == null || !visible(states, parentIndex)) continue;
-                AchievementConstellationCatalog.Node parent = NODES[parentIndex];
-                nodeVertex(buffer, parent, 130, 104, 218, 210);
-                nodeVertex(buffer, node, 130, 104, 218, 210);
+                nodeVertex(buffer, parentIndex, animationTime, red, green, blue, alpha);
+                nodeVertex(buffer, i, animationTime, red, green, blue, alpha);
             }
         }
         tessellator.draw();
     }
 
-    private static void drawNodes(byte[] states) {
+    private static void drawNodes(byte[] states, float animationTime) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
         for (int i = 0; i < NODES.length; i++) {
             if (!visible(states, i)) continue;
-            int state = states.length == NODES.length ? states[i] : ConstellationManager.MYSTERY;
+            int state = states[i];
             int red = state == ConstellationManager.COMPLETED ? 45
                 : state == ConstellationManager.AVAILABLE ? 238 : 66;
             int green = state == ConstellationManager.COMPLETED ? 183
                 : state == ConstellationManager.AVAILABLE ? 177 : 153;
             int blue = state == ConstellationManager.COMPLETED ? 112
                 : state == ConstellationManager.AVAILABLE ? 57 : 225;
-            AchievementConstellationCatalog.Node node = NODES[i];
-            box(buffer, localX(node), localY(node), localZ(node), NODE_RADIUS, red, green, blue);
+            box(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
+                NODE_RADIUS, red, green, blue);
         }
         tessellator.draw();
     }
 
-    private static void drawNodeAuras(byte[] states) {
+    private static void drawNodeAuras(byte[] states, float animationTime) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
         for (int i = 0; i < NODES.length; i++) {
             if (!visible(states, i)) continue;
-            int state = states.length == NODES.length ? states[i] : ConstellationManager.MYSTERY;
+            int state = states[i];
             int red = state == ConstellationManager.COMPLETED ? 45
                 : state == ConstellationManager.AVAILABLE ? 238 : 66;
             int green = state == ConstellationManager.COMPLETED ? 183
                 : state == ConstellationManager.AVAILABLE ? 177 : 153;
             int blue = state == ConstellationManager.COMPLETED ? 112
                 : state == ConstellationManager.AVAILABLE ? 57 : 225;
-            AchievementConstellationCatalog.Node node = NODES[i];
-            box(buffer, localX(node), localY(node), localZ(node), NODE_RADIUS * 2.2F,
+            double breath = 2.05D + Math.sin(animationTime * 0.025D + i * 0.67D) * 0.18D;
+            box(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
+                NODE_RADIUS * breath,
                 red, green, blue, 42);
         }
         tessellator.draw();
     }
 
     private static boolean visible(byte[] states, int index) {
-        return states.length != NODES.length || states[index] != ConstellationManager.ABSENT;
+        return states.length == NODES.length && states[index] != ConstellationManager.ABSENT;
     }
 
-    private static void nodeVertex(BufferBuilder buffer, AchievementConstellationCatalog.Node node,
+    private static void nodeVertex(BufferBuilder buffer, int index, float animationTime,
                                    int red, int green, int blue, int alpha) {
-        vertex(buffer, localX(node), localY(node), localZ(node), red, green, blue, alpha);
+        vertex(buffer, nodeX(index, animationTime), nodeY(index, animationTime),
+            nodeZ(index, animationTime), red, green, blue, alpha);
+    }
+
+    private static void drawMotes(float animationTime) {
+        GL11.glPointSize(2.2F);
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < 56; i++) {
+            double cycle = (animationTime * 0.0015D + i * 0.61803398875D) % 1.0D;
+            double x = Math.sin(i * 12.9898D) * 9.0D;
+            double y = -9.0D + cycle * 18.0D;
+            double z = Math.cos(i * 7.233D) * 6.5D;
+            int alpha = (int) (Math.sin(cycle * Math.PI) * 105.0D);
+            vertex(buffer, x, y, z, 158, 116, 244, alpha);
+        }
+        tessellator.draw();
     }
 
     private static void box(BufferBuilder buffer, double x, double y, double z, double radius,
@@ -222,33 +254,36 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         buffer.pos(x, y, z).color(red, green, blue, alpha).endVertex();
     }
 
-    private static double localX(AchievementConstellationCatalog.Node node) {
-        return (node.x - CATALOG_CENTER_X) * SCENE_SCALE;
+    private static double nodeX(int index, float animationTime) {
+        AchievementConstellationCatalog.Node node = NODES[index];
+        return (node.x - CATALOG_CENTER_X) * SCENE_SCALE
+            + Math.sin(animationTime * 0.011D + index * 2.17D) * 0.10D;
     }
 
-    private static double localY(AchievementConstellationCatalog.Node node) {
-        return (node.y - CATALOG_CENTER_Y) * SCENE_SCALE;
+    private static double nodeY(int index, float animationTime) {
+        AchievementConstellationCatalog.Node node = NODES[index];
+        return (node.y - CATALOG_CENTER_Y) * SCENE_SCALE
+            + Math.sin(animationTime * 0.008D + index * 1.37D) * 0.14D;
     }
 
-    private static double localZ(AchievementConstellationCatalog.Node node) {
-        return (node.z - CATALOG_CENTER_Z) * SCENE_SCALE;
+    private static double nodeZ(int index, float animationTime) {
+        AchievementConstellationCatalog.Node node = NODES[index];
+        return (node.z - CATALOG_CENTER_Z) * SCENE_SCALE
+            + Math.cos(animationTime * 0.010D + index * 1.79D) * 0.10D;
     }
 
-    private static int hoveredNode(EntityAngel angel, EntityPlayer player, byte[] states, float partialTicks) {
+    private static int hoveredNode(EntityConstellationObservatory observatory, EntityPlayer player,
+                                   byte[] states, float partialTicks, float animationTime) {
         Vec3d eye = player.getPositionEyes(partialTicks);
         Vec3d look = player.getLook(partialTicks);
-        double entityX = angel.lastTickPosX + (angel.posX - angel.lastTickPosX) * partialTicks;
-        double entityY = angel.lastTickPosY + (angel.posY - angel.lastTickPosY) * partialTicks;
-        double entityZ = angel.lastTickPosZ + (angel.posZ - angel.lastTickPosZ) * partialTicks;
         int nearest = -1;
         double nearestDistance = Double.MAX_VALUE;
         for (int i = 0; i < NODES.length; i++) {
             if (!visible(states, i)) continue;
-            AchievementConstellationCatalog.Node node = NODES[i];
             Vec3d offset = new Vec3d(
-                entityX + EntityConstellationObservatory.SCENE_OFFSET_X + localX(node) - eye.x,
-                entityY + localY(node) - eye.y,
-                entityZ + EntityConstellationObservatory.SCENE_OFFSET_Z + localZ(node) - eye.z);
+                observatory.getSceneX() + nodeX(i, animationTime) - eye.x,
+                observatory.getSceneY() + nodeY(i, animationTime) - eye.y,
+                observatory.getSceneZ() + nodeZ(i, animationTime) - eye.z);
             double alongRay = offset.dotProduct(look);
             if (alongRay < 0.0D || alongRay > 180.0D) continue;
             double missDistance = offset.lengthSquared() - alongRay * alongRay;
@@ -260,14 +295,14 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         return nearest;
     }
 
-    private void renderNodeLabel(EntityAngel angel, AchievementConstellationCatalog.Node node,
-                                 double x, double y, double z) {
+    private void renderNodeLabel(String title, int index,
+                                 double sceneX, double sceneY, double sceneZ, float animationTime) {
         FontRenderer font = getFontRendererFromRenderManager();
         float scale = 0.025F;
         GlStateManager.pushMatrix();
-        GlStateManager.translate(x + EntityConstellationObservatory.SCENE_OFFSET_X + localX(node),
-            y + localY(node) + 1.15D,
-            z + EntityConstellationObservatory.SCENE_OFFSET_Z + localZ(node));
+        GlStateManager.translate(sceneX + nodeX(index, animationTime),
+            sceneY + nodeY(index, animationTime) + 0.65D,
+            sceneZ + nodeZ(index, animationTime));
         GlStateManager.rotate(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
         GlStateManager.rotate((renderManager.options.thirdPersonView == 2 ? -1 : 1) * renderManager.playerViewX,
             1.0F, 0.0F, 0.0F);
@@ -278,7 +313,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
             GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
             GlStateManager.DestFactor.ZERO);
-        int halfWidth = font.getStringWidth(node.title) / 2;
+        int halfWidth = font.getStringWidth(title) / 2;
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
@@ -287,7 +322,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         buffer.pos(halfWidth + 2, 10, 0.0D).color(10, 18, 30, 190).endVertex();
         buffer.pos(halfWidth + 2, -2, 0.0D).color(10, 18, 30, 190).endVertex();
         tessellator.draw();
-        font.drawString(node.title, -halfWidth, 0, 0xFFF7FBFF);
+        font.drawString(title, -halfWidth, 0, 0xFFF7FBFF);
         GlStateManager.enableDepth();
         GlStateManager.enableLighting();
         GlStateManager.disableBlend();

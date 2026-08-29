@@ -1,6 +1,7 @@
 package com.godh00d.sf4angel.handler;
 
 import com.godh00d.sf4angel.entity.EntityAngel;
+import com.godh00d.sf4angel.constellation.ConstellationManager;
 import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.entity.player.EntityPlayer;
@@ -41,6 +42,8 @@ public class TickHandler {
         AchievementHandler.checkTwerk(mp);
 
         IntegrationEngine.tick(mp);
+
+        if (ConstellationManager.hasActiveSession(mp)) return;
 
         handleDespawn(mp);
 

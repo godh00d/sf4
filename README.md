@@ -20,7 +20,7 @@ Additional behavior includes:
 
 [Explore the public interactive 3D Achievement Constellation](https://godh00d.github.io/sf4/). The visualization shows the complete fixed catalog of all 129 achievements and their dependency routes; visibility and state colors inside the game remain specific to each player's progress and eligible stages.
 
-Right-click your visible angel with the main hand to enter the constellation. The player moves to an isolated, owner-specific observatory cell in the normal overworld and receives temporary flight. Right-click the stationary angel beside the arrival point to return to the exact dimension, position, view direction, and entry-time flight state from which you entered. Left-clicking a normal angel retains its existing irritated lightning response.
+Right-click your visible angel with the main hand to enter the constellation. The player moves to an isolated, owner-specific observatory cell in the normal overworld and receives temporary flight. Inside, the angel follows at a stable nearby offset, explains the room, comments periodically on completed and available paths, and remains within reach; right-click it to return to the exact dimension, position, view direction, and entry-time flight state from which you entered. Left-clicking a normal angel retains its existing irritated lightning response.
 
 Players cannot take normal damage in the constellation, including void damage and `/kill` damage routed through Forge. If another mod forces death without a damage event, respawn recovery returns the player and transfers any generated drops to the saved return location so they are not stranded in the void.
 
@@ -33,7 +33,7 @@ The constellation is a client-rendered graph; it does not create an entity for e
 - Blue: mystery achievement within two dependency edges of the current frontier
 - Absent: farther progress or stage-gated content that is not yet eligible
 
-Every visible parent relationship is drawn, including multi-parent requirements and parallel technical branches. Progress is player-specific and refreshes while the player is inside the constellation.
+Every visible parent relationship is drawn, including multi-parent requirements and parallel technical branches. Only completed achievements and exactly two steps beyond them are rendered: currently available gold achievements, followed by one blue mystery layer. No fallback reveals blocked or later catalog nodes. Every point sways gently with its connected branches while auras breathe and ambient motes rise around the fixed tree. Progress is player-specific and refreshes while the player is inside the constellation.
 
 The constellation renderer belongs to the owner-only return angel entity and draws a view-centered violet sky shell, fixed stars, luminous dependency edges, and glowing achievement cubes through Minecraft's normal entity-rendering pipeline. The shell stays inside the camera far plane, and clouds and weather are suppressed only for the active session before the player's original settings are restored on return or disconnect, so the normal overworld sky cannot flash through as the player looks around. The server allocates cells far from the active island and above build terrain, resolves collisions between active players, enforces the virtual room boundary, and recovers interrupted sessions on login or respawn. No custom dimension, physical constellation blocks, full-screen GUI, or world-last render hook is used.
 
