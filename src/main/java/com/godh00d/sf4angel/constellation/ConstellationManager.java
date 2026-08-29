@@ -4,6 +4,7 @@ import com.godh00d.sf4angel.SF4Angel;
 import com.godh00d.sf4angel.entity.EntityAngel;
 import com.godh00d.sf4angel.entity.EntityConstellationObservatory;
 import com.godh00d.sf4angel.network.MessageConstellationProgress;
+import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.network.PacketHandler;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.advancements.Advancement;
@@ -329,19 +330,9 @@ public final class ConstellationManager {
             }
         }
 
-        long cycle = player.world.getTotalWorldTime() / 1200L % 3L;
-        if (cycle == 0L || availableTitle == null) {
-            TypewriterHandler.queueMessage(player,
-                "You have awakened " + completed + " of " + states.length + " lights. Each one changes the shape of this sky.",
-                0, 0);
-        } else if (cycle == 1L) {
-            TypewriterHandler.queueMessage(player,
-                availableTitle + " burns blue among " + available + " paths now within your reach.", 0, 0);
-        } else {
-            TypewriterHandler.queueMessage(player,
-                "I can see only two steps beyond your completed path, but no farther. What remains hidden must be earned.",
-                0, 0);
-        }
+        TypewriterHandler.queueMessage(player,
+            AngelPersonality.getRandomObservatoryComment(completed, states.length, available, availableTitle),
+            0, 0);
         data.setLong("NextObservatoryComment", player.world.getTotalWorldTime() + 1200L);
     }
 

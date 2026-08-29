@@ -520,9 +520,9 @@ public class EntityAngel extends EntityCreature {
         boolean transitioning = getVisualState() == STATE_SPAWNING || getVisualState() == STATE_DESPAWNING;
         if (!transitioning && ticksExisted % 6 != 0) return;
         boolean smokeBurst = getAnimationType() == ANIM_SMOKE && getStateTimer() <= 5;
-        if (transitioning && getAnimationType() == ANIM_SMOKE && !smokeBurst && getStateTimer() % 3 != 0) return;
-        int count = !transitioning ? 1 : getAnimationType() == ANIM_SMOKE ? smokeBurst ? 30 : 4
-            : getAnimationType() == ANIM_SPIN ? 10 : 12;
+        if (transitioning && getAnimationType() == ANIM_SMOKE && !smokeBurst && getStateTimer() % 2 != 0) return;
+        int count = !transitioning ? 1 : getAnimationType() == ANIM_SMOKE ? smokeBurst ? 50 : 8
+            : getAnimationType() == ANIM_SPIN ? 18 : 22;
         float progress = getTransitionProgress();
         double transitionY = 0.0D;
         if (transitioning && getAnimationType() == ANIM_SKY) {
@@ -535,7 +535,8 @@ public class EntityAngel extends EntityCreature {
             double direction = getVisualState() == STATE_SPAWNING ? -1.0D : 1.0D;
             double angle = direction * ticksExisted * (getAnimationType() == ANIM_SPIN ? 0.45D : 0.13D)
                 + i * Math.PI * 2.0D / count;
-            double radius = transitioning ? 0.15D + getRenderScale() * 0.75D
+            double radius = transitioning ? (0.15D + getRenderScale() * 0.75D)
+                * (0.72D + world.rand.nextDouble() * 0.42D)
                 : 0.55D + world.rand.nextDouble() * 0.35D;
             double px = posX + Math.cos(angle) * radius;
             double py = posY + transitionY + 0.35D + world.rand.nextDouble() * 1.1D;
