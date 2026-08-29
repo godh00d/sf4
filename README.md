@@ -35,7 +35,7 @@ The constellation is a client-rendered graph; it does not create an entity for e
 
 Every visible parent relationship is drawn, including multi-parent requirements and parallel technical branches. Progress is player-specific and refreshes while the player is inside the constellation.
 
-The constellation renderer belongs to the owner-only return angel entity and draws an inward-facing white room, dependency edges, and achievement cubes through Minecraft's normal entity-rendering pipeline. The server allocates cells far from the active island and above build terrain, resolves collisions between active players, enforces the virtual room boundary, and recovers interrupted sessions on login or respawn. No custom dimension, physical constellation blocks, full-screen GUI, or world-last render hook is used.
+The constellation renderer belongs to the owner-only return angel entity and draws a view-centered violet sky shell, fixed stars, luminous dependency edges, and glowing achievement cubes through Minecraft's normal entity-rendering pipeline. The shell stays inside the camera far plane, and clouds and weather are suppressed only for the active session before the player's original settings are restored on return or disconnect, so the normal overworld sky cannot flash through as the player looks around. The server allocates cells far from the active island and above build terrain, resolves collisions between active players, enforces the virtual room boundary, and recovers interrupted sessions on login or respawn. No custom dimension, physical constellation blocks, full-screen GUI, or world-last render hook is used.
 
 ## Achievement Catalog
 

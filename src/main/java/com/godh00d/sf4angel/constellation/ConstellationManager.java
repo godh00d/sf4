@@ -46,8 +46,8 @@ public final class ConstellationManager {
     private static final String DATA_KEY = "sf4angelConstellation";
     private static final int OBSERVATORY_DIMENSION = 0;
     private static final double CENTER_Y = 512.0D;
-    private static final double ARRIVAL_OFFSET_X = -60.0D;
-    private static final double BOUNDARY_RADIUS = 108.0D;
+    private static final double ARRIVAL_OFFSET_X = -8.0D;
+    private static final double BOUNDARY_RADIUS = 12.0D;
     private static final double MIN_Y = CENTER_Y - BOUNDARY_RADIUS;
     private static final double MAX_Y = CENTER_Y + BOUNDARY_RADIUS;
     private static final int CELL_SPACING = 256;

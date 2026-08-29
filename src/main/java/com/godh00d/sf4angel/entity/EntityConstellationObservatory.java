@@ -4,7 +4,7 @@ import net.minecraft.world.World;
 
 public final class EntityConstellationObservatory extends EntityAngel {
 
-    public static final double SCENE_OFFSET_X = 57.0D;
+    public static final double SCENE_OFFSET_X = 5.0D;
     public static final double SCENE_OFFSET_Z = -2.5D;
 
     public EntityConstellationObservatory(World world) {

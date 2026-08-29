@@ -2,6 +2,7 @@ package com.godh00d.sf4angel.proxy;
 
 import com.godh00d.sf4angel.entity.EntityAngelRender;
 import com.godh00d.sf4angel.client.ConstellationClientState;
+import com.godh00d.sf4angel.client.ConstellationClientEvents;
 import com.godh00d.sf4angel.entity.EntityConstellationObservatory;
 import com.godh00d.sf4angel.entity.RenderConstellationObservatory;
 import com.godh00d.sf4angel.network.MessageConstellationProgress;
@@ -10,6 +11,7 @@ import com.godh00d.sf4angel.entity.EntityAngel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,6 +26,7 @@ public class ClientProxy extends CommonProxy {
             com.godh00d.sf4angel.entity.EntityAngel.class,
             EntityAngelRender::new
         );
+        FMLCommonHandler.instance().bus().register(new ConstellationClientEvents());
         RenderingRegistry.registerEntityRenderingHandler(
             EntityConstellationObservatory.class,
             RenderConstellationObservatory::new
