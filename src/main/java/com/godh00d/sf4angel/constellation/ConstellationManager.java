@@ -48,8 +48,8 @@ public final class ConstellationManager {
     private static final String DATA_KEY = "sf4angelConstellation";
     private static final int OBSERVATORY_DIMENSION = 0;
     private static final double CENTER_Y = 512.0D;
-    private static final double ARRIVAL_OFFSET_X = -8.0D;
-    private static final double BOUNDARY_RADIUS = 12.0D;
+    private static final double ARRIVAL_OFFSET_X = -4.0D;
+    private static final double BOUNDARY_RADIUS = 50.0D;
     private static final double MIN_Y = CENTER_Y - BOUNDARY_RADIUS;
     private static final double MAX_Y = CENTER_Y + BOUNDARY_RADIUS;
     private static final int CELL_SPACING = 256;
@@ -422,8 +422,8 @@ public final class ConstellationManager {
         EntityConstellationObservatory observatory = new EntityConstellationObservatory(player.world);
         observatory.setOwnerId(player.getUniqueID());
         observatory.setSceneCenter(centerX, CENTER_Y, centerZ);
-        observatory.setPosition(centerX - EntityConstellationObservatory.SCENE_OFFSET_X,
-            CENTER_Y, centerZ - EntityConstellationObservatory.SCENE_OFFSET_Z);
+        observatory.setPosition(player.posX, player.posY + player.getEyeHeight() - 0.5D,
+            player.posZ - 2.0D);
         player.world.spawnEntity(observatory);
     }
 

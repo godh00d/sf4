@@ -26,7 +26,7 @@ public class ModEntities {
             Reference.MOD_ID + ".constellation_observatory",
             entityId++,
             SF4Angel.instance,
-            320, 20, false
+            320, 1, false
         );
     }
 }

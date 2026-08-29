@@ -24,9 +24,9 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     private static final double CATALOG_CENTER_X = 41.0D;
     private static final double CATALOG_CENTER_Y = 88.0D;
     private static final double CATALOG_CENTER_Z = 0.0D;
-    private static final double SCENE_SCALE = 0.15D;
+    private static final double SCENE_SCALE = 0.45D;
     private static final double SKY_RADIUS = 14.0D;
-    private static final float NODE_RADIUS = 0.30F;
+    private static final float NODE_RADIUS = 0.48F;
 
     public RenderConstellationObservatory(RenderManager renderManager) {
         super(renderManager);
@@ -60,11 +60,11 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         GlStateManager.pushMatrix();
         GlStateManager.translate(sceneX, sceneY, sceneZ);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        drawEdges(states, animationTime, 4.0F, 78, 48, 156, 58);
+        drawEdges(states, animationTime, 6.0F, 78, 48, 156, 48);
         drawMotes(animationTime);
         drawNodeAuras(states, animationTime);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        drawEdges(states, animationTime, 1.5F, 146, 116, 224, 220);
+        drawEdges(states, animationTime, 1.8F, 164, 132, 238, 225);
         drawNodes(states, animationTime);
         GlStateManager.popMatrix();
         GL11.glPopAttrib();
@@ -139,17 +139,53 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             for (String parentId : node.parents) {
                 Integer parentIndex = INDEXES.get(parentId);
                 if (parentIndex == null || !visible(states, parentIndex)) continue;
-                nodeVertex(buffer, parentIndex, animationTime, red, green, blue, alpha);
-                nodeVertex(buffer, i, animationTime, red, green, blue, alpha);
+                appendTendril(buffer, parentIndex, i, animationTime, red, green, blue, alpha);
             }
         }
         tessellator.draw();
     }
 
+    private static void appendTendril(BufferBuilder buffer, int parentIndex, int childIndex,
+                                      float animationTime, int red, int green, int blue, int alpha) {
+        double startX = nodeX(parentIndex, animationTime);
+        double startY = nodeY(parentIndex, animationTime);
+        double startZ = nodeZ(parentIndex, animationTime);
+        double endX = nodeX(childIndex, animationTime);
+        double endY = nodeY(childIndex, animationTime);
+        double endZ = nodeZ(childIndex, animationTime);
+        double seed = parentIndex * 1.731D + childIndex * 0.917D;
+        double bendX = Math.sin(seed) * 0.72D;
+        double bendY = 0.38D + Math.cos(seed * 0.71D) * 0.30D;
+        double bendZ = Math.cos(seed) * 0.72D;
+
+        for (int segment = 0; segment < 16; segment++) {
+            appendTendrilVertex(buffer, segment / 16.0D, startX, startY, startZ, endX, endY, endZ,
+                bendX, bendY, bendZ, seed, animationTime, red, green, blue, alpha);
+            appendTendrilVertex(buffer, (segment + 1) / 16.0D, startX, startY, startZ, endX, endY, endZ,
+                bendX, bendY, bendZ, seed, animationTime, red, green, blue, alpha);
+        }
+    }
+
+    private static void appendTendrilVertex(BufferBuilder buffer, double progress,
+                                             double startX, double startY, double startZ,
+                                             double endX, double endY, double endZ,
+                                             double bendX, double bendY, double bendZ, double seed,
+                                             float animationTime, int red, int green, int blue, int alpha) {
+        double arc = Math.sin(progress * Math.PI);
+        double ripple = Math.sin(progress * Math.PI * 2.0D + animationTime * 0.018D + seed) * 0.11D * arc;
+        double x = startX + (endX - startX) * progress + bendX * arc + ripple * bendZ;
+        double y = startY + (endY - startY) * progress + bendY * arc
+            + Math.sin(progress * Math.PI * 3.0D + seed) * 0.07D * arc;
+        double z = startZ + (endZ - startZ) * progress + bendZ * arc - ripple * bendX;
+        int flowingAlpha = (int) (alpha * (0.86D
+            + Math.sin(animationTime * 0.012D - progress * 4.0D + seed) * 0.10D));
+        vertex(buffer, x, y, z, red, green, blue, flowingAlpha);
+    }
+
     private static void drawNodes(byte[] states, float animationTime) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
         for (int i = 0; i < NODES.length; i++) {
             if (!visible(states, i)) continue;
             int state = states[i];
@@ -159,8 +195,8 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
                 : state == ConstellationManager.AVAILABLE ? 177 : 153;
             int blue = state == ConstellationManager.COMPLETED ? 112
                 : state == ConstellationManager.AVAILABLE ? 57 : 225;
-            box(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
-                NODE_RADIUS, red, green, blue);
+            star(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
+                NODE_RADIUS, red, green, blue, 255);
         }
         tessellator.draw();
     }
@@ -168,7 +204,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     private static void drawNodeAuras(byte[] states, float animationTime) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
         for (int i = 0; i < NODES.length; i++) {
             if (!visible(states, i)) continue;
             int state = states[i];
@@ -179,7 +215,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             int blue = state == ConstellationManager.COMPLETED ? 112
                 : state == ConstellationManager.AVAILABLE ? 57 : 225;
             double breath = 2.05D + Math.sin(animationTime * 0.025D + i * 0.67D) * 0.18D;
-            box(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
+            star(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
                 NODE_RADIUS * breath,
                 red, green, blue, 42);
         }
@@ -190,12 +226,6 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         return states.length == NODES.length && states[index] != ConstellationManager.ABSENT;
     }
 
-    private static void nodeVertex(BufferBuilder buffer, int index, float animationTime,
-                                   int red, int green, int blue, int alpha) {
-        vertex(buffer, nodeX(index, animationTime), nodeY(index, animationTime),
-            nodeZ(index, animationTime), red, green, blue, alpha);
-    }
-
     private static void drawMotes(float animationTime) {
         GL11.glPointSize(2.2F);
         Tessellator tessellator = Tessellator.getInstance();
@@ -203,50 +233,35 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         buffer.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION_COLOR);
         for (int i = 0; i < 56; i++) {
             double cycle = (animationTime * 0.0015D + i * 0.61803398875D) % 1.0D;
-            double x = Math.sin(i * 12.9898D) * 9.0D;
-            double y = -9.0D + cycle * 18.0D;
-            double z = Math.cos(i * 7.233D) * 6.5D;
+            double x = Math.sin(i * 12.9898D) * 30.0D;
+            double y = -30.0D + cycle * 60.0D;
+            double z = Math.cos(i * 7.233D) * 22.0D;
             int alpha = (int) (Math.sin(cycle * Math.PI) * 105.0D);
             vertex(buffer, x, y, z, 158, 116, 244, alpha);
         }
         tessellator.draw();
     }
 
-    private static void box(BufferBuilder buffer, double x, double y, double z, double radius,
-                            int red, int green, int blue) {
-        box(buffer, x, y, z, radius, red, green, blue, 255);
+    private static void star(BufferBuilder buffer, double x, double y, double z, double radius,
+                             int red, int green, int blue, int alpha) {
+        double tip = radius * 1.65D;
+        double waist = radius * 1.25D;
+        triangle(buffer, x, y + tip, z, x + waist, y, z, x, y, z + waist, red, green, blue, alpha);
+        triangle(buffer, x, y + tip, z, x, y, z + waist, x - waist, y, z, red, green, blue, alpha);
+        triangle(buffer, x, y + tip, z, x - waist, y, z, x, y, z - waist, red, green, blue, alpha);
+        triangle(buffer, x, y + tip, z, x, y, z - waist, x + waist, y, z, red, green, blue, alpha);
+        triangle(buffer, x, y - tip, z, x, y, z + waist, x + waist, y, z, red, green, blue, alpha);
+        triangle(buffer, x, y - tip, z, x - waist, y, z, x, y, z + waist, red, green, blue, alpha);
+        triangle(buffer, x, y - tip, z, x, y, z - waist, x - waist, y, z, red, green, blue, alpha);
+        triangle(buffer, x, y - tip, z, x + waist, y, z, x, y, z - waist, red, green, blue, alpha);
     }
 
-    private static void box(BufferBuilder buffer, double x, double y, double z, double radius,
-                            int red, int green, int blue, int alpha) {
-        double x0 = x - radius;
-        double x1 = x + radius;
-        double y0 = y - radius;
-        double y1 = y + radius;
-        double z0 = z - radius;
-        double z1 = z + radius;
-        face(buffer, x0, y0, z0, x1, y1, z0, red, green, blue, alpha);
-        face(buffer, x1, y0, z1, x0, y1, z1, red, green, blue, alpha);
-        face(buffer, x0, y0, z1, x0, y1, z0, red, green, blue, alpha);
-        face(buffer, x1, y0, z0, x1, y1, z1, red, green, blue, alpha);
-        faceHorizontal(buffer, x0, y0, z1, x1, z0, red, green, blue, alpha);
-        faceHorizontal(buffer, x0, y1, z0, x1, z1, red, green, blue, alpha);
-    }
-
-    private static void face(BufferBuilder buffer, double x0, double y0, double z0,
-                             double x1, double y1, double z1, int red, int green, int blue, int alpha) {
-        vertex(buffer, x0, y0, z0, red, green, blue, alpha);
-        vertex(buffer, x1, y0, z1, red, green, blue, alpha);
+    private static void triangle(BufferBuilder buffer, double x1, double y1, double z1,
+                                 double x2, double y2, double z2, double x3, double y3, double z3,
+                                 int red, int green, int blue, int alpha) {
         vertex(buffer, x1, y1, z1, red, green, blue, alpha);
-        vertex(buffer, x0, y1, z0, red, green, blue, alpha);
-    }
-
-    private static void faceHorizontal(BufferBuilder buffer, double x0, double y, double z0,
-                                       double x1, double z1, int red, int green, int blue, int alpha) {
-        vertex(buffer, x0, y, z0, red, green, blue, alpha);
-        vertex(buffer, x1, y, z0, red, green, blue, alpha);
-        vertex(buffer, x1, y, z1, red, green, blue, alpha);
-        vertex(buffer, x0, y, z1, red, green, blue, alpha);
+        vertex(buffer, x2, y2, z2, red, green, blue, alpha);
+        vertex(buffer, x3, y3, z3, red, green, blue, alpha);
     }
 
     private static void vertex(BufferBuilder buffer, double x, double y, double z,
@@ -257,19 +272,19 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     private static double nodeX(int index, float animationTime) {
         AchievementConstellationCatalog.Node node = NODES[index];
         return (node.x - CATALOG_CENTER_X) * SCENE_SCALE
-            + Math.sin(animationTime * 0.011D + index * 2.17D) * 0.10D;
+            + Math.sin(animationTime * 0.011D + index * 2.17D) * 0.05D;
     }
 
     private static double nodeY(int index, float animationTime) {
         AchievementConstellationCatalog.Node node = NODES[index];
         return (node.y - CATALOG_CENTER_Y) * SCENE_SCALE
-            + Math.sin(animationTime * 0.008D + index * 1.37D) * 0.14D;
+            + Math.sin(animationTime * 0.008D + index * 1.37D) * 0.07D;
     }
 
     private static double nodeZ(int index, float animationTime) {
         AchievementConstellationCatalog.Node node = NODES[index];
         return (node.z - CATALOG_CENTER_Z) * SCENE_SCALE
-            + Math.cos(animationTime * 0.010D + index * 1.79D) * 0.10D;
+            + Math.cos(animationTime * 0.010D + index * 1.79D) * 0.05D;
     }
 
     private static int hoveredNode(EntityConstellationObservatory observatory, EntityPlayer player,
@@ -287,7 +302,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             double alongRay = offset.dotProduct(look);
             if (alongRay < 0.0D || alongRay > 180.0D) continue;
             double missDistance = offset.lengthSquared() - alongRay * alongRay;
-            if (missDistance < 0.36D && missDistance < nearestDistance) {
+            if (missDistance < 0.64D && missDistance < nearestDistance) {
                 nearestDistance = missDistance;
                 nearest = i;
             }
@@ -301,7 +316,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         float scale = 0.025F;
         GlStateManager.pushMatrix();
         GlStateManager.translate(sceneX + nodeX(index, animationTime),
-            sceneY + nodeY(index, animationTime) + 0.65D,
+            sceneY + nodeY(index, animationTime) + 1.05D,
             sceneZ + nodeZ(index, animationTime));
         GlStateManager.rotate(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
         GlStateManager.rotate((renderManager.options.thirdPersonView == 2 ? -1 : 1) * renderManager.playerViewX,
