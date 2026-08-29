@@ -64,9 +64,9 @@ public class PlayerJoinHandler {
         angel.setOwnerId(player.getUniqueID());
         double yaw = Math.toRadians(player.rotationYaw);
         angel.setPosition(
-            player.posX - Math.sin(yaw) * 2.5D,
+            player.posX - Math.sin(yaw) * 1.8D + Math.cos(yaw) * 1.45D,
             player.posY + player.getEyeHeight() - 0.5,
-            player.posZ + Math.cos(yaw) * 2.5D
+            player.posZ + Math.cos(yaw) * 1.8D + Math.sin(yaw) * 1.45D
         );
         world.spawnEntity(angel);
         AchievementHandler.recordAngelAppearance(player);
@@ -92,9 +92,9 @@ public class PlayerJoinHandler {
         angel.setOwnerId(player.getUniqueID());
         double yaw = Math.toRadians(player.rotationYaw);
         angel.setPosition(
-            player.posX - Math.sin(yaw) * 2.5D,
+            player.posX - Math.sin(yaw) * 1.8D + Math.cos(yaw) * 1.45D,
             player.posY + player.getEyeHeight() - 0.5,
-            player.posZ + Math.cos(yaw) * 2.5D
+            player.posZ + Math.cos(yaw) * 1.8D + Math.sin(yaw) * 1.45D
         );
         world.spawnEntity(angel);
         AchievementHandler.recordAngelAppearance(player);
@@ -115,9 +115,9 @@ public class PlayerJoinHandler {
         angel.setOwnerId(player.getUniqueID());
         double yaw = Math.toRadians(player.rotationYaw);
         angel.setPosition(
-            player.posX - Math.sin(yaw) * 2.5D,
+            player.posX - Math.sin(yaw) * 1.8D + Math.cos(yaw) * 1.45D,
             player.posY + player.getEyeHeight() - 0.5,
-            player.posZ + Math.cos(yaw) * 2.5D
+            player.posZ + Math.cos(yaw) * 1.8D + Math.sin(yaw) * 1.45D
         );
         world.spawnEntity(angel);
         AchievementHandler.recordAngelAppearance(player);

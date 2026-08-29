@@ -458,7 +458,10 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
                 }
                 if (states[childIndex] == ConstellationManager.MYSTERY) edgeAlpha *= 0.82D;
                 appendTendrilTube(buffer, parentIndex, childIndex, animationTime,
-                    radius * radiusScale, edgeRed, edgeGreen, edgeBlue, edgeAlpha,
+                    radius * radiusScale,
+                    nodeVisualRadius(states[parentIndex], parentIndex, animationTime) * 0.92D,
+                    nodeVisualRadius(states[childIndex], childIndex, animationTime) * 0.92D,
+                    edgeRed, edgeGreen, edgeBlue, edgeAlpha,
                     points, tangents, normals, binormals, distances, energies);
             }
         }
@@ -485,6 +488,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
 
     private static void appendTendrilTube(BufferBuilder buffer, int parentIndex, int childIndex,
                                            float animationTime, double baseRadius,
+                                           double startSurfaceRadius, double endSurfaceRadius,
                                            int red, int green, int blue, int alpha,
                                            double[] points, double[] tangents, double[] normals,
                                            double[] binormals, double[] distances, double[] energies) {
@@ -502,6 +506,29 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             sampleTendril(points, ring * 3, ring / (double) TENDRIL_SEGMENTS,
                 startX, startY, startZ, endX, endY, endZ,
                 bendX, bendY, bendZ, seed, animationTime);
+        }
+        double startDirectionX = points[3] - points[0];
+        double startDirectionY = points[4] - points[1];
+        double startDirectionZ = points[5] - points[2];
+        double startDirectionLength = Math.sqrt(startDirectionX * startDirectionX
+            + startDirectionY * startDirectionY + startDirectionZ * startDirectionZ);
+        int last = TENDRIL_SEGMENTS * 3;
+        double endDirectionX = points[last] - points[last - 3];
+        double endDirectionY = points[last + 1] - points[last - 2];
+        double endDirectionZ = points[last + 2] - points[last - 1];
+        double endDirectionLength = Math.sqrt(endDirectionX * endDirectionX
+            + endDirectionY * endDirectionY + endDirectionZ * endDirectionZ);
+        for (int ring = 0; ring <= TENDRIL_SEGMENTS; ring++) {
+            double progress = ring / (double) TENDRIL_SEGMENTS;
+            double startWeight = Math.pow(1.0D - progress, 3.0D);
+            double endWeight = Math.pow(progress, 3.0D);
+            int offset = ring * 3;
+            points[offset] += startDirectionX / startDirectionLength * startSurfaceRadius * startWeight
+                - endDirectionX / endDirectionLength * endSurfaceRadius * endWeight;
+            points[offset + 1] += startDirectionY / startDirectionLength * startSurfaceRadius * startWeight
+                - endDirectionY / endDirectionLength * endSurfaceRadius * endWeight;
+            points[offset + 2] += startDirectionZ / startDirectionLength * startSurfaceRadius * startWeight
+                - endDirectionZ / endDirectionLength * endSurfaceRadius * endWeight;
             if (ring > 0) {
                 distances[ring] = distances[ring - 1] + distance(points, ring * 3, (ring - 1) * 3);
             } else {
@@ -631,7 +658,8 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             + binormals[offset + 2] * TENDRIL_SIN[side];
         double energy = energies[ring];
         double breathing = 0.975D + Math.sin(animationTime * 0.045D - progress * 8.0D + seed) * 0.025D;
-        double envelope = 0.55D + Math.sin(progress * Math.PI) * 0.45D;
+        double attachment = Math.pow(Math.abs(progress * 2.0D - 1.0D), 4.0D);
+        double envelope = 0.8D + Math.sin(progress * Math.PI) * 0.2D + attachment * 1.45D;
         double surfaceRipple = 1.0D + Math.sin(side * Math.PI * 0.75D - progress * 11.0D
             + animationTime * 0.055D + seed) * 0.025D;
         double radius = baseRadius * envelope * (breathing + energy * 0.06D) * surfaceRipple;
@@ -726,7 +754,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
         for (int i = 0; i < NODES.length; i++) {
-            if (!visible(states, i) || states[i] == ConstellationManager.MYSTERY) continue;
+            if (!visible(states, i)) continue;
             int state = states[i];
             double x = nodeX(i, animationTime);
             double y = nodeY(i, animationTime);
@@ -758,8 +786,9 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             int green = starGreen(state);
             int blue = starBlue(state);
             double pulse = starPulse(state, i, animationTime) * starScale(state);
-            double haloRadius = NODE_RADIUS * 3.2D * pulse;
-            int centerAlpha = state == ConstellationManager.COMPLETED ? 56 : 42;
+            double haloRadius = NODE_RADIUS * 3.9D * pulse;
+            int centerAlpha = state == ConstellationManager.COMPLETED ? 82
+                : state == ConstellationManager.AVAILABLE ? 64 : 24;
             for (int wedge = 0; wedge < 16; wedge++) {
                 double firstAngle = wedge * Math.PI * 2.0D / 16.0D;
                 double secondAngle = (wedge + 1) * Math.PI * 2.0D / 16.0D;
@@ -770,18 +799,20 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
                     secondAngle, haloRadius, red, green, blue, 0);
             }
             double rotation = animationTime * 0.004D + i * 0.47D;
-            for (int rayIndex = 0; rayIndex < 10; rayIndex++) {
-                double angle = rotation + rayIndex * Math.PI * 2.0D / 10.0D;
-                double length = NODE_RADIUS * pulse * (rayIndex % 2 == 0 ? 4.2D : 2.8D);
+            int rayCount = state == ConstellationManager.MYSTERY ? 6 : 10;
+            for (int rayIndex = 0; rayIndex < rayCount; rayIndex++) {
+                double angle = rotation + rayIndex * Math.PI * 2.0D / rayCount;
+                double length = NODE_RADIUS * pulse * (rayIndex % 2 == 0 ? 4.8D : 3.2D);
                 double base = NODE_RADIUS * pulse * 0.18D;
+                int rayAlpha = state == ConstellationManager.MYSTERY ? 42 : 142;
                 double directionRight = Math.cos(angle);
                 double directionUp = Math.sin(angle);
                 double perpendicularRight = -directionUp;
                 double perpendicularUp = directionRight;
                 billboardOffsetVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
-                    perpendicularRight * base, perpendicularUp * base, red, green, blue, 118);
+                    perpendicularRight * base, perpendicularUp * base, red, green, blue, rayAlpha);
                 billboardOffsetVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
-                    -perpendicularRight * base, -perpendicularUp * base, red, green, blue, 118);
+                    -perpendicularRight * base, -perpendicularUp * base, red, green, blue, rayAlpha);
                 billboardOffsetVertex(buffer, x, y, z, rightX, rightY, rightZ, upX, upY, upZ,
                     directionRight * length, directionUp * length, red, green, blue, 0);
             }
@@ -834,8 +865,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             int red = starRed(state);
             int green = starGreen(state);
             int blue = starBlue(state);
-            double pulse = starPulse(state, i, animationTime);
-            double coreRadius = NODE_RADIUS * 1.10D * pulse * starScale(state);
+            double coreRadius = nodeVisualRadius(state, i, animationTime);
             nodeStar(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
                 coreRadius, red, green, blue,
                 state == ConstellationManager.MYSTERY ? 165 : 255);
@@ -855,6 +885,10 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         if (state == ConstellationManager.AVAILABLE) return 0.72D;
         if (state == ConstellationManager.MYSTERY) return 0.58D;
         return 1.0D;
+    }
+
+    private static double nodeVisualRadius(int state, int index, float animationTime) {
+        return NODE_RADIUS * 1.10D * starPulse(state, index, animationTime) * starScale(state);
     }
 
     private static int starRed(int state) {
@@ -1065,18 +1099,18 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     }
 
     private static String nodeHint(int index, boolean mystery) {
-        if (mystery) return "Hint: Complete the blue achievement leading to this path.";
+        if (mystery) return "Complete the blue achievement leading to this path.";
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft.getConnection() == null) return "Hint: Continue this achievement branch.";
+        if (minecraft.getConnection() == null) return "Continue this achievement branch.";
         Advancement advancement = minecraft.getConnection().getAdvancementManager().getAdvancementList()
             .getAdvancement(new ResourceLocation(NODES[index].id));
         if (advancement == null || advancement.getDisplay() == null) {
-            return "Hint: Continue this achievement branch.";
+            return "Continue this achievement branch.";
         }
         String description = advancement.getDisplay().getDescription().getUnformattedText().trim();
         if (description.startsWith("First inventory acquisition")
             && !advancement.getDisplay().getIcon().isEmpty()) {
-            return "Hint: Acquire " + advancement.getDisplay().getIcon().getDisplayName() + ".";
+            return "Acquire " + advancement.getDisplay().getIcon().getDisplayName() + ".";
         }
         int clauseEnd = description.indexOf(';');
         if (clauseEnd > 0) description = description.substring(0, clauseEnd);
@@ -1084,7 +1118,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             int breakAt = description.lastIndexOf(' ', 105);
             description = description.substring(0, breakAt > 40 ? breakAt : 105) + "...";
         }
-        return "Hint: " + description;
+        return description;
     }
 
     private void renderNodeLabel(String title, String hint, int index,

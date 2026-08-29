@@ -338,8 +338,9 @@ public class AchievementHandler {
         EntityAngel angel = new EntityAngel(world);
         angel.setOwnerId(player.getUniqueID());
         double yaw = Math.toRadians(player.rotationYaw);
-        angel.setPosition(player.posX - Math.sin(yaw) * 2.5D,
-            player.posY + player.getEyeHeight() - 0.5D, player.posZ + Math.cos(yaw) * 2.5D);
+        angel.setPosition(player.posX - Math.sin(yaw) * 1.8D + Math.cos(yaw) * 1.45D,
+            player.posY + player.getEyeHeight() - 0.5D,
+            player.posZ + Math.cos(yaw) * 1.8D + Math.sin(yaw) * 1.45D);
         world.spawnEntity(angel);
         recordAngelAppearance(player);
     }

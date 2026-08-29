@@ -128,16 +128,16 @@ public class TickHandler {
                 MovementState movement = movementStates.computeIfAbsent(id, ignored -> new MovementState());
                 movement.tick();
 
-                double yaw = Math.toRadians(player.rotationYaw);
-                double forwardX = -Math.sin(yaw);
-                double forwardZ = Math.cos(yaw);
-                double rightX = Math.cos(yaw);
-                double rightZ = Math.sin(yaw);
+                double facing = Math.toRadians(player.rotationYaw);
+                double forwardX = -Math.sin(facing);
+                double forwardZ = Math.cos(facing);
+                double rightX = Math.cos(facing);
+                double rightZ = Math.sin(facing);
                 double[] target = getMovementTarget(player, movement, movement.mode, movement.elapsed,
-                    yaw, forwardX, forwardZ, rightX, rightZ);
+                    forwardX, forwardZ, rightX, rightZ);
                 if (movement.transitionElapsed < MovementState.TRANSITION_TICKS) {
                     double[] previous = getMovementTarget(player, movement, movement.previousMode,
-                        movement.previousElapsed + movement.transitionElapsed, yaw,
+                        movement.previousElapsed + movement.transitionElapsed,
                         forwardX, forwardZ, rightX, rightZ);
                     double blend = movement.getTransitionBlend();
                     target[0] = previous[0] + (target[0] - previous[0]) * blend;
@@ -176,17 +176,19 @@ public class TickHandler {
                     angel.motionX += playerDx / safeDistance * push;
                     angel.motionZ += playerDz / safeDistance * push;
                 }
-                if (dist > 0.25D) {
-                    double speed = isPlayerLookingAt(player, angel) ? 0.025D : 0.045D;
+                boolean playerIsLooking = isPlayerLookingAt(player, angel);
+                if (dist > 0.25D && !playerIsLooking) {
+                    double speed = 0.045D;
                     if (dist > 2.5D) speed = 0.12D;
                     angel.motionX += (dx / dist) * speed;
                     angel.motionY += (dy / dist) * speed;
                     angel.motionZ += (dz / dist) * speed;
                 }
 
-                angel.motionX *= 0.89D;
-                angel.motionY *= 0.89D;
-                angel.motionZ *= 0.89D;
+                double drag = playerIsLooking ? 0.45D : 0.89D;
+                angel.motionX *= drag;
+                angel.motionY *= drag;
+                angel.motionZ *= drag;
                 double motion = Math.sqrt(angel.motionX * angel.motionX + angel.motionY * angel.motionY
                     + angel.motionZ * angel.motionZ);
                 if (motion > 0.2D) {
@@ -200,38 +202,37 @@ public class TickHandler {
     }
 
     private static double[] getMovementTarget(EntityPlayer player, MovementState movement, int mode,
-                                               int elapsed, double yaw, double forwardX, double forwardZ,
+                                               int elapsed, double forwardX, double forwardZ,
                                                double rightX, double rightZ) {
         double wave = Math.sin(movement.phase + elapsed * 0.025D);
         switch (mode) {
-            case 0: // Hold position in front and acknowledge the player.
+            case 0: // Stay beside the player's view rather than drifting through the crosshair.
                 return new double[] {
-                    player.posX + forwardX * 2.25D + rightX * wave * 0.25D,
-                    player.posZ + forwardZ * 2.25D + rightZ * wave * 0.25D
+                    player.posX + forwardX * 1.8D + rightX * movement.side * (1.45D + wave * 0.12D),
+                    player.posZ + forwardZ * 1.8D + rightZ * movement.side * (1.45D + wave * 0.12D)
                 };
-            case 1: // Make one unhurried world-space orbit.
-                double orbit = movement.phase + elapsed * 0.009D;
+            case 1: // Float outward on the same side of the player.
                 return new double[] {
-                    player.posX + Math.cos(orbit) * 2.4D,
-                    player.posZ + Math.sin(orbit) * 2.4D
+                    player.posX + forwardX * (0.8D + wave * 0.2D) + rightX * movement.side * 2.3D,
+                    player.posZ + forwardZ * (0.8D + wave * 0.2D) + rightZ * movement.side * 2.3D
                 };
-            case 2: // Deliberately cross to the other side of the player's view.
+            case 2: // Sweep vertically and laterally without crossing the attack line.
                 return new double[] {
-                    player.posX + forwardX * 1.9D + rightX * movement.side * (0.45D + wave * 0.25D),
-                    player.posZ + forwardZ * 1.9D + rightZ * movement.side * (0.45D + wave * 0.25D)
+                    player.posX + forwardX * 1.3D + rightX * movement.side * (1.85D + wave * 0.2D),
+                    player.posZ + forwardZ * 1.3D + rightZ * movement.side * (1.85D + wave * 0.2D)
                 };
             case 3: // Move closer briefly, as if inspecting the player.
-                double closeDistance = 1.75D + wave * 0.15D;
+                double closeDistance = 1.4D + wave * 0.12D;
                 return new double[] {
-                    player.posX + forwardX * closeDistance + rightX * movement.side * 0.3D,
-                    player.posZ + forwardZ * closeDistance + rightZ * movement.side * 0.3D
+                    player.posX + forwardX * closeDistance + rightX * movement.side * 1.25D,
+                    player.posZ + forwardZ * closeDistance + rightZ * movement.side * 1.25D
                 };
-            default: // Trace a loose arc, then return to the front.
-                double wanderAngle = yaw + movement.phase + Math.sin(elapsed * 0.012D) * 0.75D;
-                double wanderDistance = 2.1D + Math.sin(elapsed * 0.019D) * 0.3D;
+            default: // Trace a loose arc within the same side of the player's view.
                 return new double[] {
-                    player.posX - Math.sin(wanderAngle) * wanderDistance,
-                    player.posZ + Math.cos(wanderAngle) * wanderDistance
+                    player.posX + forwardX * (0.9D + wave * 0.35D)
+                        + rightX * movement.side * (2.05D - wave * 0.2D),
+                    player.posZ + forwardZ * (0.9D + wave * 0.35D)
+                        + rightZ * movement.side * (2.05D - wave * 0.2D)
                 };
         }
     }
@@ -299,7 +300,6 @@ public class TickHandler {
             elapsed = 0;
             transitionElapsed = 0;
             duration = getDuration(mode);
-            if (mode == 2 || mode == 3) side *= -1;
         }
 
         double getTransitionBlend() {
