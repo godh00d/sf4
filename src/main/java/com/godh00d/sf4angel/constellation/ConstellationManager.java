@@ -48,8 +48,12 @@ public final class ConstellationManager {
     private static final String DATA_KEY = "sf4angelConstellation";
     private static final int OBSERVATORY_DIMENSION = 0;
     private static final double CENTER_Y = 512.0D;
-    private static final double ARRIVAL_OFFSET_X = -4.0D;
-    private static final double BOUNDARY_RADIUS = 50.0D;
+    private static final double ARRIVAL_OFFSET_X = -66.0D;
+    private static final double ARRIVAL_OFFSET_Y = -56.0D;
+    private static final double ARRIVAL_OFFSET_Z = 14.0D;
+    private static final float ARRIVAL_YAW = -99.7F;
+    private static final float ARRIVAL_PITCH = -24.3F;
+    private static final double BOUNDARY_RADIUS = 110.0D;
     private static final double MIN_Y = CENTER_Y - BOUNDARY_RADIUS;
     private static final double MAX_Y = CENTER_Y + BOUNDARY_RADIUS;
     private static final int CELL_SPACING = 256;
@@ -99,20 +103,22 @@ public final class ConstellationManager {
 
         WorldServer overworld = player.getServer().getWorld(OBSERVATORY_DIMENSION);
         double arrivalX = cell.x + ARRIVAL_OFFSET_X;
+        double arrivalY = CENTER_Y + ARRIVAL_OFFSET_Y;
+        double arrivalZ = cell.z + ARRIVAL_OFFSET_Z;
         try {
-            overworld.getChunkFromBlockCoords(new BlockPos(arrivalX, CENTER_Y, cell.z));
+            overworld.getChunkFromBlockCoords(new BlockPos(arrivalX, arrivalY, arrivalZ));
             if (player.dimension == OBSERVATORY_DIMENSION) {
-                player.connection.setPlayerLocation(arrivalX, CENTER_Y, cell.z, -90.0F, 0.0F);
+                player.connection.setPlayerLocation(arrivalX, arrivalY, arrivalZ, ARRIVAL_YAW, ARRIVAL_PITCH);
             } else {
                 player.changeDimension(OBSERVATORY_DIMENSION,
-                    new FixedTeleporter(arrivalX, CENTER_Y, cell.z, -90.0F, 0.0F));
+                    new FixedTeleporter(arrivalX, arrivalY, arrivalZ, ARRIVAL_YAW, ARRIVAL_PITCH));
             }
         } catch (RuntimeException exception) {
             SF4Angel.logger.error("Constellation entry failed for {}", player.getName(), exception);
         }
 
         boolean arrived = player.dimension == OBSERVATORY_DIMENSION && player.world == overworld
-            && atPosition(player, arrivalX, CENTER_Y, cell.z);
+            && atPosition(player, arrivalX, arrivalY, arrivalZ);
         if (!arrived) {
             rollbackFlight(player, data);
             clearSession(data);
@@ -292,7 +298,7 @@ public final class ConstellationManager {
             "This is your living constellation. Fly to explore it, and aim at a visible light to identify its path.",
             0, 20);
         TypewriterHandler.queueMessage(player,
-            "Green remembers what you completed, gold marks the next step, and blue veils one more step beyond it.",
+            "Gold remembers what you completed, blue marks the next step, and grey veils one more dead path beyond it.",
             0, 20);
         TypewriterHandler.queueMessage(player,
             "The paths beyond that horizon remain hidden. I will stay beside you; right-click me when you wish to return.",
@@ -322,7 +328,7 @@ public final class ConstellationManager {
                 0, 0);
         } else if (cycle == 1L) {
             TypewriterHandler.queueMessage(player,
-                availableTitle + " burns gold among " + available + " paths now within your reach.", 0, 0);
+                availableTitle + " burns blue among " + available + " paths now within your reach.", 0, 0);
         } else {
             TypewriterHandler.queueMessage(player,
                 "I can see only two steps beyond your completed path, but no farther. What remains hidden must be earned.",

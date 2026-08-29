@@ -22,9 +22,9 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     private static final AchievementConstellationCatalog.Node[] NODES = AchievementConstellationCatalog.nodes();
     private static final Map<String, Integer> INDEXES = AchievementConstellationCatalog.indexes();
     private static final int[] LAYOUT_PARENTS = layoutParents();
-    private static final double CATALOG_CENTER_X = 111.0D;
-    private static final double CATALOG_CENTER_Y = 120.0D;
-    private static final double CATALOG_CENTER_Z = -22.5D;
+    private static final double CATALOG_CENTER_X = 190.0D;
+    private static final double CATALOG_CENTER_Y = 184.0D;
+    private static final double CATALOG_CENTER_Z = -32.0D;
     private static final double SCENE_SCALE = 0.41D;
     private static final double SKY_RADIUS = 14.0D;
     private static final float NODE_RADIUS = 0.48F;
@@ -245,15 +245,13 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         for (int i = 0; i < NODES.length; i++) {
             if (!visible(states, i)) continue;
             int state = states[i];
-            int red = state == ConstellationManager.COMPLETED ? 45
-                : state == ConstellationManager.AVAILABLE ? 238 : 66;
-            int green = state == ConstellationManager.COMPLETED ? 183
-                : state == ConstellationManager.AVAILABLE ? 177 : 153;
-            int blue = state == ConstellationManager.COMPLETED ? 112
-                : state == ConstellationManager.AVAILABLE ? 57 : 225;
-            double pulse = starPulse(i, animationTime);
+            int red = starRed(state);
+            int green = starGreen(state);
+            int blue = starBlue(state);
+            double pulse = starPulse(state, i, animationTime);
             star(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
-                NODE_RADIUS * 0.62D * pulse, red, green, blue, 255);
+                NODE_RADIUS * 0.62D * pulse * starScale(state), red, green, blue,
+                state == ConstellationManager.MYSTERY ? 165 : 255);
         }
         tessellator.draw();
     }
@@ -265,14 +263,12 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         for (int i = 0; i < NODES.length; i++) {
             if (!visible(states, i)) continue;
             int state = states[i];
-            int red = state == ConstellationManager.COMPLETED ? 45
-                : state == ConstellationManager.AVAILABLE ? 238 : 66;
-            int green = state == ConstellationManager.COMPLETED ? 183
-                : state == ConstellationManager.AVAILABLE ? 177 : 153;
-            int blue = state == ConstellationManager.COMPLETED ? 112
-                : state == ConstellationManager.AVAILABLE ? 57 : 225;
+            if (state == ConstellationManager.MYSTERY) continue;
+            int red = starRed(state);
+            int green = starGreen(state);
+            int blue = starBlue(state);
             double breath = (2.0D + Math.sin(animationTime * 0.025D + i * 0.67D) * 0.16D)
-                * starPulse(i, animationTime);
+                * starPulse(state, i, animationTime) * starScale(state);
             star(buffer, nodeX(i, animationTime), nodeY(i, animationTime), nodeZ(i, animationTime),
                 NODE_RADIUS * breath,
                 red, green, blue, 42);
@@ -289,24 +285,24 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         for (int i = 0; i < NODES.length; i++) {
             if (!visible(states, i)) continue;
             int state = states[i];
-            int red = state == ConstellationManager.COMPLETED ? 76
-                : state == ConstellationManager.AVAILABLE ? 255 : 116;
-            int green = state == ConstellationManager.COMPLETED ? 226
-                : state == ConstellationManager.AVAILABLE ? 214 : 190;
-            int blue = state == ConstellationManager.COMPLETED ? 154
-                : state == ConstellationManager.AVAILABLE ? 104 : 255;
+            int red = starRed(state);
+            int green = starGreen(state);
+            int blue = starBlue(state);
             double x = nodeX(i, animationTime);
             double y = nodeY(i, animationTime);
             double z = nodeZ(i, animationTime);
-            double radius = NODE_RADIUS * 2.45D * starPulse(i, animationTime) * sizeMultiplier;
-            ray(buffer, x, y, z, radius, 1.0D, 0.0D, 0.0D, red, green, blue, alpha);
-            ray(buffer, x, y, z, radius, 0.0D, 1.0D, 0.0D, red, green, blue, alpha);
-            ray(buffer, x, y, z, radius, 0.0D, 0.0D, 1.0D, red, green, blue, alpha);
+            double radius = NODE_RADIUS * 2.45D * starPulse(state, i, animationTime)
+                * starScale(state) * sizeMultiplier;
+            int rayAlpha = state == ConstellationManager.MYSTERY ? (int) (alpha * 0.42D) : alpha;
+            ray(buffer, x, y, z, radius, 1.0D, 0.0D, 0.0D, red, green, blue, rayAlpha);
+            ray(buffer, x, y, z, radius, 0.0D, 1.0D, 0.0D, red, green, blue, rayAlpha);
+            ray(buffer, x, y, z, radius, 0.0D, 0.0D, 1.0D, red, green, blue, rayAlpha);
+            if (state == ConstellationManager.MYSTERY) continue;
             double diagonal = 0.5773502691896258D;
-            ray(buffer, x, y, z, radius, diagonal, diagonal, diagonal, red, green, blue, alpha);
-            ray(buffer, x, y, z, radius, diagonal, diagonal, -diagonal, red, green, blue, alpha);
-            ray(buffer, x, y, z, radius, diagonal, -diagonal, diagonal, red, green, blue, alpha);
-            ray(buffer, x, y, z, radius, -diagonal, diagonal, diagonal, red, green, blue, alpha);
+            ray(buffer, x, y, z, radius, diagonal, diagonal, diagonal, red, green, blue, rayAlpha);
+            ray(buffer, x, y, z, radius, diagonal, diagonal, -diagonal, red, green, blue, rayAlpha);
+            ray(buffer, x, y, z, radius, diagonal, -diagonal, diagonal, red, green, blue, rayAlpha);
+            ray(buffer, x, y, z, radius, -diagonal, diagonal, diagonal, red, green, blue, rayAlpha);
         }
         tessellator.draw();
     }
@@ -320,13 +316,40 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             red, green, blue, alpha);
     }
 
-    private static double starPulse(int index, float animationTime) {
-        return 1.0D + Math.sin(animationTime * 0.040D + index * 0.73D) * 0.10D
-            + Math.sin(animationTime * 0.017D + index * 1.31D) * 0.04D;
+    private static double starPulse(int state, int index, float animationTime) {
+        if (state == ConstellationManager.MYSTERY) return 0.90D;
+        double strength = state == ConstellationManager.COMPLETED ? 1.0D : 0.65D;
+        return 1.0D + Math.sin(animationTime * 0.040D + index * 0.73D) * 0.10D * strength
+            + Math.sin(animationTime * 0.017D + index * 1.31D) * 0.04D * strength;
+    }
+
+    private static double starScale(int state) {
+        if (state == ConstellationManager.AVAILABLE) return 0.72D;
+        if (state == ConstellationManager.MYSTERY) return 0.58D;
+        return 1.0D;
+    }
+
+    private static int starRed(int state) {
+        if (state == ConstellationManager.COMPLETED) return 255;
+        if (state == ConstellationManager.AVAILABLE) return 72;
+        return 104;
+    }
+
+    private static int starGreen(int state) {
+        if (state == ConstellationManager.COMPLETED) return 190;
+        if (state == ConstellationManager.AVAILABLE) return 158;
+        return 108;
+    }
+
+    private static int starBlue(int state) {
+        if (state == ConstellationManager.COMPLETED) return 58;
+        if (state == ConstellationManager.AVAILABLE) return 255;
+        return 116;
     }
 
     private static boolean visible(byte[] states, int index) {
-        return states.length == NODES.length && states[index] != ConstellationManager.ABSENT;
+        if (states.length != NODES.length || states[index] == ConstellationManager.ABSENT) return false;
+        return NODES[index].id.startsWith("sf4angel:core/") || states[index] == ConstellationManager.COMPLETED;
     }
 
     private static void drawMotes(float animationTime) {

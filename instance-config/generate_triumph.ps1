@@ -376,7 +376,7 @@ function Get-ConstellationCatalogLines($Rows) {
             $Ring = [int][math]::Floor($RingIndex / 8.0)
             $Slot = $RingIndex % 8
             $Heading = ($Slot / 8.0) * [math]::PI * 2.0 + $Ring * 0.19
-            $Radius = 14 + $Ring * 11
+            $Radius = 28 + $Ring * 22
             $RootX = 40 + [int][math]::Round([math]::Cos($Heading) * $Radius)
             $RootZ = [int][math]::Round([math]::Sin($Heading) * $Radius)
         }
@@ -412,11 +412,11 @@ function Get-ConstellationCatalogLines($Rows) {
             $Sector = (($WeightBefore + $Weight / 2.0) / [math]::Max(1, $TotalWeight)) - 0.5
             $Fan = [math]::Min(2.35, 0.72 + [math]::Log($TotalWeight + 1.0) * 0.42)
             $Heading = [double]$Headings[$ParentId] + $Sector * $Fan
-            $Step = if ($Siblings.Count -eq 1) { 3.0 } else {
-                10.0 + [math]::Min(8.0, [math]::Sqrt($Weight) * 1.7)
+            $Step = if ($Siblings.Count -eq 1) { 6.0 } else {
+                20.0 + [math]::Min(16.0, [math]::Sqrt($Weight) * 3.4)
             }
             $CandidateX = [int][math]::Round($ParentCoordinate.X + [math]::Cos($Heading) * $Step)
-            $CandidateY = 56 + $Depth * 8
+            $CandidateY = 56 + $Depth * 16
             $CandidateZ = [int][math]::Round($ParentCoordinate.Z + [math]::Sin($Heading) * $Step)
 
             if (-not (Test-ConstellationPosition $CandidateX $CandidateY $CandidateZ)) {
