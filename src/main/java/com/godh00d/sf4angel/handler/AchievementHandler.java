@@ -3,6 +3,7 @@ package com.godh00d.sf4angel.handler;
 import com.godh00d.sf4angel.entity.EntityAngel;
 import com.godh00d.sf4angel.constellation.ConstellationManager;
 import com.godh00d.sf4angel.personality.AchievementReactions;
+import com.godh00d.sf4angel.sound.AngelSoundscape;
 import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.advancements.Advancement;
@@ -298,6 +299,8 @@ public class AchievementHandler {
         angelAppearanceCount.merge(player.getUniqueID(), 1, Integer::sum);
         LOGGER.info("Advancement completed for {}: {}", player.getName(), advancementId);
         ConstellationManager.refresh(player);
+        AngelSoundscape.playAchievement(player,
+            "sf4angel:core/the_sky_finally_claps".equals(advancementId));
 
         TypewriterHandler.queueMessage(player, AchievementReactions.get(advancementId), 0, 0);
         if (advancementId.startsWith("sf4angel:core/")) {
@@ -342,6 +345,7 @@ public class AchievementHandler {
             player.posY + player.getEyeHeight() - 0.5D,
             player.posZ + Math.cos(yaw) * 1.8D + Math.sin(yaw) * 1.45D);
         world.spawnEntity(angel);
+        AngelSoundscape.playAppearance(player, angel.getAnimationType());
         recordAngelAppearance(player);
     }
 

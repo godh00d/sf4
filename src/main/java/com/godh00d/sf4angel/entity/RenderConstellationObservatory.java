@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
@@ -47,6 +48,8 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
     private static final int TENDRIL_SIDES = 8;
     private static final double[] TENDRIL_COS = tendrilCircle(true);
     private static final double[] TENDRIL_SIN = tendrilCircle(false);
+    private int lastHoveredNode = -1;
+    private int nextHoverSoundTick;
 
     public RenderConstellationObservatory(RenderManager renderManager) {
         super(renderManager);
@@ -112,6 +115,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
 
         super.doRender(angel, x, y, z, entityYaw, partialTicks);
         int hovered = hoveredNode(observatory, player, states, partialTicks, animationTime);
+        updateHoverSound(player, states, hovered);
         if (hovered >= 0) {
             boolean mystery = states[hovered] == ConstellationManager.MYSTERY;
             String title = mystery
@@ -119,6 +123,20 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             renderNodeLabel(title, nodeHint(hovered, mystery), hovered,
                 sceneX, sceneY, sceneZ, animationTime);
         }
+    }
+
+    private void updateHoverSound(EntityPlayer player, byte[] states, int hovered) {
+        if (hovered < 0) {
+            lastHoveredNode = -1;
+            return;
+        }
+        if (hovered == lastHoveredNode || player.ticksExisted < nextHoverSoundTick) return;
+        int state = states[hovered];
+        float pitch = state == ConstellationManager.COMPLETED ? 1.58F
+            : state == ConstellationManager.AVAILABLE ? 1.32F : 0.82F;
+        player.playSound(SoundEvents.BLOCK_NOTE_HARP, 0.10F, pitch);
+        lastHoveredNode = hovered;
+        nextHoverSoundTick = player.ticksExisted + 8;
     }
 
     private static void drawSkyShell() {

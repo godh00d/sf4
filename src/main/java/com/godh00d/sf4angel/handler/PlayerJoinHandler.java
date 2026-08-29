@@ -4,6 +4,7 @@ import com.godh00d.sf4angel.entity.EntityAngel;
 import com.godh00d.sf4angel.constellation.ConstellationManager;
 import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
+import com.godh00d.sf4angel.sound.AngelSoundscape;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.World;
@@ -69,6 +70,7 @@ public class PlayerJoinHandler {
             player.posZ + Math.cos(yaw) * 1.8D + Math.sin(yaw) * 1.45D
         );
         world.spawnEntity(angel);
+        AngelSoundscape.playAppearance(player, angel.getAnimationType());
         AchievementHandler.recordAngelAppearance(player);
 
         String[] intro = AngelPersonality.getFirstLoginIntro();
@@ -97,6 +99,7 @@ public class PlayerJoinHandler {
             player.posZ + Math.cos(yaw) * 1.8D + Math.sin(yaw) * 1.45D
         );
         world.spawnEntity(angel);
+        AngelSoundscape.playAppearance(player, angel.getAnimationType());
         AchievementHandler.recordAngelAppearance(player);
 
         String nextGoal = AchievementHandler.getNextGoal(player);
@@ -120,6 +123,7 @@ public class PlayerJoinHandler {
             player.posZ + Math.cos(yaw) * 1.8D + Math.sin(yaw) * 1.45D
         );
         world.spawnEntity(angel);
+        AngelSoundscape.playAppearance(player, angel.getAnimationType());
         AchievementHandler.recordAngelAppearance(player);
 
         String deathLine = AngelPersonality.getRandomDeathLine();

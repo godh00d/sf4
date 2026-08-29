@@ -3,6 +3,7 @@ package com.godh00d.sf4angel.handler;
 import com.godh00d.sf4angel.entity.EntityAngel;
 import com.godh00d.sf4angel.constellation.ConstellationManager;
 import com.godh00d.sf4angel.personality.AngelPersonality;
+import com.godh00d.sf4angel.sound.AngelSoundscape;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -38,6 +39,7 @@ public class TickHandler {
         EntityPlayerMP mp = (EntityPlayerMP) player;
 
         TypewriterHandler.tick(player);
+        AngelSoundscape.tick(mp);
 
         AchievementHandler.checkTwerk(mp);
 
@@ -260,6 +262,7 @@ public class TickHandler {
                 if (!TypewriterHandler.hasActiveMessages(player)) {
                     String warning = AngelPersonality.getRandomHealthWarning();
                     TypewriterHandler.queueMessage(player, warning, 0, 0);
+                    AngelSoundscape.playHealthWarning(player);
                     healthWarnTimers.put(lastWarnKey, 1);
                 }
             }
@@ -272,6 +275,7 @@ public class TickHandler {
         healthWarnTimers.remove(id.toString() + "_healthwarn");
         AchievementHandler.removePlayer(id);
         IntegrationEngine.removePlayer(id);
+        AngelSoundscape.removePlayer(id);
     }
 
     private static class MovementState {
