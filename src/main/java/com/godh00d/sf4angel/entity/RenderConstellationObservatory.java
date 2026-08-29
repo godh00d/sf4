@@ -440,6 +440,7 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         double[] binormals = new double[pointCount * 3];
         double[] distances = new double[pointCount];
         double[] energies = new double[pointCount];
+        int[] connectionCounts = visibleConnectionCounts(states);
         for (int childIndex = 0; childIndex < NODES.length; childIndex++) {
             if (!visible(states, childIndex)) continue;
             for (String parentId : NODES[childIndex].parents) {
@@ -461,6 +462,10 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
                     radius * radiusScale,
                     nodeVisualRadius(states[parentIndex], parentIndex, animationTime) * 0.92D,
                     nodeVisualRadius(states[childIndex], childIndex, animationTime) * 0.92D,
+                    tendrilCollarRadius(states[parentIndex], parentIndex, connectionCounts[parentIndex],
+                        structural, layer, animationTime),
+                    tendrilCollarRadius(states[childIndex], childIndex, connectionCounts[childIndex],
+                        structural, layer, animationTime),
                     edgeRed, edgeGreen, edgeBlue, edgeAlpha,
                     points, tangents, normals, binormals, distances, energies);
             }
@@ -486,9 +491,35 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         return layer == 0 ? 166 : layer == 1 ? 118 : 94;
     }
 
+    private static int[] visibleConnectionCounts(byte[] states) {
+        int[] counts = new int[NODES.length];
+        for (int childIndex = 0; childIndex < NODES.length; childIndex++) {
+            if (!visible(states, childIndex)) continue;
+            for (String parentId : NODES[childIndex].parents) {
+                Integer parentIndex = INDEXES.get(parentId);
+                if (parentIndex == null || !visible(states, parentIndex)) continue;
+                counts[parentIndex]++;
+                counts[childIndex]++;
+            }
+        }
+        return counts;
+    }
+
+    private static double tendrilCollarRadius(int state, int nodeIndex, int connectionCount,
+                                               boolean structural, int layer, float animationTime) {
+        double stateScale = state == ConstellationManager.COMPLETED ? 0.78D
+            : state == ConstellationManager.AVAILABLE ? 0.66D : 0.56D;
+        double crowdScale = 1.0D / Math.sqrt(1.0D + Math.max(0, connectionCount - 1) * 0.22D);
+        double edgeScale = structural ? 1.0D : 0.58D;
+        double layerScale = layer == 0 ? 0.30D : layer == 1 ? 1.0D : 1.28D;
+        return nodeVisualRadius(state, nodeIndex, animationTime)
+            * stateScale * crowdScale * edgeScale * layerScale;
+    }
+
     private static void appendTendrilTube(BufferBuilder buffer, int parentIndex, int childIndex,
                                            float animationTime, double baseRadius,
                                            double startSurfaceRadius, double endSurfaceRadius,
+                                           double startCollarRadius, double endCollarRadius,
                                            int red, int green, int blue, int alpha,
                                            double[] points, double[] tangents, double[] normals,
                                            double[] binormals, double[] distances, double[] energies) {
@@ -554,13 +585,17 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             for (int side = 0; side < TENDRIL_SIDES; side++) {
                 int nextSide = (side + 1) % TENDRIL_SIDES;
                 tubeVertex(buffer, points, normals, binormals, energies,
-                    segment, side, baseRadius, seed, animationTime, red, green, blue, alpha);
+                    segment, side, baseRadius, startCollarRadius, endCollarRadius,
+                    seed, animationTime, red, green, blue, alpha);
                 tubeVertex(buffer, points, normals, binormals, energies,
-                    segment, nextSide, baseRadius, seed, animationTime, red, green, blue, alpha);
+                    segment, nextSide, baseRadius, startCollarRadius, endCollarRadius,
+                    seed, animationTime, red, green, blue, alpha);
                 tubeVertex(buffer, points, normals, binormals, energies,
-                    segment + 1, nextSide, baseRadius, seed, animationTime, red, green, blue, alpha);
+                    segment + 1, nextSide, baseRadius, startCollarRadius, endCollarRadius,
+                    seed, animationTime, red, green, blue, alpha);
                 tubeVertex(buffer, points, normals, binormals, energies,
-                    segment + 1, side, baseRadius, seed, animationTime, red, green, blue, alpha);
+                    segment + 1, side, baseRadius, startCollarRadius, endCollarRadius,
+                    seed, animationTime, red, green, blue, alpha);
             }
         }
     }
@@ -647,7 +682,8 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
 
     private static void tubeVertex(BufferBuilder buffer, double[] points, double[] normals,
                                    double[] binormals, double[] energies,
-                                   int ring, int side, double baseRadius, double seed,
+                                   int ring, int side, double baseRadius,
+                                   double startCollarRadius, double endCollarRadius, double seed,
                                    float animationTime, int red, int green, int blue, int alpha) {
         int offset = ring * 3;
         double progress = ring / (double) TENDRIL_SEGMENTS;
@@ -658,11 +694,15 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
             + binormals[offset + 2] * TENDRIL_SIN[side];
         double energy = energies[ring];
         double breathing = 0.975D + Math.sin(animationTime * 0.045D - progress * 8.0D + seed) * 0.025D;
-        double attachment = Math.pow(Math.abs(progress * 2.0D - 1.0D), 4.0D);
-        double envelope = 0.8D + Math.sin(progress * Math.PI) * 0.2D + attachment * 1.45D;
+        double startAttachment = Math.pow(1.0D - progress, 4.0D);
+        double endAttachment = Math.pow(progress, 4.0D);
+        double envelope = 0.78D + Math.sin(progress * Math.PI) * 0.22D;
         double surfaceRipple = 1.0D + Math.sin(side * Math.PI * 0.75D - progress * 11.0D
             + animationTime * 0.055D + seed) * 0.025D;
-        double radius = baseRadius * envelope * (breathing + energy * 0.06D) * surfaceRipple;
+        double radius = baseRadius * envelope;
+        radius += (startCollarRadius - baseRadius * 0.78D) * startAttachment
+            + (endCollarRadius - baseRadius * 0.78D) * endAttachment;
+        radius *= (breathing + energy * 0.06D) * surfaceRipple;
         double light = Math.max(0.0D, radialX * 0.32D + radialY * 0.81D + radialZ * 0.49D);
         double spiral = Math.sin(side * Math.PI * 0.5D - progress * 13.0D
             + animationTime * 0.075D + seed) * 0.5D + 0.5D;
