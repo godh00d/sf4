@@ -6,7 +6,6 @@ import com.godh00d.sf4angel.knowledge.AngelOracle;
 import com.godh00d.sf4angel.knowledge.ChestScanner;
 import com.godh00d.sf4angel.personality.AngelPersonality;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
-import com.godh00d.sf4angel.sound.AngelSoundscape;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -224,10 +223,6 @@ public class EntityAngel extends EntityCreature {
 
     public void startDespawn(int delay) {
         if (getVisualState() == STATE_DESPAWNING || getVisualState() == STATE_HIDDEN) return;
-        EntityPlayer owner = getOwnerEntity();
-        if (owner instanceof EntityPlayerMP) {
-            AngelSoundscape.playDeparture((EntityPlayerMP) owner, getAnimationType());
-        }
         setVisualState(STATE_DESPAWNING);
         setStateTimer(0);
     }
@@ -242,7 +237,6 @@ public class EntityAngel extends EntityCreature {
 
         if (source.getTrueSource() instanceof EntityPlayer) {
             EntityPlayer attacker = (EntityPlayer) source.getTrueSource();
-            if (attacker instanceof EntityPlayerMP) AngelSoundscape.playIrritation((EntityPlayerMP) attacker);
             setMood(MOOD_IRRITATED, 100);
             setLookTarget(attacker);
             attacker.attackEntityFrom(DamageSource.causeMobDamage(this), 4.0F);

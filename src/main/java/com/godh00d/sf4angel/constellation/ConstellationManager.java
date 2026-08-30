@@ -5,7 +5,6 @@ import com.godh00d.sf4angel.entity.EntityAngel;
 import com.godh00d.sf4angel.entity.EntityConstellationObservatory;
 import com.godh00d.sf4angel.network.MessageConstellationProgress;
 import com.godh00d.sf4angel.personality.AngelPersonality;
-import com.godh00d.sf4angel.sound.AngelSoundscape;
 import com.godh00d.sf4angel.network.PacketHandler;
 import com.godh00d.sf4angel.typewriter.TypewriterHandler;
 import net.minecraft.advancements.Advancement;
@@ -136,7 +135,6 @@ public final class ConstellationManager {
         player.fallDistance = 0.0F;
         spawnObservatory(player);
         sendSnapshot(player);
-        AngelSoundscape.playObservatoryEntry(player);
         explainObservatory(player, data);
     }
 
@@ -178,7 +176,6 @@ public final class ConstellationManager {
         removeObservatories(player);
         clearSession(data);
         sendClear(player);
-        AngelSoundscape.playObservatoryExit(player);
     }
 
     public static void refresh(EntityPlayerMP player) {
