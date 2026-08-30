@@ -92,9 +92,11 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         GL11.glDisable(GL11.GL_BLEND);
         drawTendrilTubes(states, animationTime, 0.30D, 0, 255);
 
-        GL11.glDepthMask(false);
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        drawNodes(states, animationTime);
+
+        GL11.glDepthMask(false);
         drawTendrilTubes(states, animationTime, 1.0D, 1, 112);
 
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
@@ -103,10 +105,6 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         drawPlasmaMotes(animationTime);
         drawStarGlows(states, animationTime, cameraX, cameraY, cameraZ);
 
-        GL11.glDepthMask(true);
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        drawNodes(states, animationTime);
         GlStateManager.popMatrix();
         GL11.glPopAttrib();
 
@@ -458,14 +456,17 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
                     edgeBlue *= 0.88D;
                 }
                 if (states[childIndex] == ConstellationManager.MYSTERY) edgeAlpha *= 0.82D;
+                double startNodeRadius = nodeVisualRadius(states[parentIndex], parentIndex, animationTime);
+                double endNodeRadius = nodeVisualRadius(states[childIndex], childIndex, animationTime);
+                double startCollarRadius = tendrilCollarRadius(states[parentIndex], parentIndex,
+                    connectionCounts[parentIndex], structural, layer, animationTime);
+                double endCollarRadius = tendrilCollarRadius(states[childIndex], childIndex,
+                    connectionCounts[childIndex], structural, layer, animationTime);
                 appendTendrilTube(buffer, parentIndex, childIndex, animationTime,
                     radius * radiusScale,
-                    nodeVisualRadius(states[parentIndex], parentIndex, animationTime) * 0.92D,
-                    nodeVisualRadius(states[childIndex], childIndex, animationTime) * 0.92D,
-                    tendrilCollarRadius(states[parentIndex], parentIndex, connectionCounts[parentIndex],
-                        structural, layer, animationTime),
-                    tendrilCollarRadius(states[childIndex], childIndex, connectionCounts[childIndex],
-                        structural, layer, animationTime),
+                    tendrilSurfaceDistance(startNodeRadius, startCollarRadius, layer),
+                    tendrilSurfaceDistance(endNodeRadius, endCollarRadius, layer),
+                    startCollarRadius, endCollarRadius,
                     edgeRed, edgeGreen, edgeBlue, edgeAlpha,
                     points, tangents, normals, binormals, distances, energies);
             }
@@ -512,8 +513,17 @@ public final class RenderConstellationObservatory extends EntityAngelRender {
         double crowdScale = 1.0D / Math.sqrt(1.0D + Math.max(0, connectionCount - 1) * 0.22D);
         double edgeScale = structural ? 1.0D : 0.58D;
         double layerScale = layer == 0 ? 0.30D : layer == 1 ? 1.0D : 1.28D;
-        return nodeVisualRadius(state, nodeIndex, animationTime)
-            * stateScale * crowdScale * edgeScale * layerScale;
+        double nodeRadius = nodeVisualRadius(state, nodeIndex, animationTime);
+        return Math.min(nodeRadius * 0.92D,
+            nodeRadius * stateScale * crowdScale * edgeScale * layerScale);
+    }
+
+    private static double tendrilSurfaceDistance(double nodeRadius, double collarRadius, int layer) {
+        double intersectionRadius = Math.min(nodeRadius * 0.94D, collarRadius * 1.04D);
+        double distance = Math.sqrt(Math.max(0.0D,
+            nodeRadius * nodeRadius - intersectionRadius * intersectionRadius));
+        double overlap = nodeRadius * (layer == 0 ? 0.015D : layer == 1 ? 0.035D : 0.06D);
+        return Math.max(nodeRadius * 0.08D, distance - overlap);
     }
 
     private static void appendTendrilTube(BufferBuilder buffer, int parentIndex, int childIndex,
