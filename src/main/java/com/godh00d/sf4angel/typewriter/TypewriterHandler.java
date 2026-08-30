@@ -1,8 +1,6 @@
 package com.godh00d.sf4angel.typewriter;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 
@@ -84,10 +82,8 @@ public class TypewriterHandler {
             case APPEAR:
                 state.phase = Phase.TYPING;
                 state.tickCount = 0;
-                state.blipCooldown = 0;
                 state.charIndex = Math.min(CHARS_PER_TICK, state.currentMessage.text.length());
                 sendPartialMessage(player, state);
-                playSpeechBlip(player, state);
                 break;
 
             case TYPING:
@@ -98,7 +94,6 @@ public class TypewriterHandler {
                     state.tickCount = 0;
                 }
                 sendPartialMessage(player, state);
-                playSpeechBlip(player, state);
                 break;
 
             case SHOWING:
@@ -168,21 +163,6 @@ public class TypewriterHandler {
         player.sendStatusMessage(new TextComponentString(""), true);
     }
 
-    private static void playSpeechBlip(EntityPlayer player, PlayerTypewriterState state) {
-        if (!(player instanceof EntityPlayerMP) || state.currentMessage == null || state.charIndex <= 0) return;
-        char character = state.currentMessage.text.charAt(state.charIndex - 1);
-        if (!Character.isLetterOrDigit(character)) return;
-        if (state.blipCooldown > 0) {
-            state.blipCooldown--;
-            return;
-        }
-        int voice = Math.abs(state.currentMessage.text.hashCode() % 7);
-        int syllable = Character.toLowerCase(character) % 5;
-        float pitch = 1.34F + voice * 0.045F + syllable * 0.025F;
-        ((EntityPlayerMP) player).playSound(SoundEvents.BLOCK_NOTE_HARP, 0.06F, pitch);
-        state.blipCooldown = 1;
-    }
-
     public static void despawnWhenReady(EntityPlayer player) {
         PlayerTypewriterState state = states.get(player.getUniqueID());
         if (state != null) {
@@ -205,7 +185,6 @@ public class TypewriterHandler {
         Phase phase = Phase.IDLE;
         int tickCount = 0;
         int charIndex = 0;
-        int blipCooldown = 0;
         boolean despawnWhenReady = false;
         int despawnDelay = 0;
     }
